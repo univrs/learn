@@ -1,8 +1,8 @@
-# MetaLearn.org Vision
+# MetaLearn Vision
 
 ## The Premise
 
-**MetaLearn.org** is a platform for tools that help systems understand themselves.
+**MetaLearn** is a platform for tools that help systems understand themselves.
 
 We work at the boundaries between:
 - **Specification and Implementation** (DOL)
@@ -16,16 +16,16 @@ We work at the boundaries between:
 │                                                                         │
 │              "Tools for systems that know what they should be"          │
 │                                                                         │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐         │
-│  │                 │  │                 │  │                 │         │
-│  │  dol.metalearn  │  │ llvm.metalearn  │  │skills.metalearn │         │
-│  │     .org        │  │     .org        │  │     .org        │         │
-│  │                 │  │                 │  │                 │         │
-│  │  Design         │  │  Compilation    │  │  Composable     │         │
-│  │  Ontology       │  │  & Translation  │  │  Capabilities   │         │
-│  │  Language       │  │  Tools          │  │                 │         │
-│  │                 │  │                 │  │                 │         │
-│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘         │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐          │
+│  │                 │  │                 │  │                 │          │
+│  │  dol.metalearn  │  │ llvm.metalearn  │  │skills.metalearn │          │
+│  │                 │  │                 │  │                 │          │
+│  │                 │  │                 │  │                 │          │
+│  │  Design         │  │  Compilation    │  │  Composable     │          │
+│  │  Ontology       │  │  & Translation  │  │  Capabilities   │          │
+│  │  Language       │  │  Tools          │  │                 │          │
+│  │                 │  │                 │  │                 │          │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘          │ 
 │           │                    │                    │                   │
 │           └────────────────────┼────────────────────┘                   │
 │                                │                                        │
