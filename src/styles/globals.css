@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-univrs-bg-primary text-univrs-text-primary;
+  }
+
+  ::selection {
+    @apply bg-univrs-primary-500/30;
+  }
+
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-univrs-bg-secondary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-univrs-bg-elevated rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-univrs-primary-700;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-univrs-primary-600 rounded-lg hover:bg-univrs-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-univrs-primary-500 focus:ring-offset-2 focus:ring-offset-univrs-bg-primary;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-univrs-text-primary bg-univrs-bg-tertiary rounded-lg border border-white/10 hover:bg-univrs-bg-elevated hover:border-univrs-primary-500/50 transition-colors focus:outline-none focus:ring-2 focus:ring-univrs-primary-500 focus:ring-offset-2 focus:ring-offset-univrs-bg-primary;
+  }
+
+  .card {
+    @apply bg-univrs-bg-secondary rounded-xl border border-white/5 p-6 hover:border-univrs-primary-500/30 transition-colors;
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-univrs-primary-400 to-univrs-secondary-400;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
