@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Github, ExternalLink, Sun, Moon } from 'lucide-react'
+import { Menu, X, Github, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navigation = [
@@ -12,134 +12,172 @@ const navigation = [
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    // Read initial theme from document
+    if (typeof document !== 'undefined') {
+      return (document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark'
+    }
+    return 'dark'
+  })
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
 
   // Handle scroll for header background
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20)
+      setScrolled(window.scrollY > 50)
     }
     window.addEventListener('scroll', handleScroll)
+    handleScroll() // Check initial state
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Initialize theme from localStorage or system preference
+  // Sync theme state with document attribute
   useEffect(() => {
-    const stored = localStorage.getItem('theme') as 'dark' | 'light' | null
-    if (stored) {
-      setTheme(stored)
-      document.documentElement.setAttribute('data-theme', stored)
-    } else {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      const defaultTheme = prefersDark ? 'dark' : 'light'
-      setTheme(defaultTheme)
-      document.documentElement.setAttribute('data-theme', defaultTheme)
+    const currentTheme = document.documentElement.getAttribute('data-theme') as 'dark' | 'light'
+    if (currentTheme) {
+      setTheme(currentTheme)
     }
   }, [])
 
   const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark'
-    setTheme(newTheme)
-    localStorage.setItem('theme', newTheme)
+    const current = document.documentElement.getAttribute('data-theme')
+    const newTheme = current === 'dark' ? 'light' : 'dark'
+
     document.documentElement.setAttribute('data-theme', newTheme)
+    localStorage.setItem('theme', newTheme)
+    setTheme(newTheme)
   }
+
+  const isDark = theme === 'dark'
 
   return (
     <header
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        scrolled
-          ? "bg-[var(--nav-bg)] backdrop-blur-xl border-b border-[var(--border-color)]"
-          : "bg-transparent"
+        scrolled && "backdrop-blur-xl"
       )}
       style={{
-        '--nav-bg': theme === 'dark' ? 'rgba(10, 13, 11, 0.95)' : 'rgba(248, 250, 249, 0.95)',
-        '--border-color': theme === 'dark' ? 'rgba(42, 58, 48, 0.5)' : 'rgba(200, 212, 205, 0.5)',
-      } as React.CSSProperties}
+        backgroundColor: scrolled
+          ? (isDark ? 'rgba(10, 13, 11, 0.95)' : 'rgba(248, 250, 249, 0.95)')
+          : 'transparent',
+        borderBottom: scrolled
+          ? `1px solid ${isDark ? '#2a3a30' : '#c8d4cd'}`
+          : 'none',
+      }}
     >
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Top">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-[70px] items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-3">
+            <span
+              className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, #00ffd5, #b088f9)',
+                boxShadow: isDark ? '0 0 10px rgba(0, 255, 213, 0.3)' : 'none'
+              }}
+            >
               <img
                 src="/icon.jpg"
                 alt="Univrs"
-                className="w-8 h-8 rounded-full object-cover"
+                className="w-full h-full object-cover"
               />
-              <span className={cn(
-                "text-xl font-semibold transition-colors",
-                theme === 'dark' ? 'text-[#e8f4ec]' : 'text-[#1a221d]'
-              )}>
-                Univrs <span className={theme === 'dark' ? 'text-[#00ffd5]' : 'text-[#008b75]'}>Learn</span>
-              </span>
-            </Link>
-          </div>
+            </span>
+            <span
+              className="text-xl font-semibold"
+              style={{ color: isDark ? '#e8f4ec' : '#1a221d' }}
+            >
+              Univrs.io
+            </span>
+          </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:gap-8">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  'text-sm font-medium transition-colors relative',
-                  location.pathname.startsWith(item.href)
-                    ? theme === 'dark' ? 'text-[#e8f4ec]' : 'text-[#1a221d]'
-                    : theme === 'dark' ? 'text-[#8a9a8f] hover:text-[#e8f4ec]' : 'text-[#5a6a5f] hover:text-[#1a221d]'
-                )}
-              >
-                {item.name}
-                {location.pathname.startsWith(item.href) && (
-                  <span className={cn(
-                    "absolute -bottom-1 left-0 right-0 h-0.5",
-                    theme === 'dark' ? 'bg-[#00ffd5]' : 'bg-[#008b75]'
-                  )} />
-                )}
-              </Link>
-            ))}
+          <div className="hidden md:flex md:items-center md:gap-10">
+            {navigation.map((item) => {
+              const isActive = location.pathname.startsWith(item.href)
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className="relative text-sm font-medium transition-colors"
+                  style={{
+                    color: isActive
+                      ? (isDark ? '#e8f4ec' : '#1a221d')
+                      : (isDark ? '#8a9a8f' : '#5a6a5f'),
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = isDark ? '#e8f4ec' : '#1a221d'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = isDark ? '#8a9a8f' : '#5a6a5f'
+                    }
+                  }}
+                >
+                  {item.name}
+                  {isActive && (
+                    <span
+                      className="absolute -bottom-1 left-0 right-0 h-0.5"
+                      style={{ backgroundColor: isDark ? '#00ffd5' : '#008b75' }}
+                    />
+                  )}
+                </Link>
+              )
+            })}
           </div>
 
           {/* Right side actions */}
-          <div className="flex items-center gap-2">
-            {/* Theme Toggle */}
+          <div className="flex items-center gap-4">
+            {/* Theme Toggle - matching univrs.io style */}
             <button
               onClick={toggleTheme}
-              className={cn(
-                "w-10 h-10 rounded-full flex items-center justify-center transition-all border",
-                theme === 'dark'
-                  ? 'bg-[#141a16] border-[#2a3a30] text-[#8a9a8f] hover:text-[#e8f4ec] hover:border-[#00ffd5]'
-                  : 'bg-[#e8eeeb] border-[#c8d4cd] text-[#5a6a5f] hover:text-[#1a221d] hover:border-[#008b75]'
-              )}
-              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all"
+              style={{
+                backgroundColor: isDark ? '#141a16' : '#e8eeeb',
+                border: `1px solid ${isDark ? '#2a3a30' : '#c8d4cd'}`,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = isDark ? '#00ffd5' : '#008b75'
+                e.currentTarget.style.boxShadow = isDark ? '0 0 10px rgba(0, 255, 213, 0.3)' : '0 0 10px rgba(0, 139, 117, 0.3)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = isDark ? '#2a3a30' : '#c8d4cd'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+              aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
             >
-              {theme === 'dark' ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
+              {isDark ? '☀️' : '🌙'}
             </button>
 
             <a
               href="https://univrs.io"
               target="_blank"
               rel="noopener noreferrer"
-              className={cn(
-                "hidden sm:flex items-center gap-1 text-sm transition-colors px-2",
-                theme === 'dark' ? 'text-[#8a9a8f] hover:text-[#e8f4ec]' : 'text-[#5a6a5f] hover:text-[#1a221d]'
-              )}
+              className="hidden sm:flex items-center gap-1 text-sm transition-colors"
+              style={{ color: isDark ? '#8a9a8f' : '#5a6a5f' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = isDark ? '#e8f4ec' : '#1a221d'}
+              onMouseLeave={(e) => e.currentTarget.style.color = isDark ? '#8a9a8f' : '#5a6a5f'}
             >
               univrs.io
               <ExternalLink className="w-3 h-3" />
             </a>
+
             <a
               href="https://github.com/univrs"
               target="_blank"
               rel="noopener noreferrer"
-              className={cn(
-                "p-2 rounded-lg transition-colors",
-                theme === 'dark'
-                  ? 'text-[#8a9a8f] hover:text-[#e8f4ec] hover:bg-[#1a221d]'
-                  : 'text-[#5a6a5f] hover:text-[#1a221d] hover:bg-[#dce5e0]'
-              )}
+              className="p-2 rounded-lg transition-colors"
+              style={{ color: isDark ? '#8a9a8f' : '#5a6a5f' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = isDark ? '#e8f4ec' : '#1a221d'
+                e.currentTarget.style.backgroundColor = isDark ? '#1a221d' : '#dce5e0'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = isDark ? '#8a9a8f' : '#5a6a5f'
+                e.currentTarget.style.backgroundColor = 'transparent'
+              }}
             >
               <Github className="w-5 h-5" />
             </a>
@@ -147,12 +185,8 @@ export default function Header() {
             {/* Mobile menu button */}
             <button
               type="button"
-              className={cn(
-                "md:hidden p-2 rounded-lg transition-colors",
-                theme === 'dark'
-                  ? 'text-[#8a9a8f] hover:text-[#e8f4ec] hover:bg-[#1a221d]'
-                  : 'text-[#5a6a5f] hover:text-[#1a221d] hover:bg-[#dce5e0]'
-              )}
+              className="md:hidden p-2 rounded-lg transition-colors"
+              style={{ color: isDark ? '#8a9a8f' : '#5a6a5f' }}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -162,30 +196,32 @@ export default function Header() {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className={cn(
-            "md:hidden py-4 border-t",
-            theme === 'dark' ? 'border-[#2a3a30]' : 'border-[#c8d4cd]'
-          )}>
+          <div
+            className="md:hidden py-4"
+            style={{ borderTop: `1px solid ${isDark ? '#2a3a30' : '#c8d4cd'}` }}
+          >
             <div className="flex flex-col gap-2">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={cn(
-                    'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
-                    location.pathname.startsWith(item.href)
-                      ? theme === 'dark'
-                        ? 'text-[#00ffd5] bg-[#00ffd510]'
-                        : 'text-[#008b75] bg-[#008b7510]'
-                      : theme === 'dark'
-                        ? 'text-[#8a9a8f] hover:text-[#e8f4ec] hover:bg-[#1a221d]'
-                        : 'text-[#5a6a5f] hover:text-[#1a221d] hover:bg-[#dce5e0]'
-                  )}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {navigation.map((item) => {
+                const isActive = location.pathname.startsWith(item.href)
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                    style={{
+                      color: isActive
+                        ? (isDark ? '#00ffd5' : '#008b75')
+                        : (isDark ? '#8a9a8f' : '#5a6a5f'),
+                      backgroundColor: isActive
+                        ? (isDark ? 'rgba(0, 255, 213, 0.1)' : 'rgba(0, 139, 117, 0.1)')
+                        : 'transparent',
+                    }}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                )
+              })}
             </div>
           </div>
         )}
