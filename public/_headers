@@ -1,13 +1,17 @@
 /*
   X-Content-Type-Options: nosniff
-  X-Frame-Options: DENY
-  X-XSS-Protection: 1; mode=block
+
+/assets/*.js
+  Content-Type: text/javascript; charset=utf-8
+
+/assets/*.css
+  Content-Type: text/css; charset=utf-8
 
 /*.js
-  Content-Type: application/javascript; charset=utf-8
+  Content-Type: text/javascript; charset=utf-8
 
 /*.mjs
-  Content-Type: application/javascript; charset=utf-8
+  Content-Type: text/javascript; charset=utf-8
 
 /*.css
   Content-Type: text/css; charset=utf-8
@@ -26,9 +30,3 @@
 
 /*.png
   Content-Type: image/png
-
-/*.woff2
-  Content-Type: font/woff2
-
-/*.woff
-  Content-Type: font/woff
