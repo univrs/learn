@@ -2,9 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Univrs.io Design System Colors */
+/*
+  Univrs.io Design System
+  Aesthetic: Organic Bioluminescence — dark forest floor with mycelial glow
+*/
+
+/* ═══════════════════════════════════════════════════════════════
+   CSS VARIABLES
+   ═══════════════════════════════════════════════════════════════ */
+
 :root {
-  /* Dark theme (default) - forest depths */
+  /* Core palette - forest depths */
   --void: #0a0d0b;
   --deep-earth: #0f1411;
   --forest-floor: #141a16;
@@ -15,6 +23,7 @@
   --glow-cyan: #00ffd5;
   --glow-cyan-dim: #00ffd540;
   --glow-gold: #ffd700;
+  --glow-gold-dim: #ffd70030;
   --spore-purple: #b088f9;
   --mycelium-white: #e8f4ec;
   --soft-gray: #8a9a8f;
@@ -27,6 +36,17 @@
   --bg-secondary: var(--deep-earth);
   --bg-card: var(--forest-floor);
   --border-subtle: #2a3a30;
+
+  /* Shadows & Glows */
+  --glow-sm: 0 0 10px var(--glow-cyan-dim);
+  --glow-md: 0 0 20px var(--glow-cyan-dim), 0 0 40px var(--glow-cyan-dim);
+  --glow-lg: 0 0 30px var(--glow-cyan-dim), 0 0 60px var(--glow-cyan-dim), 0 0 90px var(--glow-cyan-dim);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.4);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 300ms ease;
+  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Light theme override */
@@ -40,12 +60,18 @@
   --glow-cyan: #008b75;
   --glow-cyan-dim: #008b7530;
   --glow-gold: #b8960a;
+  --glow-gold-dim: #b8960a30;
   --spore-purple: #7c4dbd;
   --mycelium-white: #1a221d;
   --soft-gray: #5a6a5f;
 
   --border-subtle: #c8d4cd;
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════════════════════════ */
 
 @layer base {
   html {
@@ -53,9 +79,54 @@
   }
 
   body {
-    background-color: var(--bg-primary);
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg-primary);
     color: var(--text-primary);
-    transition: background-color 0.3s ease, color 0.3s ease;
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background-color var(--transition-base), color var(--transition-base);
+  }
+
+  /* Animated background gradient - matches univrs.io */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 40%, var(--glow-cyan-dim) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 80% 60%, var(--glow-gold-dim) 0%, transparent 50%),
+      radial-gradient(ellipse 50% 30% at 50% 80%, rgba(176, 136, 249, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+    animation: pulse-bg 20s ease-in-out infinite alternate;
+  }
+
+  @keyframes pulse-bg {
+    0% { opacity: 0.4; transform: scale(1); }
+    100% { opacity: 0.7; transform: scale(1.1); }
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  p {
+    color: var(--text-secondary);
+  }
+
+  a {
+    color: var(--text-accent);
+    text-decoration: none;
+    transition: var(--transition-fast);
+  }
+
+  a:hover {
+    text-shadow: var(--glow-sm);
   }
 
   ::selection {
@@ -80,27 +151,33 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   COMPONENTS
+   ═══════════════════════════════════════════════════════════════ */
+
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center px-6 py-3 text-sm font-medium rounded-lg transition-all;
-    background-color: var(--glow-cyan);
+    @apply inline-flex items-center justify-center px-6 py-3 text-sm font-semibold rounded-md transition-all;
+    background: linear-gradient(135deg, var(--glow-cyan), #00b8a0);
     color: var(--void);
+    box-shadow: var(--glow-sm);
   }
 
   .btn-primary:hover {
-    box-shadow: 0 0 20px var(--glow-cyan-dim), 0 0 40px var(--glow-cyan-dim);
+    transform: translateY(-2px);
+    box-shadow: var(--glow-md);
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-6 py-3 text-sm font-medium rounded-lg transition-all;
-    background-color: var(--bg-card);
+    @apply inline-flex items-center justify-center px-6 py-3 text-sm font-semibold rounded-md transition-all;
+    background-color: transparent;
     color: var(--text-primary);
     border: 1px solid var(--border-subtle);
   }
 
   .btn-secondary:hover {
     border-color: var(--glow-cyan);
-    box-shadow: 0 0 10px var(--glow-cyan-dim);
+    box-shadow: var(--glow-sm);
   }
 
   .card {
@@ -110,62 +187,95 @@
   }
 
   .card:hover {
-    border-color: var(--glow-cyan);
-    box-shadow: 0 0 10px var(--glow-cyan-dim);
+    border-color: var(--glow-cyan-dim);
+    box-shadow: var(--shadow-card), var(--glow-sm);
+    transform: translateY(-4px);
   }
 
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r;
-    background-image: linear-gradient(135deg, var(--glow-cyan), var(--spore-purple));
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, var(--glow-cyan) 0%, var(--glow-gold) 50%, var(--spore-purple) 100%);
   }
 
-  /* Background classes */
-  .bg-univrs-bg-primary {
+  .text-glow {
+    text-shadow: var(--glow-md);
+  }
+
+  /* Background utility classes */
+  .bg-univrs-primary {
     background-color: var(--bg-primary);
   }
 
-  .bg-univrs-bg-secondary {
+  .bg-univrs-secondary {
     background-color: var(--bg-secondary);
   }
 
-  .bg-univrs-bg-tertiary {
-    background-color: var(--forest-floor);
+  .bg-univrs-card {
+    background-color: var(--bg-card);
   }
 
-  .bg-univrs-bg-elevated {
-    background-color: var(--moss);
-  }
-
-  /* Text classes */
-  .text-univrs-text-primary {
+  /* Text utility classes */
+  .text-univrs-primary {
     color: var(--text-primary);
   }
 
-  .text-univrs-text-secondary {
+  .text-univrs-secondary {
     color: var(--text-secondary);
   }
 
-  .text-univrs-text-muted {
-    color: var(--soft-gray);
+  .text-univrs-accent {
+    color: var(--text-accent);
   }
 
-  .text-univrs-primary-400 {
-    color: var(--glow-cyan);
-  }
-
-  .text-univrs-secondary-400 {
-    color: var(--spore-purple);
-  }
-
-  /* Border classes */
-  .border-white\/5 {
+  /* Border utility classes */
+  .border-univrs {
     border-color: var(--border-subtle);
   }
 
-  .border-white\/10 {
-    border-color: var(--border-subtle);
+  /* Nav styles matching univrs.io */
+  .nav-scrolled {
+    background: var(--bg-primary);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-subtle);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-fade-up {
+  animation: fade-up 1s ease-out;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════════════════════════ */
 
 @layer utilities {
   .text-balance {

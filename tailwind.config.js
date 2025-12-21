@@ -4,82 +4,58 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        // Univrs Brand Colors - Match univrs.io
+        // Univrs Brand Colors - Now using CSS variables for theme switching
         univrs: {
-          // Primary purple/violet spectrum
+          // Primary (cyan/teal)
           primary: {
-            50: '#f5f3ff',
-            100: '#ede9fe',
-            200: '#ddd6fe',
-            300: '#c4b5fd',
-            400: '#a78bfa',
-            500: '#8b5cf6',
-            600: '#7c3aed',
-            700: '#6d28d9',
-            800: '#5b21b6',
-            900: '#4c1d95',
-            950: '#2e1065',
+            300: 'var(--glow-cyan)',
+            400: 'var(--glow-cyan)',
+            500: 'var(--glow-cyan)',
           },
-          // Secondary teal/cyan spectrum
+          // Secondary (purple)
           secondary: {
-            50: '#ecfeff',
-            100: '#cffafe',
-            200: '#a5f3fc',
-            300: '#67e8f9',
-            400: '#22d3ee',
-            500: '#06b6d4',
-            600: '#0891b2',
-            700: '#0e7490',
-            800: '#155e75',
-            900: '#164e63',
-            950: '#083344',
+            400: 'var(--spore-purple)',
+            500: 'var(--spore-purple)',
           },
-          // Background colors (dark mode default)
+          // Background colors
           bg: {
-            primary: '#0a0a0f',
-            secondary: '#12121a',
-            tertiary: '#1a1a24',
-            elevated: '#22222e',
+            primary: 'var(--bg-primary)',
+            secondary: 'var(--bg-secondary)',
+            tertiary: 'var(--forest-floor)',
+            elevated: 'var(--moss)',
           },
           // Text colors
           text: {
-            primary: '#f8fafc',
-            secondary: '#94a3b8',
-            muted: '#64748b',
+            primary: 'var(--text-primary)',
+            secondary: 'var(--text-secondary)',
+            muted: 'var(--soft-gray)',
           },
-          // Accent colors
-          accent: {
-            success: '#22c55e',
-            warning: '#f59e0b',
-            error: '#ef4444',
-            info: '#3b82f6',
-          }
         },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
-      typography: (theme) => ({
+      typography: () => ({
         DEFAULT: {
           css: {
-            color: theme('colors.univrs.text.primary'),
+            color: 'var(--text-primary)',
             a: {
-              color: theme('colors.univrs.primary.400'),
+              color: 'var(--glow-cyan)',
               '&:hover': {
-                color: theme('colors.univrs.primary.300'),
+                color: 'var(--glow-cyan)',
+                textShadow: 'var(--glow-sm)',
               },
             },
             'h1, h2, h3, h4': {
-              color: theme('colors.univrs.text.primary'),
+              color: 'var(--text-primary)',
             },
             code: {
-              color: theme('colors.univrs.secondary.400'),
-              backgroundColor: theme('colors.univrs.bg.tertiary'),
+              color: 'var(--spore-purple)',
+              backgroundColor: 'var(--forest-floor)',
               padding: '0.25rem 0.5rem',
               borderRadius: '0.25rem',
               fontWeight: '400',
@@ -91,19 +67,14 @@ export default {
               content: '""',
             },
             pre: {
-              backgroundColor: theme('colors.univrs.bg.secondary'),
+              backgroundColor: 'var(--bg-secondary)',
               borderRadius: '0.5rem',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              border: '1px solid var(--border-subtle)',
             },
             blockquote: {
-              borderLeftColor: theme('colors.univrs.primary.500'),
-              color: theme('colors.univrs.text.secondary'),
+              borderLeftColor: 'var(--glow-cyan)',
+              color: 'var(--text-secondary)',
             },
-          },
-        },
-        invert: {
-          css: {
-            color: theme('colors.univrs.text.primary'),
           },
         },
       }),
@@ -111,6 +82,7 @@ export default {
         'gradient': 'gradient 8s ease infinite',
         'float': 'float 6s ease-in-out infinite',
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'fade-up': 'fade-up 1s ease-out',
       },
       keyframes: {
         gradient: {
@@ -121,11 +93,19 @@ export default {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-20px)' },
         },
+        'fade-up': {
+          from: { opacity: '0', transform: 'translateY(40px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(var(--tw-gradient-stops))',
-        'univrs-gradient': 'linear-gradient(135deg, #6d28d9 0%, #0891b2 100%)',
+        'univrs-gradient': 'linear-gradient(135deg, var(--glow-cyan) 0%, var(--spore-purple) 100%)',
+      },
+      borderColor: {
+        'white/5': 'var(--border-subtle)',
+        'white/10': 'var(--border-subtle)',
       },
     },
   },
