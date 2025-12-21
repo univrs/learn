@@ -183,11 +183,71 @@ learn/
 └── package.json
 ```
 
+## Implemented Design System (Matching univrs.io)
+
+### CSS Variables - Theme System
+The site uses CSS variables that automatically switch between dark and light modes via `data-theme` attribute on `<html>`.
+
+```css
+/* Dark Theme (default) - Forest Depths Palette */
+:root {
+  --void: #0a0d0b;           /* Deepest background */
+  --deep-earth: #0f1411;     /* Secondary background */
+  --forest-floor: #141a16;   /* Card backgrounds */
+  --moss: #1a221d;           /* Elevated surfaces */
+  --bark: #232d27;           /* Borders, scrollbar */
+
+  /* Bioluminescent Accents */
+  --glow-cyan: #00ffd5;      /* Primary accent */
+  --glow-cyan-dim: #00ffd540;
+  --glow-gold: #ffd700;      /* Secondary accent */
+  --spore-purple: #b088f9;   /* Tertiary accent */
+  --mycelium-white: #e8f4ec; /* Primary text */
+  --soft-gray: #8a9a8f;      /* Muted text */
+
+  /* Semantic */
+  --text-primary: var(--mycelium-white);
+  --text-secondary: var(--soft-gray);
+  --bg-primary: var(--void);
+  --bg-secondary: var(--deep-earth);
+  --bg-card: var(--forest-floor);
+  --border-subtle: #2a3a30;
+}
+
+/* Light Theme - Inverted */
+[data-theme="light"] {
+  --void: #f8faf9;
+  --deep-earth: #f0f4f2;
+  --forest-floor: #e8eeeb;
+  --glow-cyan: #008b75;      /* Darker cyan for light bg */
+  --mycelium-white: #1a221d; /* Dark text on light */
+  --border-subtle: #c8d4cd;
+}
+```
+
+### Animated Backgrounds
+1. **body::before** - Pulsing gradient overlay with cyan, gold, purple radial gradients
+2. **MyceliumCanvas** - React component (`src/components/ui/MyceliumCanvas.tsx`) that renders animated network nodes connecting like mycelium
+
+### Component Classes
+```css
+.card          /* Card with hover glow effect */
+.btn-primary   /* Cyan gradient button with glow */
+.btn-secondary /* Outline button */
+.gradient-text /* Cyan-gold-purple text gradient */
+```
+
+### Theme Toggle
+- Uses `data-theme="dark"` or `data-theme="light"` on `<html>`
+- Emoji toggle button (☀️/🌙) in header
+- Persisted to localStorage
+- System preference detection on first load
+
 ## Key Messages
 
 ### Landing Page
 > **Univrs Learn**
-> Tools that build tools that build self-aware systems.
+> Creating tools of self-aware systems.
 >
 > The Univrs meta-tools ecosystem provides the foundation for
 > specification-driven development, intelligent compilation,
