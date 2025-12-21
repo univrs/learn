@@ -7,8 +7,64 @@
     scroll-behavior: smooth;
   }
 
+  /* Dark mode (default) */
   body {
-    @apply bg-univrs-bg-primary text-univrs-text-primary;
+    @apply bg-univrs-bg-primary text-univrs-text-primary transition-colors duration-300;
+  }
+
+  /* Light mode overrides */
+  [data-theme="light"] body,
+  html:not(.dark) body {
+    --univrs-bg-primary: #f8faf9;
+    --univrs-bg-secondary: #f0f4f2;
+    --univrs-bg-tertiary: #e8eeeb;
+    --univrs-bg-elevated: #dce5e0;
+    --univrs-text-primary: #1a221d;
+    --univrs-text-secondary: #5a6a5f;
+    --univrs-text-muted: #7a8a7f;
+    background-color: #f8faf9;
+    color: #1a221d;
+  }
+
+  [data-theme="light"] {
+    --tw-bg-opacity: 1;
+  }
+
+  /* Light mode specific styles */
+  [data-theme="light"] .bg-univrs-bg-primary {
+    background-color: #f8faf9;
+  }
+
+  [data-theme="light"] .bg-univrs-bg-secondary {
+    background-color: #f0f4f2;
+  }
+
+  [data-theme="light"] .bg-univrs-bg-tertiary {
+    background-color: #e8eeeb;
+  }
+
+  [data-theme="light"] .bg-univrs-bg-elevated {
+    background-color: #dce5e0;
+  }
+
+  [data-theme="light"] .text-univrs-text-primary {
+    color: #1a221d;
+  }
+
+  [data-theme="light"] .text-univrs-text-secondary {
+    color: #5a6a5f;
+  }
+
+  [data-theme="light"] .text-univrs-text-muted {
+    color: #7a8a7f;
+  }
+
+  [data-theme="light"] .border-white\/5 {
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  [data-theme="light"] .border-white\/10 {
+    border-color: rgba(0, 0, 0, 0.1);
   }
 
   ::selection {
@@ -30,6 +86,14 @@
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-univrs-primary-700;
   }
+
+  [data-theme="light"] ::-webkit-scrollbar-track {
+    background-color: #f0f4f2;
+  }
+
+  [data-theme="light"] ::-webkit-scrollbar-thumb {
+    background-color: #c8d4cd;
+  }
 }
 
 @layer components {
@@ -41,12 +105,24 @@
     @apply inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-univrs-text-primary bg-univrs-bg-tertiary rounded-lg border border-white/10 hover:bg-univrs-bg-elevated hover:border-univrs-primary-500/50 transition-colors focus:outline-none focus:ring-2 focus:ring-univrs-primary-500 focus:ring-offset-2 focus:ring-offset-univrs-bg-primary;
   }
 
+  [data-theme="light"] .btn-secondary {
+    @apply border-black/10 hover:border-univrs-primary-500/50;
+  }
+
   .card {
     @apply bg-univrs-bg-secondary rounded-xl border border-white/5 p-6 hover:border-univrs-primary-500/30 transition-colors;
   }
 
+  [data-theme="light"] .card {
+    @apply border-black/5 shadow-sm;
+  }
+
   .gradient-text {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-univrs-primary-400 to-univrs-secondary-400;
+  }
+
+  [data-theme="light"] .gradient-text {
+    @apply from-univrs-primary-600 to-univrs-secondary-600;
   }
 }
 

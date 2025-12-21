@@ -25,9 +25,11 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-univrs-gradient flex items-center justify-center">
-                <span className="text-white font-bold text-lg">U</span>
-              </div>
+              <img
+                src="/icon.jpg"
+                alt="Univrs"
+                className="w-8 h-8 rounded-lg object-cover"
+              />
               <span className="text-lg font-semibold text-univrs-text-primary">
                 Univrs Learn
               </span>
