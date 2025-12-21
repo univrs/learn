@@ -17,7 +17,7 @@ export default function About() {
               About Univrs Meta-Tools
             </h1>
             <p className="text-xl text-univrs-text-secondary">
-              We build tools that build tools that build self-aware systems.
+              Build tools for self-aware systems.
             </p>
           </div>
         </div>
