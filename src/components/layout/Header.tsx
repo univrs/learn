@@ -13,7 +13,17 @@ const navigation = [
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
+
+  // Handle scroll for header background
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // Initialize theme from localStorage or system preference
   useEffect(() => {
@@ -21,13 +31,11 @@ export default function Header() {
     if (stored) {
       setTheme(stored)
       document.documentElement.setAttribute('data-theme', stored)
-      document.documentElement.classList.toggle('dark', stored === 'dark')
     } else {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
       const defaultTheme = prefersDark ? 'dark' : 'light'
       setTheme(defaultTheme)
       document.documentElement.setAttribute('data-theme', defaultTheme)
-      document.documentElement.classList.toggle('dark', defaultTheme === 'dark')
     }
   }, [])
 
@@ -36,11 +44,21 @@ export default function Header() {
     setTheme(newTheme)
     localStorage.setItem('theme', newTheme)
     document.documentElement.setAttribute('data-theme', newTheme)
-    document.documentElement.classList.toggle('dark', newTheme === 'dark')
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-univrs-bg-primary/80 backdrop-blur-xl border-b border-white/5 dark:bg-univrs-bg-primary/80 dark:border-white/5">
+    <header
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        scrolled
+          ? "bg-[var(--nav-bg)] backdrop-blur-xl border-b border-[var(--border-color)]"
+          : "bg-transparent"
+      )}
+      style={{
+        '--nav-bg': theme === 'dark' ? 'rgba(10, 13, 11, 0.95)' : 'rgba(248, 250, 249, 0.95)',
+        '--border-color': theme === 'dark' ? 'rgba(42, 58, 48, 0.5)' : 'rgba(200, 212, 205, 0.5)',
+      } as React.CSSProperties}
+    >
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Top">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -49,10 +67,13 @@ export default function Header() {
               <img
                 src="/icon.jpg"
                 alt="Univrs"
-                className="w-8 h-8 rounded-lg object-cover"
+                className="w-8 h-8 rounded-full object-cover"
               />
-              <span className="text-xl font-semibold text-univrs-text-primary">
-                Univrs <span className="text-univrs-primary-400">Learn</span>
+              <span className={cn(
+                "text-xl font-semibold transition-colors",
+                theme === 'dark' ? 'text-[#e8f4ec]' : 'text-[#1a221d]'
+              )}>
+                Univrs <span className={theme === 'dark' ? 'text-[#00ffd5]' : 'text-[#008b75]'}>Learn</span>
               </span>
             </Link>
           </div>
@@ -64,13 +85,19 @@ export default function Header() {
                 key={item.name}
                 to={item.href}
                 className={cn(
-                  'text-sm font-medium transition-colors',
+                  'text-sm font-medium transition-colors relative',
                   location.pathname.startsWith(item.href)
-                    ? 'text-univrs-primary-400'
-                    : 'text-univrs-text-secondary hover:text-univrs-text-primary'
+                    ? theme === 'dark' ? 'text-[#e8f4ec]' : 'text-[#1a221d]'
+                    : theme === 'dark' ? 'text-[#8a9a8f] hover:text-[#e8f4ec]' : 'text-[#5a6a5f] hover:text-[#1a221d]'
                 )}
               >
                 {item.name}
+                {location.pathname.startsWith(item.href) && (
+                  <span className={cn(
+                    "absolute -bottom-1 left-0 right-0 h-0.5",
+                    theme === 'dark' ? 'bg-[#00ffd5]' : 'bg-[#008b75]'
+                  )} />
+                )}
               </Link>
             ))}
           </div>
@@ -80,17 +107,25 @@ export default function Header() {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-univrs-text-secondary hover:text-univrs-text-primary hover:bg-univrs-bg-tertiary transition-colors"
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center transition-all border",
+                theme === 'dark'
+                  ? 'bg-[#141a16] border-[#2a3a30] text-[#8a9a8f] hover:text-[#e8f4ec] hover:border-[#00ffd5]'
+                  : 'bg-[#e8eeeb] border-[#c8d4cd] text-[#5a6a5f] hover:text-[#1a221d] hover:border-[#008b75]'
+              )}
               aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             >
-              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              {theme === 'dark' ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
             </button>
 
             <a
               href="https://univrs.io"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1 text-sm text-univrs-text-secondary hover:text-univrs-text-primary transition-colors px-2"
+              className={cn(
+                "hidden sm:flex items-center gap-1 text-sm transition-colors px-2",
+                theme === 'dark' ? 'text-[#8a9a8f] hover:text-[#e8f4ec]' : 'text-[#5a6a5f] hover:text-[#1a221d]'
+              )}
             >
               univrs.io
               <ExternalLink className="w-3 h-3" />
@@ -99,7 +134,12 @@ export default function Header() {
               href="https://github.com/univrs"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 rounded-lg text-univrs-text-secondary hover:text-univrs-text-primary hover:bg-univrs-bg-tertiary transition-colors"
+              className={cn(
+                "p-2 rounded-lg transition-colors",
+                theme === 'dark'
+                  ? 'text-[#8a9a8f] hover:text-[#e8f4ec] hover:bg-[#1a221d]'
+                  : 'text-[#5a6a5f] hover:text-[#1a221d] hover:bg-[#dce5e0]'
+              )}
             >
               <Github className="w-5 h-5" />
             </a>
@@ -107,7 +147,12 @@ export default function Header() {
             {/* Mobile menu button */}
             <button
               type="button"
-              className="md:hidden p-2 rounded-lg text-univrs-text-secondary hover:text-univrs-text-primary hover:bg-univrs-bg-tertiary transition-colors"
+              className={cn(
+                "md:hidden p-2 rounded-lg transition-colors",
+                theme === 'dark'
+                  ? 'text-[#8a9a8f] hover:text-[#e8f4ec] hover:bg-[#1a221d]'
+                  : 'text-[#5a6a5f] hover:text-[#1a221d] hover:bg-[#dce5e0]'
+              )}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -117,7 +162,10 @@ export default function Header() {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-white/5">
+          <div className={cn(
+            "md:hidden py-4 border-t",
+            theme === 'dark' ? 'border-[#2a3a30]' : 'border-[#c8d4cd]'
+          )}>
             <div className="flex flex-col gap-2">
               {navigation.map((item) => (
                 <Link
@@ -126,8 +174,12 @@ export default function Header() {
                   className={cn(
                     'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
                     location.pathname.startsWith(item.href)
-                      ? 'text-univrs-primary-400 bg-univrs-primary-500/10'
-                      : 'text-univrs-text-secondary hover:text-univrs-text-primary hover:bg-univrs-bg-tertiary'
+                      ? theme === 'dark'
+                        ? 'text-[#00ffd5] bg-[#00ffd510]'
+                        : 'text-[#008b75] bg-[#008b7510]'
+                      : theme === 'dark'
+                        ? 'text-[#8a9a8f] hover:text-[#e8f4ec] hover:bg-[#1a221d]'
+                        : 'text-[#5a6a5f] hover:text-[#1a221d] hover:bg-[#dce5e0]'
                   )}
                   onClick={() => setMobileMenuOpen(false)}
                 >
