@@ -46,7 +46,7 @@ export default function Footer() {
               className="text-sm"
               style={{ color: 'var(--soft-gray)' }}
             >
-              Tools that build tools that build self-aware systems.
+              Creating tools of self-aware systems.
             </p>
           </div>
 

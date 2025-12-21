@@ -35,7 +35,7 @@ export default function Hero() {
             className="text-xl sm:text-2xl font-medium mb-4 italic"
             style={{ color: 'var(--text-secondary)' }}
           >
-            Tools that build tools that build self-aware systems.
+            Creating tools of self-aware systems.
           </p>
 
           {/* Description */}
