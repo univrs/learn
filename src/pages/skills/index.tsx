@@ -1,6 +1,9 @@
-import { Link } from 'react-router-dom'
+import { Routes, Route, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { Puzzle, Grid, Plus, FileText, ArrowRight } from 'lucide-react'
+import SkillsCatalog from './Catalog'
+import SkillsCreate from './Create'
+import SkillsSpec from './Spec'
 
 const sections = [
   {
@@ -23,7 +26,7 @@ const sections = [
   },
 ]
 
-export default function SkillsIndex() {
+function SkillsOverview() {
   return (
     <>
       <Helmet>
@@ -36,35 +39,37 @@ export default function SkillsIndex() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                <Puzzle className="w-6 h-6 text-white" />
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg, var(--spore-purple), rgba(176, 136, 249, 0.3))' }}
+              >
+                <Puzzle className="w-6 h-6" style={{ color: 'white' }} />
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-univrs-text-primary">
+              <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
                 Skills Framework
               </h1>
             </div>
-            <p className="text-xl text-univrs-text-secondary mb-8">
+            <p className="text-xl" style={{ color: 'var(--text-secondary)' }}>
               Composable capabilities for AI agents and systems.
-              Discover, use, and create modular capability modules.
             </p>
           </div>
         </div>
       </section>
 
       {/* What are Skills */}
-      <section className="py-16 bg-univrs-bg-secondary">
+      <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-univrs-text-primary mb-8">What are Skills?</h2>
+          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>What are Skills?</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { name: 'Composable', desc: 'Combine skills to create complex capabilities' },
               { name: 'Self-Describing', desc: 'SKILL.md provides complete documentation' },
               { name: 'AI-Ready', desc: 'Designed for use by AI agents and LLMs' },
-              { name: 'Portable', desc: 'Works across different platforms and contexts' },
+              { name: 'Portable', desc: 'Works across different platforms' },
             ].map((feature) => (
               <div key={feature.name} className="card">
-                <h3 className="text-lg font-semibold text-purple-400 mb-2">{feature.name}</h3>
-                <p className="text-sm text-univrs-text-muted">{feature.desc}</p>
+                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--spore-purple)' }}>{feature.name}</h3>
+                <p className="text-sm" style={{ color: 'var(--soft-gray)' }}>{feature.desc}</p>
               </div>
             ))}
           </div>
@@ -74,45 +79,35 @@ export default function SkillsIndex() {
       {/* Example SKILL.md */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-univrs-text-primary mb-8">Example SKILL.md</h2>
-          <div className="bg-univrs-bg-secondary rounded-xl border border-white/5 overflow-hidden">
-            <div className="px-4 py-2 bg-univrs-bg-tertiary border-b border-white/5 flex items-center gap-2">
-              <span className="text-xs text-univrs-text-muted font-mono">SKILL.md</span>
+          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Example SKILL.md</h2>
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+            <div className="px-4 py-2 flex items-center gap-2" style={{ backgroundColor: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-subtle)' }}>
+              <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>SKILL.md</span>
             </div>
-            <pre className="p-6 text-sm font-mono text-univrs-secondary-400 overflow-x-auto">
-{`# Code Analysis Skill
+            <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--spore-purple)' }}>
+{`---
+name: "Code Analysis"
+description: "Analyze code for quality and performance."
+---
 
-## Metadata
-- name: code-analysis
-- version: 1.0.0
-- author: univrs
+# Code Analysis
 
-## Capabilities
-- static-analysis
-- dependency-tracking
-- complexity-metrics
+## What This Skill Does
+Static analysis and metrics for your codebase.
 
-## Requirements
-- node >= 18.0.0
-- llvm >= 15.0.0
-
-## Usage
+## Quick Start
 \`\`\`bash
-skill invoke code-analysis --target ./src
-\`\`\`
-
-## API
-### analyze(path: string): AnalysisReport
-Analyzes the code at the given path and returns a report.`}
+claude "Analyze the src/ directory"
+\`\`\``}
             </pre>
           </div>
         </div>
       </section>
 
       {/* Navigation sections */}
-      <section className="py-16 bg-univrs-bg-secondary">
+      <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-univrs-text-primary mb-8">Explore Skills</h2>
+          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Explore Skills</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {sections.map((section) => (
               <Link
@@ -120,12 +115,12 @@ Analyzes the code at the given path and returns a report.`}
                 to={section.href}
                 className="card group"
               >
-                <section.icon className="w-8 h-8 text-purple-400 mb-4" />
-                <h3 className="text-lg font-semibold text-univrs-text-primary mb-2 group-hover:text-purple-400 transition-colors">
+                <section.icon className="w-8 h-8 mb-4" style={{ color: 'var(--spore-purple)' }} />
+                <h3 className="text-lg font-semibold mb-2 group-hover:opacity-80 transition-opacity" style={{ color: 'var(--text-primary)' }}>
                   {section.name}
                 </h3>
-                <p className="text-sm text-univrs-text-muted mb-4">{section.description}</p>
-                <div className="flex items-center text-sm text-purple-400">
+                <p className="text-sm mb-4" style={{ color: 'var(--soft-gray)' }}>{section.description}</p>
+                <div className="flex items-center text-sm" style={{ color: 'var(--spore-purple)' }}>
                   Explore
                   <ArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -135,5 +130,16 @@ Analyzes the code at the given path and returns a report.`}
         </div>
       </section>
     </>
+  )
+}
+
+export default function SkillsIndex() {
+  return (
+    <Routes>
+      <Route index element={<SkillsOverview />} />
+      <Route path="catalog" element={<SkillsCatalog />} />
+      <Route path="create" element={<SkillsCreate />} />
+      <Route path="spec" element={<SkillsSpec />} />
+    </Routes>
   )
 }

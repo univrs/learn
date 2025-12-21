@@ -1,6 +1,9 @@
-import { Link } from 'react-router-dom'
+import { Routes, Route, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { FileCode, BookOpen, Library, Code2, ArrowRight } from 'lucide-react'
+import DOLLearn from './Learn'
+import DOLReference from './Reference'
+import DOLStdlib from './Stdlib'
 
 const sections = [
   {
@@ -23,7 +26,7 @@ const sections = [
   },
 ]
 
-export default function DOLIndex() {
+function DOLOverview() {
   return (
     <>
       <Helmet>
@@ -36,25 +39,27 @@ export default function DOLIndex() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-univrs-primary-500 to-univrs-primary-700 flex items-center justify-center">
-                <FileCode className="w-6 h-6 text-white" />
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg, var(--glow-cyan), var(--glow-cyan-dim))' }}
+              >
+                <FileCode className="w-6 h-6" style={{ color: 'var(--void)' }} />
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-univrs-text-primary">
+              <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
                 Design Ontology Language
               </h1>
             </div>
-            <p className="text-xl text-univrs-text-secondary mb-8">
+            <p className="text-xl" style={{ color: 'var(--text-secondary)' }}>
               A specification language for systems that know what they should be.
-              Write specs first. Generate tests. Implement with confidence.
             </p>
           </div>
         </div>
       </section>
 
       {/* Key Concepts */}
-      <section className="py-16 bg-univrs-bg-secondary">
+      <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-univrs-text-primary mb-8">Key Concepts</h2>
+          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Key Concepts</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { name: 'Genes', desc: 'Define properties and data structures' },
@@ -63,8 +68,8 @@ export default function DOLIndex() {
               { name: 'Systems', desc: 'Compose genes, traits, and constraints' },
             ].map((concept) => (
               <div key={concept.name} className="card">
-                <h3 className="text-lg font-semibold text-univrs-primary-400 mb-2">{concept.name}</h3>
-                <p className="text-sm text-univrs-text-muted">{concept.desc}</p>
+                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--glow-cyan)' }}>{concept.name}</h3>
+                <p className="text-sm" style={{ color: 'var(--soft-gray)' }}>{concept.desc}</p>
               </div>
             ))}
           </div>
@@ -74,29 +79,21 @@ export default function DOLIndex() {
       {/* Example */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-univrs-text-primary mb-8">Quick Example</h2>
-          <div className="bg-univrs-bg-secondary rounded-xl border border-white/5 overflow-hidden">
-            <div className="px-4 py-2 bg-univrs-bg-tertiary border-b border-white/5 flex items-center gap-2">
-              <span className="text-xs text-univrs-text-muted font-mono">example.dol</span>
+          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Quick Example</h2>
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+            <div className="px-4 py-2 flex items-center gap-2" style={{ backgroundColor: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-subtle)' }}>
+              <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>example.dol</span>
             </div>
-            <pre className="p-6 text-sm font-mono text-univrs-secondary-400 overflow-x-auto">
-{`// Define a system with physical properties
-system Particle {
-  // Genes define data
-  gene position: Vector3
-  gene velocity: Vector3
-  gene mass: Float
+            <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`gene container.exists @1.0.0 {
+    """
+    A container exists in the system with unique identity.
+    """
 
-  // Traits define behavior
-  trait Movable {
-    fn update(dt: Float) {
-      position += velocity * dt
-    }
-  }
-
-  // Constraints define rules
-  constraint mass > 0.0
-  constraint magnitude(velocity) <= SPEED_OF_LIGHT
+    has identifier: string
+    has state: ContainerState
+    is entity
+    is persistent
 }`}
             </pre>
           </div>
@@ -104,9 +101,9 @@ system Particle {
       </section>
 
       {/* Navigation sections */}
-      <section className="py-16 bg-univrs-bg-secondary">
+      <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-univrs-text-primary mb-8">Explore DOL</h2>
+          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Explore DOL</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {sections.map((section) => (
               <Link
@@ -114,12 +111,12 @@ system Particle {
                 to={section.href}
                 className="card group"
               >
-                <section.icon className="w-8 h-8 text-univrs-primary-400 mb-4" />
-                <h3 className="text-lg font-semibold text-univrs-text-primary mb-2 group-hover:text-univrs-primary-400 transition-colors">
+                <section.icon className="w-8 h-8 mb-4" style={{ color: 'var(--glow-cyan)' }} />
+                <h3 className="text-lg font-semibold mb-2 group-hover:opacity-80 transition-opacity" style={{ color: 'var(--text-primary)' }}>
                   {section.name}
                 </h3>
-                <p className="text-sm text-univrs-text-muted mb-4">{section.description}</p>
-                <div className="flex items-center text-sm text-univrs-primary-400">
+                <p className="text-sm mb-4" style={{ color: 'var(--soft-gray)' }}>{section.description}</p>
+                <div className="flex items-center text-sm" style={{ color: 'var(--glow-cyan)' }}>
                   Explore
                   <ArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -129,5 +126,16 @@ system Particle {
         </div>
       </section>
     </>
+  )
+}
+
+export default function DOLIndex() {
+  return (
+    <Routes>
+      <Route index element={<DOLOverview />} />
+      <Route path="learn" element={<DOLLearn />} />
+      <Route path="reference" element={<DOLReference />} />
+      <Route path="stdlib" element={<DOLStdlib />} />
+    </Routes>
   )
 }
