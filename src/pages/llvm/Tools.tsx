@@ -47,7 +47,7 @@ export default function LLVMTools() {
           </div>
           <div className="flex items-center gap-3 mb-6">
             <Wrench className="w-10 h-10" style={{ color: 'var(--glow-gold)' }} />
-            <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            <h1 className="text-3xl sm:text-4xl font-light" style={{ color: 'var(--text-primary)' }}>
               MCP Tools
             </h1>
           </div>
@@ -60,7 +60,7 @@ export default function LLVMTools() {
       {/* Architecture */}
       <section className="py-12" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Translation Flow</h2>
+          <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>Translation Flow</h2>
           <div className="flex flex-wrap items-center justify-center gap-4 text-sm font-mono">
             {['Julia Code', 'LLVM IR', 'Analysis', 'Code Gen', 'Zig/Rust'].map((step, i) => (
               <div key={step} className="flex items-center gap-4">
@@ -77,14 +77,14 @@ export default function LLVMTools() {
       {/* Available Tools */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Available Tools</h2>
+          <h2 className="text-2xl font-light mb-8" style={{ color: 'var(--text-primary)' }}>Available Tools</h2>
           <div className="grid md:grid-cols-2 gap-6">
             {tools.map((tool) => (
               <div key={tool.name} className="card">
                 <div className="flex items-start gap-4">
                   <tool.icon className="w-6 h-6 flex-shrink-0" style={{ color: 'var(--glow-gold)' }} />
                   <div>
-                    <h3 className="font-mono font-semibold mb-2" style={{ color: 'var(--glow-gold)' }}>
+                    <h3 className="font-mono font-normal mb-2" style={{ color: 'var(--glow-gold)' }}>
                       {tool.name}
                     </h3>
                     <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
@@ -112,7 +112,7 @@ export default function LLVMTools() {
       {/* Example Request */}
       <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Example Request</h2>
+          <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>Example Request</h2>
           <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)' }}>
             <div className="px-4 py-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
               <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>JSON-RPC</span>
@@ -133,7 +133,7 @@ export default function LLVMTools() {
       {/* Capabilities */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Capabilities</h2>
+          <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>Capabilities</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               'Type mapping (i64, f64, ptr, arrays)',

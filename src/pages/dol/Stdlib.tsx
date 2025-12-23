@@ -51,7 +51,7 @@ export default function DOLStdlib() {
           </div>
           <div className="flex items-center gap-3 mb-6">
             <Library className="w-10 h-10" style={{ color: 'var(--glow-cyan)' }} />
-            <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            <h1 className="text-3xl sm:text-4xl font-light" style={{ color: 'var(--text-primary)' }}>
               Standard Library
             </h1>
           </div>
@@ -65,13 +65,13 @@ export default function DOLStdlib() {
       {/* Three Layers Diagram */}
       <section className="py-12" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>
             The Three Layers of System Design
           </h2>
           <div className="space-y-4">
             <div className="card" style={{ borderLeft: '4px solid var(--glow-cyan)' }}>
               <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold" style={{ color: 'var(--glow-cyan)' }}>Ontological Layer</h3>
+                <h3 className="font-normal" style={{ color: 'var(--glow-cyan)' }}>Ontological Layer</h3>
                 <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'var(--glow-cyan-dim)', color: 'var(--glow-cyan)' }}>
                   Decades to centuries
                 </span>
@@ -85,7 +85,7 @@ export default function DOLStdlib() {
             </div>
             <div className="card" style={{ borderLeft: '4px solid var(--glow-gold)' }}>
               <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold" style={{ color: 'var(--glow-gold)' }}>Architectural Layer</h3>
+                <h3 className="font-normal" style={{ color: 'var(--glow-gold)' }}>Architectural Layer</h3>
                 <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'var(--glow-gold-dim)', color: 'var(--glow-gold)' }}>
                   Years to decades
                 </span>
@@ -99,7 +99,7 @@ export default function DOLStdlib() {
             </div>
             <div className="card" style={{ borderLeft: '4px solid var(--spore-purple)' }}>
               <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold" style={{ color: 'var(--spore-purple)' }}>Implementation Layer</h3>
+                <h3 className="font-normal" style={{ color: 'var(--spore-purple)' }}>Implementation Layer</h3>
                 <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(176, 136, 249, 0.2)', color: 'var(--spore-purple)' }}>
                   Months to years
                 </span>
@@ -118,7 +118,7 @@ export default function DOLStdlib() {
       {/* Modules */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="text-2xl font-light mb-8" style={{ color: 'var(--text-primary)' }}>
             Standard Library Modules
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
@@ -127,7 +127,7 @@ export default function DOLStdlib() {
                 <div className="flex items-start gap-4">
                   <module.icon className="w-8 h-8 flex-shrink-0" style={{ color: module.color }} />
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold mb-2 group-hover:opacity-80 transition-opacity" style={{ color: module.color }}>
+                    <h3 className="text-lg font-normal mb-2 group-hover:opacity-80 transition-opacity" style={{ color: module.color }}>
                       {module.name}
                     </h3>
                     <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
@@ -156,7 +156,7 @@ export default function DOLStdlib() {
       {/* Physical Grounding */}
       <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>
             Physical Grounding: The Non-Negotiables
           </h2>
           <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
@@ -172,7 +172,7 @@ export default function DOLStdlib() {
               { title: "Landauer's Principle", desc: 'Erasing information has a minimum energy cost.' },
             ].map((principle) => (
               <div key={principle.title} className="p-4 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-                <h4 className="font-semibold text-sm mb-2" style={{ color: 'var(--glow-cyan)' }}>{principle.title}</h4>
+                <h4 className="font-normal text-sm mb-2" style={{ color: 'var(--glow-cyan)' }}>{principle.title}</h4>
                 <p className="text-xs" style={{ color: 'var(--soft-gray)' }}>{principle.desc}</p>
               </div>
             ))}
@@ -183,7 +183,7 @@ export default function DOLStdlib() {
       {/* Bits ↔ Atoms */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>
             The Bidirectional Bridge: Bits ↔ Atoms
           </h2>
           <div className="rounded-xl p-8 font-mono text-sm text-center" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>

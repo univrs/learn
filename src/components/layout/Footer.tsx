@@ -36,7 +36,7 @@ export default function Footer() {
                 className="w-8 h-8 rounded-lg object-cover"
               />
               <span
-                className="text-lg font-semibold"
+                className="text-lg font-normal"
                 style={{ color: 'var(--text-primary)' }}
               >
                 Univrs Learn
@@ -53,7 +53,7 @@ export default function Footer() {
           {/* Documentation */}
           <div>
             <h3
-              className="text-sm font-semibold mb-4"
+              className="text-sm font-normal mb-4"
               style={{ color: 'var(--text-primary)' }}
             >
               Documentation
@@ -78,7 +78,7 @@ export default function Footer() {
           {/* Ecosystem */}
           <div>
             <h3
-              className="text-sm font-semibold mb-4"
+              className="text-sm font-normal mb-4"
               style={{ color: 'var(--text-primary)' }}
             >
               Ecosystem
@@ -106,7 +106,7 @@ export default function Footer() {
           {/* Community */}
           <div>
             <h3
-              className="text-sm font-semibold mb-4"
+              className="text-sm font-normal mb-4"
               style={{ color: 'var(--text-primary)' }}
             >
               Community

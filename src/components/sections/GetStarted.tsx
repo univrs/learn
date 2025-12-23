@@ -46,7 +46,7 @@ export default function GetStarted() {
         {/* Section header */}
         <div className="text-center mb-16">
           <h2
-            className="text-3xl sm:text-4xl font-bold mb-4"
+            className="text-3xl sm:text-4xl font-light mb-4"
             style={{ color: 'var(--text-primary)' }}
           >
             Quick Start
@@ -66,7 +66,7 @@ export default function GetStarted() {
               {/* Step number */}
               <div className="flex items-center gap-3 mb-4">
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-light"
                   style={{
                     backgroundColor: 'var(--glow-cyan-dim)',
                     color: 'var(--glow-cyan)'
@@ -75,7 +75,7 @@ export default function GetStarted() {
                   {index + 1}
                 </div>
                 <h3
-                  className="text-lg font-semibold"
+                  className="text-lg font-normal"
                   style={{ color: 'var(--text-primary)' }}
                 >
                   {step.title}

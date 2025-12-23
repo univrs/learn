@@ -72,7 +72,7 @@ export default function DOLLearn() {
                             style={{ color: "var(--glow-cyan)" }}
                         />
                         <h1
-                            className="text-3xl sm:text-4xl font-bold"
+                            className="text-3xl sm:text-4xl font-light"
                             style={{ color: "var(--text-primary)" }}
                         >
                             Learn DOL
@@ -96,7 +96,7 @@ export default function DOLLearn() {
             >
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <h2
-                        className="text-2xl font-bold mb-6"
+                        className="text-2xl font-light mb-6"
                         style={{ color: "var(--text-primary)" }}
                     >
                         The DOL-First Paradigm
@@ -104,7 +104,7 @@ export default function DOLLearn() {
                     <div className="grid md:grid-cols-2 gap-8">
                         <div className="card">
                             <h3
-                                className="text-lg font-semibold mb-3"
+                                className="text-lg font-normal mb-3"
                                 style={{ color: "var(--soft-gray)" }}
                             >
                                 Traditional Development
@@ -126,7 +126,7 @@ export default function DOLLearn() {
                             }}
                         >
                             <h3
-                                className="text-lg font-semibold mb-3"
+                                className="text-lg font-normal mb-3"
                                 style={{ color: "var(--glow-cyan)" }}
                             >
                                 DOL-First Development
@@ -157,7 +157,7 @@ export default function DOLLearn() {
             <section className="py-16">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <h2
-                        className="text-2xl font-bold mb-8"
+                        className="text-2xl font-light mb-8"
                         style={{ color: "var(--text-primary)" }}
                     >
                         Tutorial Series
@@ -170,7 +170,7 @@ export default function DOLLearn() {
                             >
                                 <div className="flex items-start gap-6">
                                     <div
-                                        className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center text-lg font-bold"
+                                        className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center text-lg font-light"
                                         style={{
                                             backgroundColor:
                                                 "var(--glow-cyan-dim)",
@@ -181,7 +181,7 @@ export default function DOLLearn() {
                                     </div>
                                     <div className="flex-1">
                                         <h3
-                                            className="text-lg font-semibold mb-2 group-hover:text-univrs-primary-400 transition-colors"
+                                            className="text-lg font-normal mb-2 group-hover:text-univrs-primary-400 transition-colors"
                                             style={{
                                                 color: "var(--text-primary)",
                                             }}
@@ -230,7 +230,7 @@ export default function DOLLearn() {
             >
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <h2
-                        className="text-2xl font-bold mb-8"
+                        className="text-2xl font-light mb-8"
                         style={{ color: "var(--text-primary)" }}
                     >
                         Your First DOL File
@@ -332,7 +332,7 @@ export default function DOLLearn() {
             <section className="py-16">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <h2
-                        className="text-2xl font-bold mb-8"
+                        className="text-2xl font-light mb-8"
                         style={{ color: "var(--text-primary)" }}
                     >
                         What You Can Build
@@ -358,7 +358,7 @@ export default function DOLLearn() {
                         ].map((item) => (
                             <div key={item.title} className="card">
                                 <h3
-                                    className="font-semibold mb-2"
+                                    className="font-normal mb-2"
                                     style={{ color: "var(--glow-cyan)" }}
                                 >
                                     {item.title}

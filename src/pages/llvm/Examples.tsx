@@ -20,7 +20,7 @@ export default function LLVMExamples() {
           </div>
           <div className="flex items-center gap-3 mb-6">
             <Code2 className="w-10 h-10" style={{ color: 'var(--glow-gold)' }} />
-            <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            <h1 className="text-3xl sm:text-4xl font-light" style={{ color: 'var(--text-primary)' }}>
               Translation Examples
             </h1>
           </div>
@@ -33,7 +33,7 @@ export default function LLVMExamples() {
       {/* Julia Source */}
       <section className="py-12" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Julia Source</h2>
+          <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>Julia Source</h2>
           <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)' }}>
             <div className="px-4 py-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
               <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>optimizer.jl</span>
@@ -60,7 +60,7 @@ end`}
       {/* Zig Translation */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Zig Translation</h2>
+          <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>Zig Translation</h2>
           <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
             <div className="px-4 py-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
               <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>optimizer.zig</span>
@@ -88,7 +88,7 @@ pub const MomentumOptimizer = struct {
       {/* Rust Translation */}
       <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Rust Translation</h2>
+          <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>Rust Translation</h2>
           <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)' }}>
             <div className="px-4 py-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
               <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>optimizer.rs</span>
@@ -117,7 +117,7 @@ impl MomentumOptimizer {
       {/* Key Mappings */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Type Mappings</h2>
+          <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>Type Mappings</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>

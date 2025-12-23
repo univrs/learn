@@ -45,7 +45,7 @@ function LLVMOverview() {
               >
                 <Cpu className="w-6 h-6" style={{ color: 'var(--void)' }} />
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
+              <h1 className="text-3xl sm:text-4xl font-light" style={{ color: 'var(--text-primary)' }}>
                 LLVM Translation Tools
               </h1>
             </div>
@@ -59,7 +59,7 @@ function LLVMOverview() {
       {/* Capabilities */}
       <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Capabilities</h2>
+          <h2 className="text-2xl font-light mb-8" style={{ color: 'var(--text-primary)' }}>Capabilities</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { name: 'MCP Server', desc: 'Model Context Protocol for AI integration' },
@@ -68,7 +68,7 @@ function LLVMOverview() {
               { name: 'LLVM IR', desc: 'Direct access to intermediate representation' },
             ].map((cap) => (
               <div key={cap.name} className="card">
-                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--glow-gold)' }}>{cap.name}</h3>
+                <h3 className="text-lg font-normal mb-2" style={{ color: 'var(--glow-gold)' }}>{cap.name}</h3>
                 <p className="text-sm" style={{ color: 'var(--soft-gray)' }}>{cap.desc}</p>
               </div>
             ))}
@@ -79,7 +79,7 @@ function LLVMOverview() {
       {/* Quick Start */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Quick Start</h2>
+          <h2 className="text-2xl font-light mb-8" style={{ color: 'var(--text-primary)' }}>Quick Start</h2>
           <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
             <div className="px-4 py-2 flex items-center gap-2" style={{ backgroundColor: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-subtle)' }}>
               <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>terminal</span>
@@ -101,7 +101,7 @@ cargo run --bin llvm-mcp-server`}
       {/* Navigation sections */}
       <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Explore LLVM Tools</h2>
+          <h2 className="text-2xl font-light mb-8" style={{ color: 'var(--text-primary)' }}>Explore LLVM Tools</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {sections.map((section) => (
               <Link
@@ -110,7 +110,7 @@ cargo run --bin llvm-mcp-server`}
                 className="card group"
               >
                 <section.icon className="w-8 h-8 mb-4" style={{ color: 'var(--glow-gold)' }} />
-                <h3 className="text-lg font-semibold mb-2 group-hover:opacity-80 transition-opacity" style={{ color: 'var(--text-primary)' }}>
+                <h3 className="text-lg font-normal mb-2 group-hover:opacity-80 transition-opacity" style={{ color: 'var(--text-primary)' }}>
                   {section.name}
                 </h3>
                 <p className="text-sm mb-4" style={{ color: 'var(--soft-gray)' }}>{section.description}</p>

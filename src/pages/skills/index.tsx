@@ -45,7 +45,7 @@ function SkillsOverview() {
               >
                 <Puzzle className="w-6 h-6" style={{ color: 'white' }} />
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
+              <h1 className="text-3xl sm:text-4xl font-light" style={{ color: 'var(--text-primary)' }}>
                 Skills Framework
               </h1>
             </div>
@@ -59,7 +59,7 @@ function SkillsOverview() {
       {/* What are Skills */}
       <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>What are Skills?</h2>
+          <h2 className="text-2xl font-light mb-8" style={{ color: 'var(--text-primary)' }}>What are Skills?</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { name: 'Composable', desc: 'Combine skills to create complex capabilities' },
@@ -68,7 +68,7 @@ function SkillsOverview() {
               { name: 'Portable', desc: 'Works across different platforms' },
             ].map((feature) => (
               <div key={feature.name} className="card">
-                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--spore-purple)' }}>{feature.name}</h3>
+                <h3 className="text-lg font-normal mb-2" style={{ color: 'var(--spore-purple)' }}>{feature.name}</h3>
                 <p className="text-sm" style={{ color: 'var(--soft-gray)' }}>{feature.desc}</p>
               </div>
             ))}
@@ -79,7 +79,7 @@ function SkillsOverview() {
       {/* Example SKILL.md */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Example SKILL.md</h2>
+          <h2 className="text-2xl font-light mb-8" style={{ color: 'var(--text-primary)' }}>Example SKILL.md</h2>
           <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
             <div className="px-4 py-2 flex items-center gap-2" style={{ backgroundColor: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-subtle)' }}>
               <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>SKILL.md</span>
@@ -107,7 +107,7 @@ claude "Analyze the src/ directory"
       {/* Navigation sections */}
       <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Explore Skills</h2>
+          <h2 className="text-2xl font-light mb-8" style={{ color: 'var(--text-primary)' }}>Explore Skills</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {sections.map((section) => (
               <Link
@@ -116,7 +116,7 @@ claude "Analyze the src/ directory"
                 className="card group"
               >
                 <section.icon className="w-8 h-8 mb-4" style={{ color: 'var(--spore-purple)' }} />
-                <h3 className="text-lg font-semibold mb-2 group-hover:opacity-80 transition-opacity" style={{ color: 'var(--text-primary)' }}>
+                <h3 className="text-lg font-normal mb-2 group-hover:opacity-80 transition-opacity" style={{ color: 'var(--text-primary)' }}>
                   {section.name}
                 </h3>
                 <p className="text-sm mb-4" style={{ color: 'var(--soft-gray)' }}>{section.description}</p>

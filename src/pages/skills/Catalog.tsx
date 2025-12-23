@@ -48,7 +48,7 @@ export default function SkillsCatalog() {
           </div>
           <div className="flex items-center gap-3 mb-6">
             <Grid className="w-10 h-10" style={{ color: 'var(--spore-purple)' }} />
-            <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            <h1 className="text-3xl sm:text-4xl font-light" style={{ color: 'var(--text-primary)' }}>
               Skills Catalog
             </h1>
           </div>
@@ -103,7 +103,7 @@ export default function SkillsCatalog() {
             {filtered.map((skill) => (
               <div key={skill.name} className="card group cursor-pointer">
                 <div className="flex items-start justify-between mb-3">
-                  <h3 className="font-semibold group-hover:text-purple-400 transition-colors" style={{ color: 'var(--text-primary)' }}>
+                  <h3 className="font-normal group-hover:text-purple-400 transition-colors" style={{ color: 'var(--text-primary)' }}>
                     {skill.name}
                   </h3>
                   <span

@@ -8,7 +8,7 @@ export default function Hero() {
         <div className="text-center animate-fade-up">
           {/* Tagline */}
           <p
-            className="text-sm font-semibold uppercase tracking-[0.2em] mb-6 flex items-center justify-center gap-4"
+            className="text-sm font-normal uppercase tracking-[0.2em] mb-6 flex items-center justify-center gap-4"
             style={{ color: 'var(--glow-cyan)' }}
           >
             <span
@@ -24,7 +24,7 @@ export default function Hero() {
 
           {/* Heading */}
           <h1
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6"
+            className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight mb-6"
             style={{ color: 'var(--text-primary)' }}
           >
             <span className="gradient-text">Univrs</span> Learn

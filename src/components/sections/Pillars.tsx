@@ -41,7 +41,7 @@ export default function Pillars() {
         {/* Section header */}
         <div className="text-center mb-16">
           <h2
-            className="text-3xl sm:text-4xl font-bold mb-4"
+            className="text-3xl sm:text-4xl font-light mb-4"
             style={{ color: 'var(--text-primary)' }}
           >
             Three Pillars of Univrs
@@ -72,7 +72,7 @@ export default function Pillars() {
 
               {/* Content */}
               <h3
-                className="text-xl font-semibold mb-2 transition-colors"
+                className="text-xl font-normal mb-2 transition-colors"
                 style={{ color: 'var(--text-primary)' }}
               >
                 {pillar.name}

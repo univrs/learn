@@ -55,7 +55,7 @@ function DOLOverview() {
                                 />
                             </div>
                             <h1
-                                className="text-3xl sm:text-4xl font-bold"
+                                className="text-3xl sm:text-4xl font-light"
                                 style={{ color: "var(--text-primary)" }}
                             >
                                 Design Ontology Language
@@ -79,7 +79,7 @@ function DOLOverview() {
             >
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <h2
-                        className="text-2xl font-bold mb-8"
+                        className="text-2xl font-light mb-8"
                         style={{ color: "var(--text-primary)" }}
                     >
                         Key Concepts
@@ -105,7 +105,7 @@ function DOLOverview() {
                         ].map((concept) => (
                             <div key={concept.name} className="card">
                                 <h3
-                                    className="text-lg font-semibold mb-2"
+                                    className="text-lg font-normal mb-2"
                                     style={{ color: "var(--glow-cyan)" }}
                                 >
                                     {concept.name}
@@ -126,7 +126,7 @@ function DOLOverview() {
             <section className="py-16">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <h2
-                        className="text-2xl font-bold mb-8"
+                        className="text-2xl font-light mb-8"
                         style={{ color: "var(--text-primary)" }}
                     >
                         Quick Example
@@ -179,7 +179,7 @@ function DOLOverview() {
             >
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <h2
-                        className="text-2xl font-bold mb-8"
+                        className="text-2xl font-light mb-8"
                         style={{ color: "var(--text-primary)" }}
                     >
                         Explore DOL
@@ -196,7 +196,7 @@ function DOLOverview() {
                                     style={{ color: "var(--glow-cyan)" }}
                                 />
                                 <h3
-                                    className="text-lg font-semibold mb-2 group-hover:opacity-80 transition-opacity"
+                                    className="text-lg font-normal mb-2 group-hover:opacity-80 transition-opacity"
                                     style={{ color: "var(--text-primary)" }}
                                 >
                                     {section.name}

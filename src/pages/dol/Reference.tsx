@@ -36,7 +36,7 @@ export default function DOLReference() {
           </div>
           <div className="flex items-center gap-3 mb-6">
             <Code2 className="w-10 h-10" style={{ color: 'var(--glow-cyan)' }} />
-            <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            <h1 className="text-3xl sm:text-4xl font-light" style={{ color: 'var(--text-primary)' }}>
               Language Reference
             </h1>
           </div>
@@ -49,7 +49,7 @@ export default function DOLReference() {
       {/* Design Principles */}
       <section className="py-12" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Design Principles</h2>
+          <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>Design Principles</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               { title: 'Declarative', desc: 'Describes what things are, not how they work' },
@@ -59,7 +59,7 @@ export default function DOLReference() {
               { title: 'Composable', desc: 'Complex behaviors are built from simple, atomic units' },
             ].map((principle) => (
               <div key={principle.title} className="card">
-                <h3 className="font-semibold mb-2" style={{ color: 'var(--glow-cyan)' }}>{principle.title}</h3>
+                <h3 className="font-normal mb-2" style={{ color: 'var(--glow-cyan)' }}>{principle.title}</h3>
                 <p className="text-sm" style={{ color: 'var(--soft-gray)' }}>{principle.desc}</p>
               </div>
             ))}
@@ -70,11 +70,11 @@ export default function DOLReference() {
       {/* Declaration Types */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Declaration Types</h2>
+          <h2 className="text-2xl font-light mb-8" style={{ color: 'var(--text-primary)' }}>Declaration Types</h2>
 
           {/* Gene */}
           <div className="mb-12">
-            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--glow-cyan)' }}>Gene Declarations</h3>
+            <h3 className="text-xl font-normal mb-4" style={{ color: 'var(--glow-cyan)' }}>Gene Declarations</h3>
             <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
               Genes are the atomic units of DOL. They declare fundamental truths that cannot be decomposed further.
             </p>
@@ -101,7 +101,7 @@ export default function DOLReference() {
 
           {/* Trait */}
           <div className="mb-12">
-            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--glow-gold)' }}>Trait Declarations</h3>
+            <h3 className="text-xl font-normal mb-4" style={{ color: 'var(--glow-gold)' }}>Trait Declarations</h3>
             <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
               Traits compose genes and declare behaviors. They represent composable capabilities.
             </p>
@@ -131,7 +131,7 @@ export default function DOLReference() {
 
           {/* Constraint */}
           <div className="mb-12">
-            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--spore-purple)' }}>Constraint Declarations</h3>
+            <h3 className="text-xl font-normal mb-4" style={{ color: 'var(--spore-purple)' }}>Constraint Declarations</h3>
             <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
               Constraints define invariants that must always hold true in the system.
             </p>
@@ -156,7 +156,7 @@ export default function DOLReference() {
 
           {/* System */}
           <div className="mb-12">
-            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>System Declarations</h3>
+            <h3 className="text-xl font-normal mb-4" style={{ color: 'var(--text-primary)' }}>System Declarations</h3>
             <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
               Systems are top-level compositions that bring together traits with version requirements.
             </p>
@@ -181,11 +181,11 @@ export default function DOLReference() {
       {/* Keywords */}
       <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Reserved Keywords</h2>
+          <h2 className="text-2xl font-light mb-8" style={{ color: 'var(--text-primary)' }}>Reserved Keywords</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {Object.entries(keywords).map(([category, words]) => (
               <div key={category} className="card">
-                <h3 className="text-sm font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--soft-gray)' }}>
+                <h3 className="text-sm font-normal uppercase tracking-wide mb-3" style={{ color: 'var(--soft-gray)' }}>
                   {category}
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -208,7 +208,7 @@ export default function DOLReference() {
       {/* Operators */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>Operators and Delimiters</h2>
+          <h2 className="text-2xl font-light mb-8" style={{ color: 'var(--text-primary)' }}>Operators and Delimiters</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
@@ -235,10 +235,10 @@ export default function DOLReference() {
       {/* File Conventions */}
       <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-primary)' }}>File Conventions</h2>
+          <h2 className="text-2xl font-light mb-8" style={{ color: 'var(--text-primary)' }}>File Conventions</h2>
           <div className="grid sm:grid-cols-2 gap-6">
             <div className="card">
-              <h3 className="font-semibold mb-3" style={{ color: 'var(--glow-cyan)' }}>Source Files</h3>
+              <h3 className="font-normal mb-3" style={{ color: 'var(--glow-cyan)' }}>Source Files</h3>
               <ul className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <li>Use the <code>.dol</code> extension</li>
                 <li>Each file contains exactly one primary declaration</li>
@@ -246,7 +246,7 @@ export default function DOLReference() {
               </ul>
             </div>
             <div className="card">
-              <h3 className="font-semibold mb-3" style={{ color: 'var(--glow-gold)' }}>Test Files</h3>
+              <h3 className="font-normal mb-3" style={{ color: 'var(--glow-gold)' }}>Test Files</h3>
               <ul className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <li>Use the <code>.dol.test</code> extension</li>
                 <li>Contain test declarations with given/when/then</li>

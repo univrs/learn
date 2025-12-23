@@ -13,7 +13,7 @@ export default function About() {
       <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <h1 className="text-3xl sm:text-4xl font-bold text-univrs-text-primary mb-6">
+            <h1 className="text-3xl sm:text-4xl font-light text-univrs-text-primary mb-6">
               About Univrs Meta-Tools
             </h1>
             <p className="text-xl text-univrs-text-secondary">
@@ -29,7 +29,7 @@ export default function About() {
           <div className="grid md:grid-cols-3 gap-8">
             <div className="card">
               <Target className="w-8 h-8 text-univrs-primary-400 mb-4" />
-              <h3 className="text-lg font-semibold text-univrs-text-primary mb-2">Specification-First</h3>
+              <h3 className="text-lg font-normal text-univrs-text-primary mb-2">Specification-First</h3>
               <p className="text-sm text-univrs-text-muted">
                 Define what your system should be before building it. Let specifications
                 drive implementation, testing, and documentation.
@@ -37,7 +37,7 @@ export default function About() {
             </div>
             <div className="card">
               <Lightbulb className="w-8 h-8 text-univrs-secondary-400 mb-4" />
-              <h3 className="text-lg font-semibold text-univrs-text-primary mb-2">Self-Aware Systems</h3>
+              <h3 className="text-lg font-normal text-univrs-text-primary mb-2">Self-Aware Systems</h3>
               <p className="text-sm text-univrs-text-muted">
                 Systems that understand their own structure, constraints, and capabilities.
                 Code that knows what it should be.
@@ -45,7 +45,7 @@ export default function About() {
             </div>
             <div className="card">
               <Users className="w-8 h-8 text-purple-400 mb-4" />
-              <h3 className="text-lg font-semibold text-univrs-text-primary mb-2">Composable Tools</h3>
+              <h3 className="text-lg font-normal text-univrs-text-primary mb-2">Composable Tools</h3>
               <p className="text-sm text-univrs-text-muted">
                 Small, focused tools that work together. Build complex systems from
                 simple, well-defined components.
@@ -58,7 +58,7 @@ export default function About() {
       {/* The Ecosystem */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-univrs-text-primary mb-8">The Ecosystem</h2>
+          <h2 className="text-2xl font-light text-univrs-text-primary mb-8">The Ecosystem</h2>
           <div className="prose prose-invert max-w-none">
             <p className="text-univrs-text-secondary text-lg mb-6">
               The Univrs meta-tools ecosystem consists of three main pillars:
@@ -87,7 +87,7 @@ export default function About() {
       {/* Contributing */}
       <section id="contributing" className="py-16 bg-univrs-bg-secondary">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-univrs-text-primary mb-8">Contributing</h2>
+          <h2 className="text-2xl font-light text-univrs-text-primary mb-8">Contributing</h2>
           <div className="card max-w-2xl">
             <p className="text-univrs-text-secondary mb-6">
               Univrs is an open-source project and we welcome contributions of all kinds:

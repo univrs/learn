@@ -137,8 +137,9 @@
     h4,
     h5,
     h6 {
+        font-family: "Space Grotesk", sans-serif;
         color: var(--text-primary);
-        font-weight: 600;
+        font-weight: 300;
         line-height: 1.2;
     }
 

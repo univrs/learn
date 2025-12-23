@@ -84,7 +84,7 @@ export default function Header() {
               />
             </span>
             <span
-              className="text-xl font-semibold"
+              className="text-xl font-normal"
               style={{ color: isDark ? '#e8f4ec' : '#1a221d' }}
             >
               Univrs.io

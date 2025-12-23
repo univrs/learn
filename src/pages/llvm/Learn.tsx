@@ -20,7 +20,7 @@ export default function LLVMLearn() {
           </div>
           <div className="flex items-center gap-3 mb-6">
             <BookOpen className="w-10 h-10" style={{ color: 'var(--glow-gold)' }} />
-            <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            <h1 className="text-3xl sm:text-4xl font-light" style={{ color: 'var(--text-primary)' }}>
               Quick Start
             </h1>
           </div>
@@ -33,7 +33,7 @@ export default function LLVMLearn() {
       {/* Prerequisites */}
       <section className="py-12" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Prerequisites</h2>
+          <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>Prerequisites</h2>
           <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)' }}>
             <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-gold)' }}>
 {`# Verify Julia is installed
@@ -52,7 +52,7 @@ zig version`}
       {/* Build */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Build the Server</h2>
+          <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>Build the Server</h2>
           <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
             <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-gold)' }}>
 {`cd llvm-translation-mcp
@@ -68,12 +68,12 @@ cargo build --release`}
       {/* Run Example */}
       <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Run Example Translation</h2>
+          <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>Run Example Translation</h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="card">
               <div className="flex items-center gap-2 mb-4">
                 <Play className="w-5 h-5" style={{ color: 'var(--glow-gold)' }} />
-                <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Option A: Demo Client</h3>
+                <h3 className="font-normal" style={{ color: 'var(--text-primary)' }}>Option A: Demo Client</h3>
               </div>
               <div className="rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
                 <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-gold)' }}>
@@ -88,7 +88,7 @@ python3 demo_client.py`}
             <div className="card">
               <div className="flex items-center gap-2 mb-4">
                 <Play className="w-5 h-5" style={{ color: 'var(--glow-gold)' }} />
-                <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Option B: Manual Testing</h3>
+                <h3 className="font-normal" style={{ color: 'var(--text-primary)' }}>Option B: Manual Testing</h3>
               </div>
               <div className="rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
                 <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-gold)' }}>
@@ -107,7 +107,7 @@ julia examples/optimizer.jl`}
       {/* Claude Desktop Integration */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Claude Desktop Integration</h2>
+          <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>Claude Desktop Integration</h2>
           <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
             Add to your Claude Desktop config:
           </p>
@@ -146,7 +146,7 @@ julia examples/optimizer.jl`}
       {/* Quick Reference */}
       <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Quick Reference</h2>
+          <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>Quick Reference</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
