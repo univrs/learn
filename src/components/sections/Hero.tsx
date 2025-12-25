@@ -48,21 +48,21 @@ export default function Hero() {
             }}
           >
             <div className="flex items-center gap-2">
-              <span style={{ color: 'var(--glow-cyan)' }}>631 Tests</span>
+              <span style={{ color: 'var(--glow-cyan)' }}>590 Tests</span>
             </div>
             <div
               className="hidden sm:block w-px h-4"
               style={{ backgroundColor: 'var(--soft-gray)' }}
             />
             <div className="flex items-center gap-2">
-              <span style={{ color: 'var(--glow-gold)' }}>v0.1.0 Released</span>
+              <span style={{ color: 'var(--glow-gold)' }}>v0.2.0 Meta-Programming</span>
             </div>
             <div
               className="hidden sm:block w-px h-4"
               style={{ backgroundColor: 'var(--soft-gray)' }}
             />
             <div className="flex items-center gap-2">
-              <span style={{ color: 'var(--spore-purple)' }}>Rust + WASM Targets</span>
+              <span style={{ color: 'var(--spore-purple)' }}>Quote/Eval + 18 Macros</span>
             </div>
           </div>
 

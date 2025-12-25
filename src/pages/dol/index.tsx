@@ -1,10 +1,13 @@
 import { Routes, Route, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { FileCode, BookOpen, Library, Code2, ArrowRight } from "lucide-react";
+import { FileCode, BookOpen, Library, Code2, ArrowRight, Sparkles, Zap } from "lucide-react";
 import DOLLearn from "./Learn";
 import DOLReference from "./Reference";
 import DOLStdlib from "./Stdlib";
 import DOLExamples from "./Examples";
+import DOLMetaprogramming from "./Metaprogramming";
+import DOLSex from "./Sex";
+import DOLCheatsheet from "./Cheatsheet";
 
 const sections = [
     {
@@ -12,6 +15,19 @@ const sections = [
         description: "Interactive tutorials from basics to advanced concepts",
         href: "/dol/learn",
         icon: BookOpen,
+    },
+    {
+        name: "Meta-Programming",
+        description: "Quote/Eval, Reflect, Macros, and Idiom Brackets",
+        href: "/dol/metaprogramming",
+        icon: Sparkles,
+        isNew: true,
+    },
+    {
+        name: "SEX System",
+        description: "Side Effect eXecution for controlled I/O",
+        href: "/dol/sex",
+        icon: Zap,
     },
     {
         name: "Examples",
@@ -196,8 +212,19 @@ function DOLOverview() {
                             <Link
                                 key={section.name}
                                 to={section.href}
-                                className="card group"
+                                className="card group relative"
                             >
+                                {'isNew' in section && section.isNew && (
+                                    <span
+                                        className="absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full"
+                                        style={{
+                                            backgroundColor: "var(--spore-purple)",
+                                            color: "var(--void)",
+                                        }}
+                                    >
+                                        New
+                                    </span>
+                                )}
                                 <section.icon
                                     className="w-8 h-8 mb-4"
                                     style={{ color: "var(--glow-cyan)" }}
@@ -235,9 +262,12 @@ export default function DOLIndex() {
         <Routes>
             <Route index element={<DOLOverview />} />
             <Route path="learn" element={<DOLLearn />} />
+            <Route path="metaprogramming" element={<DOLMetaprogramming />} />
+            <Route path="sex" element={<DOLSex />} />
             <Route path="examples" element={<DOLExamples />} />
             <Route path="reference" element={<DOLReference />} />
             <Route path="stdlib" element={<DOLStdlib />} />
+            <Route path="cheatsheet" element={<DOLCheatsheet />} />
         </Routes>
     );
 }
