@@ -80,22 +80,46 @@ export default function DOLReference() {
             </p>
             <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
-{`gene container.exists @1.0.0 {
-    has identity: String
-    has state: ContainerState
-    has boundaries: ResourceBoundaries
-    is entity
-    is persistent
+{`gene scheduling.resources {
+    // Node-level resource capacity
+    node has cpu_capacity
+    node has memory_capacity
+    node has gpu_capacity
 
-    exegesis {
-        A container is the fundamental unit of workload isolation.
-        Every container possesses these four essential properties.
-    }
+    // Container resource requests and limits
+    container has cpu_request
+    container has memory_request
+    container has cpu_limit
+    container has memory_limit
+
+    // Resource derivation relationships
+    allocatable derives from capacity
+    allocatable derives from reserved
+
+    // Resource quality constraints
+    each cpu_capacity is quantifiable
+    each cpu_capacity is non_negative
+    each cpu_capacity is measured_in millicores
+
+    each request is non_negative
+    each limit is non_negative
+    each limit is_greater_than_or_equal_to request
+
+    // Resource compressibility
+    cpu is compressible
+    memory is incompressible
+}
+
+exegesis {
+    The scheduling.resources gene defines the comprehensive resource model
+    for container orchestration. CPU is measured in millicores (1000m = 1 core),
+    memory in bytes. Compressible resources (CPU) are throttled when exceeded;
+    incompressible resources (memory) cause OOM-kill.
 }`}
               </pre>
             </div>
             <p className="mt-3 text-sm" style={{ color: 'var(--soft-gray)' }}>
-              Allowed statements: <code>has</code>, <code>is</code>, <code>derives from</code>, <code>requires</code>
+              Allowed statements: <code>has</code>, <code>is</code>, <code>derives from</code>, <code>requires</code>, <code>each</code>
             </p>
           </div>
 
@@ -107,25 +131,47 @@ export default function DOLReference() {
             </p>
             <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-gold)' }}>
-{`trait container.lifecycle @1.0.0 {
-    uses container.exists
-    uses identity.cryptographic
+{`trait scheduling.filter {
+    uses scheduling.resources
+    uses scheduling.nodes
 
-    container is created
-    container is started
-    container is stopped
+    filter has predicates
+    filter has node_pool
+    filter has eligible_nodes
 
-    each transition emits event
+    predicate has node_selector
+    predicate has node_affinity
+    predicate has tolerations
 
-    exegesis {
-        The container lifecycle defines the state machine that governs
-        container execution from creation through termination.
-    }
+    toleration has key
+    toleration has operator
+    toleration has value
+    toleration has effect
+
+    filter has resource_feasibility_check
+    resource_feasibility_check validates cpu_capacity
+    resource_feasibility_check validates memory_capacity
+
+    each filter is deterministic
+    each filter is parallelizable
+    each filter is stateless
+
+    filter requires node_pool
+    filter produces eligible_nodes
+
+    filter phase precedes scoring_phase
+    filter phase reduces search_space
+}
+
+exegesis {
+    The scheduling filter trait defines the first phase of pod scheduling:
+    node filtering. It eliminates nodes that cannot satisfy workload
+    requirements, reducing the search space for scoring and selection.
 }`}
               </pre>
             </div>
             <p className="mt-3 text-sm" style={{ color: 'var(--soft-gray)' }}>
-              Allowed statements: <code>uses</code>, <code>has</code>, <code>is</code>, <code>emits</code>, quantified statements
+              Allowed statements: <code>uses</code>, <code>has</code>, <code>is</code>, <code>validates</code>, <code>requires</code>, <code>produces</code>, <code>each</code>
             </p>
           </div>
 
@@ -137,20 +183,42 @@ export default function DOLReference() {
             </p>
             <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--spore-purple)' }}>
-{`constraint container.integrity @1.0.0 {
-    state matches declared
-    identity never changes
-    boundaries never expand
+{`constraint scheduling.feasibility {
+    node_capacity never exceeded
+    node_status requires ready
+    resource_requests is bounded_by_limits
 
-    exegesis {
-        Container integrity constraints ensure runtime state matches
-        the declared ontology. Violations indicate system errors.
-    }
+    anti_affinity_rules has enforcement
+    enforcement is hard
+    enforcement is soft
+
+    pod_spreading has topology_constraint
+    topology_constraint requires domain_key
+
+    taints requires matching_tolerations
+    matching_tolerations has operator
+    operator is equal
+    operator is present
+
+    volume_affinity requires available_zone
+
+    pod_priority is comparable
+    preemption requires lower_priority_target
+
+    scheduling_decision is atomic
+    scheduling_decision requires validation
+    binding_conflict triggers reschedule
+}
+
+exegesis {
+    The scheduling.feasibility constraint defines invariants for pod placement.
+    A node cannot accept a pod if capacity is exceeded, status is not ready,
+    taints lack matching tolerations, or anti-affinity rules are violated.
 }`}
               </pre>
             </div>
             <p className="mt-3 text-sm" style={{ color: 'var(--soft-gray)' }}>
-              Allowed statements: <code>matches</code>, <code>never</code>, <code>has</code>, <code>is</code>
+              Allowed statements: <code>never</code>, <code>requires</code>, <code>has</code>, <code>is</code>, <code>triggers</code>
             </p>
           </div>
 
@@ -162,18 +230,29 @@ export default function DOLReference() {
             </p>
             <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-primary)' }}>
-{`system univrs.orchestrator @0.1.0 {
-    requires container.lifecycle >= 0.0.2
-    requires node.discovery >= 0.0.1
-    requires identity.cryptographic = 1.0.0
+{`system scheduling.scheduler @0.1.0 {
+    requires scheduling.resources >= 0.0.1
+    requires scheduling.filter >= 0.0.1
+    requires scheduling.score >= 0.0.1
+    requires scheduling.select >= 0.0.1
+    requires scheduling.bind >= 0.0.1
 
-    exegesis {
-        The Univrs orchestrator manages container lifecycles,
-        scheduling, and resource allocation across the cluster.
-    }
+    uses state.concurrency
+    uses event.emission
+    uses error.handling
+}
+
+exegesis {
+    The scheduling.scheduler system composes the complete pod scheduling
+    pipeline: filter -> score -> select -> bind. Given a pending pod and
+    available nodes, the scheduler determines optimal placement satisfying
+    resource constraints, affinity rules, and system-wide objectives.
 }`}
               </pre>
             </div>
+            <p className="mt-3 text-sm" style={{ color: 'var(--soft-gray)' }}>
+              Allowed statements: <code>requires</code> (with version constraints), <code>uses</code>
+            </p>
           </div>
         </div>
       </section>
