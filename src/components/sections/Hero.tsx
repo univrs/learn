@@ -15,7 +15,7 @@ export default function Hero() {
               className="w-10 h-px"
               style={{ background: 'linear-gradient(90deg, transparent, var(--glow-cyan))' }}
             />
-            Meta-Tools Ecosystem
+            Univrs.io Ecosystem
             <span
               className="w-10 h-px"
               style={{ background: 'linear-gradient(90deg, var(--glow-cyan), transparent)' }}
@@ -27,25 +27,44 @@ export default function Hero() {
             className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight mb-6"
             style={{ color: 'var(--text-primary)' }}
           >
-            <span className="gradient-text">Univrs</span> Learn
+            Tools for systems that <span className="gradient-text">understand themselves</span>
           </h1>
-
-          {/* Tagline */}
-          <p
-            className="text-xl sm:text-2xl font-medium mb-4 italic"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            Creating tools of self-aware systems.
-          </p>
 
           {/* Description */}
           <p
-            className="max-w-2xl mx-auto text-lg mb-10"
+            className="max-w-2xl mx-auto text-lg mb-6"
             style={{ color: 'var(--soft-gray)' }}
           >
             The Univrs meta-tools ecosystem provides the foundation for specification-driven development,
             intelligent compilation, and composable capabilities.
           </p>
+
+          {/* Key Metrics Banner */}
+          <div
+            className="max-w-3xl mx-auto mb-10 py-4 px-6 rounded-lg flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-sm font-medium"
+            style={{
+              backgroundColor: 'var(--forest-floor)',
+              borderLeft: '3px solid var(--glow-cyan)'
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <span style={{ color: 'var(--glow-cyan)' }}>631 Tests</span>
+            </div>
+            <div
+              className="hidden sm:block w-px h-4"
+              style={{ backgroundColor: 'var(--soft-gray)' }}
+            />
+            <div className="flex items-center gap-2">
+              <span style={{ color: 'var(--glow-gold)' }}>v0.1.0 Released</span>
+            </div>
+            <div
+              className="hidden sm:block w-px h-4"
+              style={{ backgroundColor: 'var(--soft-gray)' }}
+            />
+            <div className="flex items-center gap-2">
+              <span style={{ color: 'var(--spore-purple)' }}>Rust + WASM Targets</span>
+            </div>
+          </div>
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -53,11 +72,11 @@ export default function Hero() {
               to="/dol"
               className="btn-primary group"
             >
-              Get Started
+              Get Started with DOL
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <a
-              href="https://github.com/univrs"
+              href="https://github.com/univrs/dol"
               target="_blank"
               rel="noopener noreferrer"
               className="btn-secondary"

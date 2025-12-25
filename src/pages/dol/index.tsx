@@ -4,6 +4,7 @@ import { FileCode, BookOpen, Library, Code2, ArrowRight } from "lucide-react";
 import DOLLearn from "./Learn";
 import DOLReference from "./Reference";
 import DOLStdlib from "./Stdlib";
+import DOLExamples from "./Examples";
 
 const sections = [
     {
@@ -11,6 +12,12 @@ const sections = [
         description: "Interactive tutorials from basics to advanced concepts",
         href: "/dol/learn",
         icon: BookOpen,
+    },
+    {
+        name: "Examples",
+        description: "Real-world examples from the biology module",
+        href: "/dol/examples",
+        icon: FileCode,
     },
     {
         name: "Reference",
@@ -228,6 +235,7 @@ export default function DOLIndex() {
         <Routes>
             <Route index element={<DOLOverview />} />
             <Route path="learn" element={<DOLLearn />} />
+            <Route path="examples" element={<DOLExamples />} />
             <Route path="reference" element={<DOLReference />} />
             <Route path="stdlib" element={<DOLStdlib />} />
         </Routes>

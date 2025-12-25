@@ -7,6 +7,7 @@ const navigation = [
   { name: 'DOL', href: '/dol' },
   { name: 'LLVM', href: '/llvm' },
   { name: 'Skills', href: '/skills' },
+  { name: 'Roadmap', href: '/roadmap' },
   { name: 'About', href: '/about' },
 ]
 

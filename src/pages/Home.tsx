@@ -8,8 +8,8 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>Univrs Learn - Tools that build tools</title>
-        <meta name="description" content="Learn the Univrs meta-tools ecosystem: DOL (Design Ontology Language), LLVM Translation Tools, and Skills Framework." />
+        <title>Univrs.io - Tools for systems that understand themselves</title>
+        <meta name="description" content="The Univrs meta-tools ecosystem: DOL (Design Ontology Language) with 631 tests, LLVM Translation Tools, and Skills Framework. Specification-first development for intelligent systems." />
       </Helmet>
 
       <Hero />

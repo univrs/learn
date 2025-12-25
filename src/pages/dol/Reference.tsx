@@ -178,8 +178,345 @@ export default function DOLReference() {
         </div>
       </section>
 
-      {/* Keywords */}
+      {/* CLI Reference */}
       <section className="py-16" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-light mb-8" style={{ color: 'var(--text-primary)' }}>CLI Reference</h2>
+          <p className="mb-8" style={{ color: 'var(--text-secondary)' }}>
+            The DOL toolchain provides command-line utilities for parsing, validating, testing, and code generation.
+          </p>
+
+          {/* dol-parse */}
+          <div className="mb-12">
+            <h3 className="text-xl font-normal mb-4" style={{ color: 'var(--glow-cyan)' }}>dol-parse</h3>
+            <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+              Parse DOL source files and validate syntax. Outputs structured AST representation in various formats.
+            </p>
+
+            <div className="mb-4">
+              <h4 className="text-sm font-normal uppercase tracking-wide mb-3" style={{ color: 'var(--soft-gray)' }}>
+                Basic Usage
+              </h4>
+              <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+                <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-primary)' }}>
+{`# Parse a single file
+dol-parse examples/genes/container.exists.dol
+
+# Output as JSON AST
+dol-parse --format json examples/genes/container.exists.dol
+
+# Output as Rust code
+dol-parse --format rust examples/genes/container.exists.dol`}
+                </pre>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <h4 className="text-sm font-normal uppercase tracking-wide mb-3" style={{ color: 'var(--soft-gray)' }}>
+                Options
+              </h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <th className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>Option</th>
+                      <th className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--glow-cyan)' }}>--format &lt;type&gt;</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Output format: json, rust, or pretty (default: pretty)</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--glow-cyan)' }}>-o, --output</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Write output to file instead of stdout</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--glow-cyan)' }}>-v, --verbose</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Show detailed parsing information</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-normal uppercase tracking-wide mb-3" style={{ color: 'var(--soft-gray)' }}>
+                Example Output
+              </h4>
+              <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+                <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`{
+  "declaration": "Gene",
+  "name": "container.exists",
+  "version": "1.0.0",
+  "exegesis": "A container is the fundamental unit...",
+  "statements": [
+    { "type": "Has", "property": "identity", "value_type": "string" },
+    { "type": "Has", "property": "state", "value_type": "ContainerState" },
+    { "type": "Is", "predicate": "entity" }
+  ]
+}`}
+                </pre>
+              </div>
+            </div>
+          </div>
+
+          {/* dol-check */}
+          <div className="mb-12">
+            <h3 className="text-xl font-normal mb-4" style={{ color: 'var(--glow-gold)' }}>dol-check</h3>
+            <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+              Type check and validate constraints across DOL files. Perfect for CI/CD pipelines and pre-commit hooks.
+            </p>
+
+            <div className="mb-4">
+              <h4 className="text-sm font-normal uppercase tracking-wide mb-3" style={{ color: 'var(--soft-gray)' }}>
+                Basic Usage
+              </h4>
+              <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+                <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-primary)' }}>
+{`# Check all files in a directory
+dol-check examples/
+
+# Check with glob pattern
+dol-check --strict src/**/*.dol
+
+# Require exegesis on all declarations
+dol-check --require-exegesis *.dol
+
+# CI mode (exit 1 on any error)
+dol-check --ci examples/`}
+                </pre>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <h4 className="text-sm font-normal uppercase tracking-wide mb-3" style={{ color: 'var(--soft-gray)' }}>
+                Options
+              </h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <th className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>Option</th>
+                      <th className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--glow-gold)' }}>--strict</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Enable all validation rules, fail on warnings</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--glow-gold)' }}>--require-exegesis</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Fail if any declaration lacks exegesis</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--glow-gold)' }}>--ci</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>CI mode: minimal output, exit codes for automation</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--glow-gold)' }}>--format &lt;type&gt;</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Output format: human, json, or github (default: human)</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-normal uppercase tracking-wide mb-3" style={{ color: 'var(--soft-gray)' }}>
+                Example Output
+              </h4>
+              <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+                <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-gold)' }}>
+{`Checking 12 DOL files...
+
+✓ examples/genes/container.exists.dol
+✓ examples/traits/container.lifecycle.dol
+✗ examples/constraints/invalid.dol
+  Error: Missing exegesis (line 1)
+  Error: Undefined reference to 'unknown.trait' (line 8)
+
+Summary: 10 passed, 2 failed
+Exit code: 1`}
+                </pre>
+              </div>
+            </div>
+          </div>
+
+          {/* dol-codegen */}
+          <div className="mb-12">
+            <h3 className="text-xl font-normal mb-4" style={{ color: 'var(--spore-purple)' }}>dol-codegen</h3>
+            <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+              Generate code from DOL specifications. Supports multiple target languages and frameworks.
+            </p>
+
+            <div className="mb-4">
+              <h4 className="text-sm font-normal uppercase tracking-wide mb-3" style={{ color: 'var(--soft-gray)' }}>
+                Basic Usage
+              </h4>
+              <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+                <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-primary)' }}>
+{`# Generate to output directory
+dol-codegen hello.dol -o generated/
+
+# Target Rust code
+dol-codegen --target rust src/domain.dol
+
+# Target TypeScript interfaces
+dol-codegen --target typescript src/domain.dol
+
+# Generate with custom template
+dol-codegen --target rust --template custom.hbs src/domain.dol`}
+                </pre>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <h4 className="text-sm font-normal uppercase tracking-wide mb-3" style={{ color: 'var(--soft-gray)' }}>
+                Options
+              </h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <th className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>Option</th>
+                      <th className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--spore-purple)' }}>--target &lt;lang&gt;</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Target language: rust, typescript, python, go</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--spore-purple)' }}>-o, --output</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Output directory for generated files</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--spore-purple)' }}>--template</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Custom template file (Handlebars format)</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--spore-purple)' }}>--watch</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Watch for changes and regenerate automatically</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-normal uppercase tracking-wide mb-3" style={{ color: 'var(--soft-gray)' }}>
+                Example Output (Rust)
+              </h4>
+              <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+                <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--spore-purple)' }}>
+{`// Generated from container.exists.dol v1.0.0
+// A container is the fundamental unit of workload isolation.
+
+pub struct Container {
+    pub identity: String,
+    pub state: ContainerState,
+    pub boundaries: ResourceBoundaries,
+}
+
+impl Entity for Container {}
+impl Persistent for Container {}`}
+                </pre>
+              </div>
+            </div>
+          </div>
+
+          {/* dol-test */}
+          <div className="mb-12">
+            <h3 className="text-xl font-normal mb-4" style={{ color: 'var(--text-primary)' }}>dol-test</h3>
+            <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+              Run DOL test suites and generate test code from .dol.test files.
+            </p>
+
+            <div className="mb-4">
+              <h4 className="text-sm font-normal uppercase tracking-wide mb-3" style={{ color: 'var(--soft-gray)' }}>
+                Basic Usage
+              </h4>
+              <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+                <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-primary)' }}>
+{`# Run all tests in directory
+dol-test examples/tests/
+
+# Generate test code
+dol-test --output tests/ *.dol.test
+
+# Run specific test file
+dol-test examples/traits/container.lifecycle.dol.test
+
+# Watch mode for continuous testing
+dol-test --watch examples/tests/`}
+                </pre>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <h4 className="text-sm font-normal uppercase tracking-wide mb-3" style={{ color: 'var(--soft-gray)' }}>
+                Options
+              </h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <th className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>Option</th>
+                      <th className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td className="py-2 px-3"><code>--output &lt;dir&gt;</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Generate test files to specified directory</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td className="py-2 px-3"><code>--watch</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Watch for changes and re-run tests</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td className="py-2 px-3"><code>--format &lt;type&gt;</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Output format: pretty, json, junit (default: pretty)</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td className="py-2 px-3"><code>--filter &lt;pattern&gt;</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Run only tests matching pattern</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-normal uppercase tracking-wide mb-3" style={{ color: 'var(--soft-gray)' }}>
+                Example Output
+              </h4>
+              <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
+                <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-primary)' }}>
+{`Running tests from examples/tests/
+
+test container.lifecycle::creation ... ok
+test container.lifecycle::state_transitions ... ok
+test container.lifecycle::termination ... ok
+
+Test results: 3 passed, 0 failed
+Generated 3 test files to tests/
+
+Time: 0.42s`}
+                </pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Keywords */}
+      <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-light mb-8" style={{ color: 'var(--text-primary)' }}>Reserved Keywords</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
