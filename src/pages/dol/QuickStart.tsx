@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Zap, ChevronRight, CheckCircle2, Code2, ExternalLink } from "lucide-react";
+import { Zap, ChevronRight, Code2, ExternalLink } from "lucide-react";
 
 const nextSteps = [
     {
