@@ -81,16 +81,16 @@ export default function DOLReference() {
             <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
 {`gene container.exists @1.0.0 {
-    """
-    A container is the fundamental unit of workload isolation.
-    Every container possesses these four essential properties.
-    """
-
-    has identity: string
+    has identity: String
     has state: ContainerState
     has boundaries: ResourceBoundaries
     is entity
     is persistent
+
+    exegesis {
+        A container is the fundamental unit of workload isolation.
+        Every container possesses these four essential properties.
+    }
 }`}
               </pre>
             </div>
@@ -108,11 +108,6 @@ export default function DOLReference() {
             <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-gold)' }}>
 {`trait container.lifecycle @1.0.0 {
-    """
-    The container lifecycle defines the state machine that governs
-    container execution from creation through termination.
-    """
-
     uses container.exists
     uses identity.cryptographic
 
@@ -121,6 +116,11 @@ export default function DOLReference() {
     container is stopped
 
     each transition emits event
+
+    exegesis {
+        The container lifecycle defines the state machine that governs
+        container execution from creation through termination.
+    }
 }`}
               </pre>
             </div>
@@ -138,14 +138,14 @@ export default function DOLReference() {
             <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--spore-purple)' }}>
 {`constraint container.integrity @1.0.0 {
-    """
-    Container integrity constraints ensure runtime state matches
-    the declared ontology. Violations indicate system errors.
-    """
-
     state matches declared
     identity never changes
     boundaries never expand
+
+    exegesis {
+        Container integrity constraints ensure runtime state matches
+        the declared ontology. Violations indicate system errors.
+    }
 }`}
               </pre>
             </div>
@@ -163,14 +163,14 @@ export default function DOLReference() {
             <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-primary)' }}>
 {`system univrs.orchestrator @0.1.0 {
-    """
-    The Univrs orchestrator manages container lifecycles,
-    scheduling, and resource allocation across the cluster.
-    """
-
     requires container.lifecycle >= 0.0.2
     requires node.discovery >= 0.0.1
     requires identity.cryptographic = 1.0.0
+
+    exegesis {
+        The Univrs orchestrator manages container lifecycles,
+        scheduling, and resource allocation across the cluster.
+    }
 }`}
               </pre>
             </div>
