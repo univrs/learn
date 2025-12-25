@@ -18,10 +18,17 @@
         document.documentElement.setAttribute('data-theme', theme);
       })();
     </script>
-    <!-- Single Page Apps for GitHub Pages -->
+    <!-- SPA routing handler -->
     <script>
       (function(l) {
-        if (l.search[1] === '/' ) {
+        // Handle Cloudflare Pages 404 redirect
+        var params = new URLSearchParams(l.search);
+        var redirect = params.get('redirect');
+        if (redirect) {
+          window.history.replaceState(null, null, decodeURIComponent(redirect));
+        }
+        // Handle GitHub Pages style redirect
+        else if (l.search[1] === '/' ) {
           var decoded = l.search.slice(1).split('&').map(function(s) {
             return s.replace(/~and~/g, '&')
           }).join('?');
