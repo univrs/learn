@@ -8,6 +8,7 @@ import DOLExamples from "./Examples";
 import DOLMetaprogramming from "./Metaprogramming";
 import DOLSex from "./Sex";
 import DOLCheatsheet from "./Cheatsheet";
+import DOLQuickStart from "./QuickStart";
 
 const sections = [
     {
@@ -268,6 +269,7 @@ export default function DOLIndex() {
             <Route path="reference" element={<DOLReference />} />
             <Route path="stdlib" element={<DOLStdlib />} />
             <Route path="cheatsheet" element={<DOLCheatsheet />} />
+            <Route path="quick-start" element={<DOLQuickStart />} />
         </Routes>
     );
 }
