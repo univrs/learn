@@ -2,9 +2,9 @@ import { ExternalLink, Github } from 'lucide-react'
 
 const repos = [
   {
-    name: 'metadol',
+    name: 'dol',
     description: 'Design Ontology Language compiler and stdlib',
-    href: 'https://github.com/univrs/metadol',
+    href: 'https://github.com/univrs/dol',
     language: 'Rust',
     color: '#f97316',
   },

@@ -8,7 +8,7 @@ const footerLinks = {
   ],
   ecosystem: [
     { name: 'univrs.io', href: 'https://univrs.io', external: true },
-    { name: 'metadol', href: 'https://github.com/univrs/metadol', external: true },
+    { name: 'P2P Network', href: 'https://github.com/univrs/network', external: true },
     { name: 'llvm-translation-mcp', href: 'https://github.com/univrs/llvm-translation-mcp', external: true },
   ],
   community: [
