@@ -12,8 +12,8 @@ const year1Milestones: Milestone[] = [
   { name: 'Lexer + Parser', status: 'complete', metric: '157 tests' },
   { name: 'Type Checker', status: 'complete', metric: '87 tests' },
   { name: 'SEX System', status: 'complete', metric: '24 tests' },
-  { name: 'Rust Codegen', status: 'in-progress', metric: '8 tests' },
-  { name: 'Self-Hosting', status: 'planned', metric: 'Q4 Goal' },
+  { name: 'Rust Codegen', status: 'complete', metric: '24 tests' },
+  { name: 'Self-Hosting (v0.2.2)', status: 'complete', metric: '741+ tests' },
 ]
 
 const year2Milestones: Milestone[] = [
@@ -105,9 +105,9 @@ export default function Roadmap() {
                 <p className="text-univrs-text-secondary italic mb-6">
                   "The language that writes itself"
                 </p>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/30">
-                  <Circle className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                  <span className="text-sm text-yellow-400 font-medium">IN PROGRESS</span>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-univrs-primary-400/10 border border-univrs-primary-400/30">
+                  <CheckCircle2 className="w-3 h-3 text-univrs-primary-400" />
+                  <span className="text-sm text-univrs-primary-400 font-medium">COMPLETE</span>
                 </div>
               </div>
             </div>
@@ -260,20 +260,20 @@ export default function Roadmap() {
             <div className="card">
               <div className="grid grid-cols-2 gap-8">
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">276</div>
+                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">741+</div>
                   <div className="text-sm text-univrs-text-muted">Total Tests Passing</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">4</div>
+                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">6</div>
                   <div className="text-sm text-univrs-text-muted">Core Systems Complete</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-purple-400 mb-2">~85%</div>
-                  <div className="text-sm text-univrs-text-muted">Year 1 Progress</div>
+                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">100%</div>
+                  <div className="text-sm text-univrs-text-muted">Year 1 Complete</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-yellow-400 mb-2">Q4</div>
-                  <div className="text-sm text-univrs-text-muted">Self-Hosting Target</div>
+                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">v0.2.2</div>
+                  <div className="text-sm text-univrs-text-muted">Bootstrap Released</div>
                 </div>
               </div>
             </div>
