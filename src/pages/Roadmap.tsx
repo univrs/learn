@@ -13,7 +13,7 @@ const year1Milestones: Milestone[] = [
   { name: 'Type Checker', status: 'complete', metric: '87 tests' },
   { name: 'SEX System', status: 'complete', metric: '24 tests' },
   { name: 'Rust Codegen', status: 'complete', metric: '24 tests' },
-  { name: 'Self-Hosting (v0.2.2)', status: 'complete', metric: '741+ tests' },
+  { name: 'Self-Hosting (v0.2.3)', status: 'complete', metric: '1532 tests' },
 ]
 
 const year2Milestones: Milestone[] = [
@@ -272,8 +272,8 @@ export default function Roadmap() {
                   <div className="text-sm text-univrs-text-muted">Year 1 Complete</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">v0.2.2</div>
-                  <div className="text-sm text-univrs-text-muted">Bootstrap Released</div>
+                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">v0.2.3</div>
+                  <div className="text-sm text-univrs-text-muted">Stage2 Self-Hosting</div>
                 </div>
               </div>
             </div>
