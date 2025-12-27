@@ -17,11 +17,11 @@ const year1Milestones: Milestone[] = [
 ]
 
 const year2Milestones: Milestone[] = [
-  { name: 'VUDO VM Architecture', status: 'planned' },
-  { name: 'Spirit Execution Engine', status: 'planned' },
-  { name: 'Tauri Desktop IDE', status: 'planned' },
-  { name: 'P2P Network Protocol', status: 'planned' },
-  { name: 'Distributed Computing', status: 'planned' },
+  { name: 'VUDO VM Sandbox', status: 'complete', metric: '158 tests' },
+  { name: 'Spirit Runtime', status: 'complete', metric: '50 tests' },
+  { name: 'Spirit Registry', status: 'complete', metric: 'QueryBuilder API' },
+  { name: 'Linker Integration', status: 'complete', metric: '15 host functions' },
+  { name: 'vudo CLI', status: 'complete', metric: '15 commands + REPL' },
 ]
 
 const year3Milestones: Milestone[] = [
@@ -149,9 +149,9 @@ export default function Roadmap() {
                 <p className="text-univrs-text-secondary italic mb-6">
                   "The machine that runs Spirits"
                 </p>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-univrs-text-muted/10 border border-univrs-text-muted/30">
-                  <Circle className="w-3 h-3 text-univrs-text-muted" />
-                  <span className="text-sm text-univrs-text-muted font-medium">PLANNED</span>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-univrs-secondary-400/10 border border-univrs-secondary-400/30">
+                  <CheckCircle2 className="w-3 h-3 text-univrs-secondary-400" />
+                  <span className="text-sm text-univrs-secondary-400 font-medium">COMPLETE</span>
                 </div>
               </div>
             </div>
@@ -164,8 +164,8 @@ export default function Roadmap() {
                 </div>
                 <div className="mt-6 pt-6 border-t border-univrs-text-muted/20">
                   <p className="text-sm text-univrs-text-secondary">
-                    <strong className="text-univrs-text-primary">Focus:</strong> Build the VUDO Virtual Machine to execute Spirit specifications.
-                    Develop desktop IDE and establish peer-to-peer network for distributed computation.
+                    <strong className="text-univrs-text-primary">Delivered:</strong> VUDO VM with WASM sandbox, 6-state lifecycle, capability enforcement,
+                    fuel metering. Spirit Runtime with manifest parsing, semantic versioning, Ed25519 signatures. Full CLI with REPL.
                   </p>
                 </div>
               </div>
@@ -260,20 +260,20 @@ export default function Roadmap() {
             <div className="card">
               <div className="grid grid-cols-2 gap-8">
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">741+</div>
+                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">1,376</div>
                   <div className="text-sm text-univrs-text-muted">Total Tests Passing</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">6</div>
-                  <div className="text-sm text-univrs-text-muted">Core Systems Complete</div>
+                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">5</div>
+                  <div className="text-sm text-univrs-text-muted">Repos, 0 Warnings</div>
                 </div>
                 <div className="text-center">
                   <div className="text-4xl font-light text-univrs-primary-400 mb-2">100%</div>
-                  <div className="text-sm text-univrs-text-muted">Year 1 Complete</div>
+                  <div className="text-sm text-univrs-text-muted">Phase 2 Complete</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">v0.2.3</div>
-                  <div className="text-sm text-univrs-text-muted">Stage2 Self-Hosting</div>
+                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">260</div>
+                  <div className="text-sm text-univrs-text-muted">VUDO Tests</div>
                 </div>
               </div>
             </div>

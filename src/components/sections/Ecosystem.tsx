@@ -9,6 +9,14 @@ const repos = [
     color: '#f97316',
   },
   {
+    name: 'univrs-vudo',
+    description: 'VUDO VM, Spirit Runtime, and Registry',
+    href: 'https://github.com/univrs/univrs-vudo',
+    language: 'Rust',
+    color: '#f97316',
+    isNew: true,
+  },
+  {
     name: 'llvm-translation-mcp',
     description: 'LLVM translation tools with MCP server',
     href: 'https://github.com/univrs/llvm-translation-mcp',
@@ -66,8 +74,19 @@ export default function Ecosystem() {
               href={repo.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="card group"
+              className="card group relative"
             >
+              {'isNew' in repo && repo.isNew && (
+                <span
+                  className="absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full"
+                  style={{
+                    backgroundColor: 'var(--spore-purple)',
+                    color: 'var(--void)',
+                  }}
+                >
+                  New
+                </span>
+              )}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Github
