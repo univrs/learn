@@ -184,11 +184,17 @@
    ═══════════════════════════════════════════════════════════════ */
 
 @layer components {
-    .btn-primary {
+    .btn-primary,
+    .btn-primary:hover,
+    .btn-primary:visited,
+    .btn-primary:active,
+    .prose .btn-primary,
+    .prose-invert .btn-primary {
         @apply inline-flex items-center justify-center px-6 py-3 text-sm font-semibold rounded-md transition-all;
         background: linear-gradient(135deg, var(--glow-cyan), #00b8a0);
-        color: var(--void);
+        color: #ffffff !important;
         box-shadow: var(--glow-sm);
+        text-decoration: none !important;
     }
 
     .btn-primary:hover {
@@ -196,11 +202,24 @@
         box-shadow: var(--glow-md);
     }
 
-    .btn-secondary {
+    .btn-secondary,
+    .btn-secondary:hover,
+    .btn-secondary:visited,
+    .btn-secondary:active,
+    .prose .btn-secondary,
+    .prose-invert .btn-secondary {
         @apply inline-flex items-center justify-center px-6 py-3 text-sm font-semibold rounded-md transition-all;
         background-color: transparent;
-        color: var(--text-primary);
+        color: #ffffff !important;
         border: 1px solid var(--border-subtle);
+        text-decoration: none !important;
+    }
+
+    [data-theme="light"] .btn-secondary,
+    [data-theme="light"] .btn-secondary:hover,
+    [data-theme="light"] .btn-secondary:visited,
+    [data-theme="light"] .btn-secondary:active {
+        color: #1a221d !important;
     }
 
     .btn-secondary:hover {
@@ -323,4 +342,29 @@
     .text-balance {
         text-wrap: balance;
     }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PROSE BUTTON OVERRIDES (outside @layer for max specificity)
+   ═══════════════════════════════════════════════════════════════ */
+
+.prose .btn-primary,
+.prose-invert .btn-primary,
+article .btn-primary,
+.prose a.btn-primary,
+.prose-invert a.btn-primary {
+    background: linear-gradient(135deg, var(--glow-cyan), #00b8a0) !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+.prose .btn-secondary,
+.prose-invert .btn-secondary,
+article .btn-secondary,
+.prose a.btn-secondary,
+.prose-invert a.btn-secondary {
+    background-color: transparent !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    border: 1px solid var(--border-subtle) !important;
 }

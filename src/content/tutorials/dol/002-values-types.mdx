@@ -1,321 +1,310 @@
 ---
 title: "Values and Types"
-description: "Learn about DOL's type system, primitive values, and type inference"
+description: "Learn about DOL's type system and typed gene declarations"
 lesson: 2
 track: "dol-fundamentals"
 duration: "15 minutes"
-concepts: ["integers", "floats", "strings", "booleans", "type inference", "type annotations"]
+concepts: ["primitive types", "typed fields", "generics", "type annotations"]
 prev: "/dol/tutorials/001-hello-dol"
 next: "/dol/tutorials/003-functions"
 ---
 
-import DOLRepl from '@/components/code/DOLRepl';
-
 # Values and Types
 
-Every value in DOL has a **type**. Types help catch errors early and make your code more reliable. In this lesson, you will learn about DOL's primitive types and how type inference works.
+In the previous lesson, we declared properties without specifying their types. DOL supports a rich type system that lets you be precise about what values your specifications expect.
+
+## Simple vs Typed Genes
+
+DOL has two syntactic styles:
+
+**Simple (Metal DOL)** - untyped properties:
+```dol
+gene hello.world {
+  message has content
+  message has sender
+}
+```
+
+**Typed (Full DOL)** - with type annotations:
+```dol
+pub gene Message {
+  has content: String
+  has sender: String
+  has timestamp: UInt64
+}
+```
+
+Typed genes provide stronger guarantees and enable code generation to target languages like Rust.
 
 ## Primitive Types
 
-DOL has four primitive types that form the building blocks for all data:
+DOL includes these primitive types:
 
 | Type | Description | Examples |
 |------|-------------|----------|
-| `Int` | Whole numbers | `42`, `-17`, `0` |
-| `Float` | Decimal numbers | `3.14`, `-0.5`, `1.0` |
-| `String` | Text | `"hello"`, `"DOL"` |
-| `Bool` | True or false | `true`, `false` |
+| `Int8`, `Int16`, `Int32`, `Int64` | Signed integers | `-1`, `42`, `1000` |
+| `UInt8`, `UInt16`, `UInt32`, `UInt64` | Unsigned integers | `0`, `255`, `65535` |
+| `Float32`, `Float64` | Floating point | `3.14`, `-0.5` |
+| `Bool` | Boolean | `true`, `false` |
+| `String` | UTF-8 text | `"hello"` |
+| `Char` | Unicode scalar | `'a'`, `'\n'` |
+| `Void` | Unit/no value | `()` |
 
-### Integers
+## Typed Gene Example
 
-Integers are whole numbers without decimal points:
-
-<DOLRepl
-  code={`// Integer examples
-let age = 25
-let year = 2024
-let negative = -100
-let zero = 0
-
-log(age)
-log(year + 1)`}
-  title="integers.dol"
-  output={`25
-2025`}
-/>
-
-Integers support standard arithmetic operations:
-
-<DOLRepl
-  code={`// Integer arithmetic
-let a = 10
-let b = 3
-
-log(a + b)   // Addition: 13
-log(a - b)   // Subtraction: 7
-log(a * b)   // Multiplication: 30
-log(a / b)   // Integer division: 3
-log(a % b)   // Remainder (modulo): 1`}
-  title="int-math.dol"
-  output={`13
-7
-30
-3
-1`}
-/>
-
-### Floats
-
-Floats are numbers with decimal points:
-
-<DOLRepl
-  code={`// Float examples
-let pi = 3.14159
-let temperature = -40.5
-let ratio = 0.75
-
-log(pi)
-log(temperature * 2.0)`}
-  title="floats.dol"
-  output={`3.14159
--81.0`}
-/>
-
-Note that when mixing operations with floats, all values become floats:
-
-<DOLRepl
-  code={`// Float arithmetic preserves precision
-let x = 10.0
-let y = 3.0
-
-log(x / y)   // Float division: 3.333...`}
-  title="float-div.dol"
-  output="3.3333333333333335"
-/>
-
-### Strings
-
-Strings represent text and are enclosed in double quotes:
-
-<DOLRepl
-  code={`// String examples
-let greeting = "Hello"
-let name = "DOL Developer"
-let empty = ""
-
-log(greeting + ", " + name)
-log("Length: " + greeting.len())`}
-  title="strings.dol"
-  output={`Hello, DOL Developer
-Length: 5`}
-/>
-
-String methods:
-
-<DOLRepl
-  code={`// Common string operations
-let text = "  Hello, World!  "
-
-log(text.trim())           // Remove whitespace
-log(text.to_uppercase())   // Convert to uppercase
-log(text.to_lowercase())   // Convert to lowercase
-log(text.contains("World")) // Check if contains substring`}
-  title="string-methods.dol"
-  output={`Hello, World!
-  HELLO, WORLD!
-  hello, world!
-true`}
-/>
-
-### Booleans
-
-Booleans represent truth values:
-
-<DOLRepl
-  code={`// Boolean examples
-let is_active = true
-let is_complete = false
-
-log(is_active)
-log(!is_complete)  // Negation: true
-log(is_active && is_complete)  // AND: false
-log(is_active || is_complete)  // OR: true`}
-  title="booleans.dol"
-  output={`true
-true
-false
-true`}
-/>
-
-## Type Inference
-
-DOL automatically figures out the type of values. This is called **type inference**:
-
-<DOLRepl
-  code={`// DOL infers these types automatically
-let count = 42        // Inferred as Int
-let price = 19.99     // Inferred as Float
-let name = "Alice"    // Inferred as String
-let active = true     // Inferred as Bool
-
-// You can verify with :type in the REPL
-log(count)
-log(price)`}
-  title="inference.dol"
-  output={`42
-19.99`}
-/>
-
-You do not need to write types explicitly because DOL figures them out for you.
-
-## Type Annotations
-
-While type inference is convenient, you can explicitly declare types using the `:` syntax:
-
-<DOLRepl
-  code={`// Explicit type annotations
-let count: Int = 42
-let price: Float = 19.99
-let name: String = "Alice"
-let active: Bool = true
-
-log(count)
-log(name)`}
-  title="annotations.dol"
-  output={`42
-Alice`}
-/>
-
-Type annotations are useful for:
-- Documentation (making your intent clear)
-- Catching type mismatches early
-- Disambiguating between similar types
-
-## Type Errors
-
-DOL catches type errors at compile time. This prevents bugs before your code runs:
+Here's a typed gene from the DOL codebase:
 
 ```dol
-// This will NOT compile - type mismatch!
-let age: Int = "twenty"  // Error: expected Int, got String
+module dol.token @ 0.4.0
+
+exegesis {
+  Token span tracks the location of tokens in source code.
+}
+
+/// Source location information
+pub gene Span {
+  has start: UInt32
+  has end: UInt32
+  has file_id: UInt32
+}
 ```
 
-You also cannot mix incompatible types in operations:
+Note the differences from simple genes:
+- `module ... @ version` declares the module and version
+- `pub` makes the gene publicly visible
+- Fields use `has name: Type` syntax
+- `///` provides inline documentation
+
+## Collection Types
+
+DOL has built-in collection types:
 
 ```dol
-// Type error - cannot add String and Int
-let result = "Age: " + 25  // Error!
+pub gene Container {
+  has tags: List<String>
+  has metadata: Map<String, String>
+  has resources: Option<ResourceSpec>
+}
 
-// Correct way - convert Int to String first
-let result = "Age: " + 25.to_string()  // OK
+exegesis {
+  Containers can have multiple tags, key-value metadata,
+  and an optional resource specification.
+}
 ```
 
-## Type Conversion
+| Type | Description |
+|------|-------------|
+| `List<T>` | Ordered sequence of T |
+| `Map<K, V>` | Key-value mapping |
+| `Option<T>` | Optional value (Some or None) |
+| `Box<T>` | Heap-allocated value (for recursive types) |
 
-Convert between types using built-in methods:
+## Enum Types
 
-<DOLRepl
-  code={`// Type conversions
-let num = 42
-let float_num = 3.14
+Define enumerated types inline with `enum`:
 
-// To string
-log(num.to_string())
-log(float_num.to_string())
+```dol
+/// Container lifecycle states
+pub gene ContainerState {
+  type: enum {
+    Created,
+    Starting,
+    Running,
+    Paused,
+    Stopping,
+    Stopped,
+    Removing,
+    Removed
+  }
+}
 
-// String to number (returns Result)
-let parsed = "100".parse_int()
-log(parsed)`}
-  title="conversion.dol"
-  output={`"42"
-"3.14"
-Ok(100)`}
-/>
+exegesis {
+  ContainerState represents the discrete states a container
+  can exist in during its lifecycle. Transitions between
+  states are atomic and authenticated.
+}
+```
 
-Parsing strings returns a `Result` type because the string might not be a valid number. We will cover `Result` in the error handling lesson.
+Enum variants can also carry data:
 
-## The Unit Type
+```dol
+pub gene Change {
+  type: enum {
+    /// Field added
+    Added { name: String, ty: TypeExpr, default_value: Option<Expr> },
+    /// Field removed
+    Removed { name: String },
+    /// Field type changed
+    Changed { name: String, from: TypeExpr, to: TypeExpr },
+    /// Field renamed
+    Renamed { old_name: String, new_name: String }
+  }
+  has span: Span
+}
 
-DOL has a special type called `Unit` (written as `()`) that represents "no meaningful value":
+exegesis {
+  A Change describes a single modification in an evolution,
+  tracking schema migrations between versions.
+}
+```
 
-<DOLRepl
-  code={`// Functions that don't return anything return Unit
-let result = log("Hello")  // log() returns ()
-// result is of type Unit`}
-  title="unit.dol"
-  output="Hello"
-/>
+## Generic Types
 
-## Comparison Operators
+Define genes that work with any type using type parameters:
 
-Compare values using these operators:
+```dol
+/// Generic field within a gene
+pub gene Field<T> {
+  has name: String
+  has value: T
+  has is_pub: Bool = false
+  has span: Span
+}
 
-<DOLRepl
-  code={`// Comparison operators
-let a = 10
-let b = 20
+exegesis {
+  A Field represents a named component of a gene with an
+  optional default value. The type parameter T allows
+  fields to hold any type.
+}
+```
 
-log(a == b)   // Equal: false
-log(a != b)   // Not equal: true
-log(a < b)    // Less than: true
-log(a <= b)   // Less than or equal: true
-log(a > b)    // Greater than: false
-log(a >= b)   // Greater than or equal: false`}
-  title="comparison.dol"
-  output={`false
-true
-true
-true
-false
-false`}
-/>
+## Default Values
 
-Comparisons always return `Bool` values.
+Fields can have default values:
+
+```dol
+pub gene GeneDecl {
+  has name: String
+  has is_pub: Bool = false
+  has type_params: List<TypeParam> = []
+  has fields: List<Field>
+  has methods: List<FunctionDecl>
+  has constraints: List<ConstraintDecl>
+  has exegesis: Option<String>
+  has span: Span
+}
+```
+
+When `is_pub` is not specified, it defaults to `false`. When `type_params` is not specified, it defaults to an empty list.
+
+## Recursive Types
+
+For types that reference themselves, use `Box<T>`:
+
+```dol
+pub gene TypeExpr {
+  type: enum {
+    /// Simple type
+    Named { path: List<String> },
+
+    /// Generic: List<T>, Map<K, V>
+    Generic { name: String, args: List<TypeExpr> },
+
+    /// Function: (A, B) -> C
+    Function { params: List<TypeExpr>, ret: Box<TypeExpr> },
+
+    /// Tuple: (A, B, C)
+    Tuple { elements: List<TypeExpr> },
+
+    /// Optional: T?
+    Optional { inner: Box<TypeExpr> }
+  }
+  has span: Span
+}
+
+exegesis {
+  TypeExpr represents types in DOL source code. Recursive
+  types like Function and Optional use Box<T> to avoid
+  infinite size at compile time.
+}
+```
+
+## Self Type
+
+Inside genes and traits, `Self` refers to the current type:
+
+```dol
+pub gene Point {
+  has x: Float64
+  has y: Float64
+
+  fun distance_to(other: Self) -> Float64 {
+    let dx = this.x - other.x
+    let dy = this.y - other.y
+    return (dx * dx + dy * dy).sqrt()
+  }
+}
+```
+
+## Reference and Pointer Types
+
+DOL supports references and pointers:
+
+```dol
+pub gene TypeExpr {
+  type: enum {
+    /// Reference: &T, &mut T
+    Reference { inner: Box<TypeExpr>, is_mut: Bool },
+
+    /// Pointer: *T, *mut T
+    Pointer { inner: Box<TypeExpr>, is_mut: Bool }
+  }
+}
+```
+
+## Type Aliases
+
+Give types shorter names:
+
+```dol
+type NodeId = UInt64
+type Position = (Float64, Float64, Float64)
+type Callback = (Event) -> Bool
+
+pub gene NetworkNode {
+  has id: NodeId
+  has position: Position
+  has on_message: Option<Callback>
+}
+```
 
 ## Key Takeaways
 
-- DOL has four primitive types: `Int`, `Float`, `String`, `Bool`
-- Type inference automatically determines types from values
-- Use `:` syntax for explicit type annotations
-- Type errors are caught at compile time
-- Use conversion methods like `.to_string()` to change types
+- DOL has two styles: simple (untyped) and full (typed)
+- Primitive types: integers, floats, strings, booleans
+- Collection types: `List<T>`, `Map<K,V>`, `Option<T>`
+- Define enums with `type: enum { ... }`
+- Use generics with type parameters: `gene Name<T> { ... }`
+- Default values: `has field: Type = default`
+- Recursive types use `Box<T>`
 
-## Challenge
+## Practice Exercise
 
-Create a program that:
+Create a typed gene for a "blog post" with:
+- `id: UInt64`
+- `title: String`
+- `body: String`
+- `status: enum { Draft, Published, Archived }`
+- `tags: List<String>`
+- `published_at: Option<UInt64>`
 
-1. Declares your age as an `Int` with explicit type annotation
-2. Calculates your age in months (hint: multiply by 12)
-3. Creates a string that says "I am X months old"
-4. Logs the result
+```dol
+module blog @ 1.0.0
 
-<DOLRepl
-  code={`// Challenge: Age calculator
-let age: Int = 25
+pub gene BlogPost {
+  // Your typed fields here...
+}
 
-// Your code here...
-log("Complete this challenge!")`}
-  title="challenge.dol"
-  output="Complete this challenge!"
-/>
+exegesis {
+  // Your explanation here...
+}
+```
 
 ## Next Steps
 
-Now that you understand DOL's type system, let us learn how to define and use functions.
+In the next lesson, we'll learn how to add methods (functions) to our genes.
 
 <div className="mt-8 flex justify-between">
-  <a
-    href="/dol/tutorials/001-hello-dol"
-    className="btn-secondary inline-flex items-center gap-2"
-  >
-    <span>←</span>
-    Previous: Hello DOL
-  </a>
-  <a
-    href="/dol/tutorials/003-functions"
-    className="btn-primary inline-flex items-center gap-2"
-  >
-    Next: Functions
-    <span>→</span>
-  </a>
+  <a href="/dol/tutorials/001-hello-dol" className="btn-secondary inline-flex items-center gap-2">← Previous: Hello DOL</a>
+  <a href="/dol/tutorials/003-functions" className="btn-primary inline-flex items-center gap-2">Next: Functions →</a>
 </div>

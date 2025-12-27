@@ -6,57 +6,57 @@
       "dol": {
         "label": "DOL Fundamentals",
         "description": "Learn the Design Ontology Language from first principles",
-        "duration": "3-4 hours",
+        "duration": "2-3 hours",
         "level": "beginner",
         "icon": "BookOpen",
         "items": [
           {
-            "slug": "001-introduction",
-            "title": "Introduction to DOL",
-            "description": "What is DOL and why does it matter?",
+            "slug": "001-hello-dol",
+            "title": "Hello DOL",
+            "description": "Write your first DOL specification and learn core concepts",
+            "duration": "15 min"
+          },
+          {
+            "slug": "002-values-types",
+            "title": "Values and Types",
+            "description": "Learn about DOL's type system and typed gene declarations",
+            "duration": "15 min"
+          },
+          {
+            "slug": "003-functions",
+            "title": "Functions",
+            "description": "Add behavior with methods and standalone functions",
             "duration": "20 min"
           },
           {
-            "slug": "002-genes",
-            "title": "Working with Genes",
-            "description": "Define properties and data structures",
+            "slug": "004-control-flow",
+            "title": "Control Flow",
+            "description": "Conditionals, loops, and pattern matching",
+            "duration": "20 min"
+          },
+          {
+            "slug": "005-collections",
+            "title": "Collections",
+            "description": "Work with Lists, Maps, and functional operations",
+            "duration": "20 min"
+          },
+          {
+            "slug": "006-traits-constraints",
+            "title": "Traits and Constraints",
+            "description": "Define behaviors and enforce invariants",
             "duration": "25 min"
           },
           {
-            "slug": "003-traits",
-            "title": "Defining Traits",
-            "description": "Define behaviors and capabilities",
-            "duration": "30 min"
+            "slug": "007-error-handling",
+            "title": "Error Handling",
+            "description": "Handle errors with Option, Result, and pattern matching",
+            "duration": "15 min"
           },
           {
-            "slug": "004-constraints",
-            "title": "Constraints and Rules",
-            "description": "Define invariants and validation logic",
-            "duration": "25 min"
-          },
-          {
-            "slug": "005-systems",
-            "title": "Composing Systems",
-            "description": "Combine genes, traits, and constraints",
-            "duration": "35 min"
-          },
-          {
-            "slug": "006-metaprogramming",
-            "title": "Meta-Programming",
-            "description": "Quote, Eval, Reflect, and Macros",
-            "duration": "40 min"
-          },
-          {
-            "slug": "007-sex-system",
-            "title": "The SEX System",
-            "description": "Side Effect eXecution for controlled I/O",
-            "duration": "30 min"
-          },
-          {
-            "slug": "008-best-practices",
-            "title": "Best Practices",
-            "description": "Patterns, conventions, and real-world tips",
-            "duration": "25 min"
+            "slug": "008-modules-imports",
+            "title": "Modules and Imports",
+            "description": "Organize DOL specs into reusable modules",
+            "duration": "15 min"
           }
         ]
       },

@@ -1,396 +1,310 @@
 ---
 title: "Control Flow"
-description: "Master conditionals, pattern matching, and loops in DOL"
+description: "Conditionals, loops, and pattern matching in DOL"
 lesson: 4
 track: "dol-fundamentals"
-duration: "15 minutes"
-concepts: ["if/else expressions", "match expressions", "for loops", "while loops", "pattern matching"]
+duration: "20 minutes"
+concepts: ["if/else", "match", "for loops", "while", "pattern matching"]
 prev: "/dol/tutorials/003-functions"
 next: "/dol/tutorials/005-collections"
 ---
 
-import DOLRepl from '@/components/code/DOLRepl';
-
 # Control Flow
 
-Control flow determines the order in which your code executes. DOL provides powerful tools for making decisions and repeating actions.
+DOL provides familiar control flow constructs with some powerful additions like pattern matching. In this lesson, you'll learn how to make decisions and iterate over data.
 
-## If/Else Expressions
+## If Expressions
 
-In DOL, `if/else` is an **expression** that returns a value:
+Unlike many languages, `if` in DOL is an **expression** that returns a value:
 
-<DOLRepl
-  code={`// if/else as an expression
-let age = 18
-
-let status = if age >= 18 {
-    "adult"
-} else {
-    "minor"
+```dol
+pub fun max(a: Int64, b: Int64) -> Int64 {
+  if a > b {
+    a
+  } else {
+    b
+  }
 }
 
-log(status)`}
-  title="if-expr.dol"
-  output="adult"
-/>
-
-Unlike many languages, DOL's `if` always produces a value, making it perfect for assignments.
-
-### Multiple Conditions
-
-Chain conditions with `else if`:
-
-<DOLRepl
-  code={`// Multiple conditions
-let score = 85
-
-let grade = if score >= 90 {
-    "A"
-} else if score >= 80 {
-    "B"
-} else if score >= 70 {
-    "C"
-} else if score >= 60 {
-    "D"
-} else {
-    "F"
+pub fun describe_number(n: Int64) -> String {
+  if n < 0 {
+    "negative"
+  } else if n == 0 {
+    "zero"
+  } else {
+    "positive"
+  }
 }
+```
 
-log("Grade: " + grade)`}
-  title="else-if.dol"
-  output="Grade: B"
-/>
+Since `if` returns a value, you can assign it directly:
 
-### Boolean Expressions in Conditions
-
-Conditions must evaluate to `Bool`:
-
-<DOLRepl
-  code={`// Complex boolean conditions
-let age = 25
-let has_license = true
-let is_sober = true
-
-let can_drive = if age >= 16 && has_license && is_sober {
-    true
-} else {
-    false
-}
-
-log("Can drive: " + can_drive.to_string())`}
-  title="bool-conditions.dol"
-  output="Can drive: true"
-/>
+```dol
+let status = if is_active { "active" } else { "inactive" }
+```
 
 ## Match Expressions
 
-`match` is DOL's powerful pattern matching construct. It is like a super-powered switch statement:
+Pattern matching is one of DOL's most powerful features:
 
-<DOLRepl
-  code={`// Basic match expression
-let day = 3
-
-let day_name = match day {
-    1 => "Monday",
-    2 => "Tuesday",
-    3 => "Wednesday",
-    4 => "Thursday",
-    5 => "Friday",
-    6 => "Saturday",
-    7 => "Sunday",
-    _ => "Invalid day"  // _ matches anything
+```dol
+pub fun is_primitive(ty: TypeExpr) -> Bool {
+  match ty.type {
+    Int8 { return true }
+    Int16 { return true }
+    Int32 { return true }
+    Int64 { return true }
+    UInt8 { return true }
+    UInt16 { return true }
+    UInt32 { return true }
+    UInt64 { return true }
+    Float32 { return true }
+    Float64 { return true }
+    Bool { return true }
+    String { return true }
+    Char { return true }
+    Void { return true }
+    _ { return false }
+  }
 }
+```
 
-log(day_name)`}
-  title="match-basic.dol"
-  output="Wednesday"
-/>
+The `_` is a wildcard that matches anything.
 
-### Match with Ranges
+### Matching with Destructuring
 
-Match can use ranges for numeric patterns:
+Extract values while matching:
 
-<DOLRepl
-  code={`// Match with ranges
-let score = 85
-
-let result = match score {
-    90..=100 => "Excellent!",
-    80..=89 => "Good job!",
-    70..=79 => "Not bad",
-    60..=69 => "Needs improvement",
-    0..=59 => "Failed",
-    _ => "Invalid score"
+```dol
+pub fun type_name(ty: TypeExpr) -> Option<String> {
+  match ty.type {
+    Named { path } {
+      if path.length() > 0 {
+        return Some(path[path.length() - 1].clone())
+      }
+      return None
+    }
+    Generic { name, args: _ } {
+      return Some(name)
+    }
+    _ {
+      return None
+    }
+  }
 }
+```
 
-log(result)`}
-  title="match-range.dol"
-  output="Good job!"
-/>
+### Match Arms with Guards
 
-### Match with Guards
+Add conditions to match arms:
 
-Add extra conditions with `if` guards:
-
-<DOLRepl
-  code={`// Match with guards
-let number = 15
-
-let description = match number {
-    n if n < 0 => "negative",
+```dol
+pub fun categorize(n: Int64) -> String {
+  match n {
+    x if x < 0 => "negative",
     0 => "zero",
-    n if n % 2 == 0 => "positive even",
-    n if n % 2 != 0 => "positive odd",
-    _ => "unknown"
+    x if x < 10 => "small positive",
+    x if x < 100 => "medium",
+    _ => "large"
+  }
 }
-
-log(description)`}
-  title="match-guards.dol"
-  output="positive odd"
-/>
-
-### Match with Destructuring
-
-Match can destructure complex values:
-
-<DOLRepl
-  code={`// Match with tuple destructuring
-let point = (3, 4)
-
-let quadrant = match point {
-    (0, 0) => "origin",
-    (x, 0) if x > 0 => "positive x-axis",
-    (x, 0) if x < 0 => "negative x-axis",
-    (0, y) if y > 0 => "positive y-axis",
-    (0, y) if y < 0 => "negative y-axis",
-    (x, y) if x > 0 && y > 0 => "quadrant I",
-    (x, y) if x < 0 && y > 0 => "quadrant II",
-    (x, y) if x < 0 && y < 0 => "quadrant III",
-    (x, y) if x > 0 && y < 0 => "quadrant IV",
-    _ => "unknown"
-}
-
-log(quadrant)`}
-  title="match-destruct.dol"
-  output="quadrant I"
-/>
+```
 
 ## For Loops
 
-Iterate over collections with `for`:
+Iterate over collections:
 
-<DOLRepl
-  code={`// For loop over a range
-for i in 1..=5 {
-    log(i)
-}`}
-  title="for-range.dol"
-  output={`1
-2
-3
-4
-5`}
-/>
+```dol
+pub fun find_nearby_nodes(pos: Vec3, max_dist: Float64) -> List<UInt64> {
+  result = []
+  for (id, node) in this.nodes {
+    dx = pos.x - node.position.x
+    dy = pos.y - node.position.y
+    dz = pos.z - node.position.z
+    dist = (dx * dx + dy * dy + dz * dz).sqrt()
+    if dist <= max_dist {
+      result.push(id)
+    }
+  }
+  return result
+}
+```
 
-### Iterating Over Collections
+### Range Iteration
 
-<DOLRepl
-  code={`// For loop over a list
-let fruits = ["apple", "banana", "cherry"]
+```dol
+// Iterate from 0 to 9
+for i in 0..10 {
+  // process i
+}
 
-for fruit in fruits {
-    log("I like " + fruit)
-}`}
-  title="for-list.dol"
-  output={`I like apple
-I like banana
-I like cherry`}
-/>
-
-### For with Index
-
-Get both index and value:
-
-<DOLRepl
-  code={`// For loop with index
-let colors = ["red", "green", "blue"]
-
-for (index, color) in colors.enumerate() {
-    log(index.to_string() + ": " + color)
-}`}
-  title="for-index.dol"
-  output={`0: red
-1: green
-2: blue`}
-/>
+// Inclusive range: 0 to 10
+for i in 0..=10 {
+  // process i
+}
+```
 
 ## While Loops
 
-Repeat while a condition is true:
+Continue while a condition is true:
 
-<DOLRepl
-  code={`// While loop
-let mut count = 0
-
-while count < 5 {
-    log(count)
-    count = count + 1
-}`}
-  title="while.dol"
-  output={`0
-1
-2
-3
-4`}
-/>
-
-Note the `mut` keyword for mutable variables (we will cover mutability more later).
-
-## Loop Control
-
-### Break
-
-Exit a loop early:
-
-<DOLRepl
-  code={`// Break out of a loop
-for i in 1..=10 {
-    if i == 5 {
-        break
-    }
-    log(i)
+```dol
+pub fun find_root(mut n: Int64) -> Int64 {
+  while n > 1 {
+    n = n / 2
+  }
+  return n
 }
+```
 
-log("Done")`}
-  title="break.dol"
-  output={`1
-2
-3
-4
-Done`}
-/>
+## Loop with Break
 
-### Continue
+Infinite loop until explicitly broken:
 
-Skip to the next iteration:
-
-<DOLRepl
-  code={`// Continue to next iteration
-for i in 1..=5 {
-    if i == 3 {
-        continue  // Skip 3
+```dol
+pub fun find_first_match(items: List<Item>, predicate: (Item) -> Bool) -> Option<Item> {
+  mut index = 0
+  loop {
+    if index >= items.len() {
+      break None
     }
-    log(i)
-}`}
-  title="continue.dol"
-  output={`1
-2
-4
-5`}
-/>
-
-## Loop as Expression
-
-Loops can return values using `break`:
-
-<DOLRepl
-  code={`// Loop with return value
-let result = loop {
-    let mut count = 0
-    while count < 10 {
-        if count * count > 50 {
-            break count  // Return count from loop
-        }
-        count = count + 1
+    let item = items[index]
+    if predicate(item) {
+      break Some(item)
     }
-    break 0  // Default return
+    index += 1
+  }
 }
+```
 
-log("First number whose square > 50: " + result.to_string())`}
-  title="loop-expr.dol"
-  output="First number whose square > 50: 8"
-/>
+## Pattern Types
 
-## Expression-Oriented Design
+DOL supports various patterns for matching:
 
-Remember: in DOL, control flow constructs are expressions. Use this to write concise code:
+### Literal Patterns
 
-<DOLRepl
-  code={`// Everything is an expression
-fn describe_number(n: Int) -> String {
-    let sign = if n < 0 { "negative" } else if n > 0 { "positive" } else { "zero" }
-    let parity = if n % 2 == 0 { "even" } else { "odd" }
-
-    sign + " " + parity
+```dol
+match value {
+  42 => "the answer",
+  0 => "zero",
+  _ => "something else"
 }
+```
 
-log(describe_number(7))
-log(describe_number(-4))
-log(describe_number(0))`}
-  title="expr-design.dol"
-  output={`positive odd
-negative even
-zero even`}
-/>
+### Tuple Patterns
+
+```dol
+match point {
+  (0, 0) => "origin",
+  (x, 0) => "on x-axis",
+  (0, y) => "on y-axis",
+  (x, y) => "elsewhere"
+}
+```
+
+### Struct Patterns
+
+```dol
+match node {
+  MyceliumNode { connections: [], .. } => "isolated",
+  MyceliumNode { connections, .. } if connections.len() == 1 => "tip",
+  MyceliumNode { connections, .. } if connections.len() > 2 => "branch",
+  _ => "relay"
+}
+```
+
+### Variant Patterns
+
+```dol
+match expr.type {
+  Expr.IntLit { value, suffix: None } => {
+    // Integer literal
+  }
+  Expr.StringLit { value, is_raw: false } => {
+    // String literal
+  }
+  Expr.Binary { op, left, right } => {
+    // Binary operation
+  }
+  _ => {
+    // Other expression
+  }
+}
+```
+
+### Or Patterns
+
+Match multiple alternatives:
+
+```dol
+match state {
+  ContainerState.Created | ContainerState.Starting => "initializing",
+  ContainerState.Running => "active",
+  ContainerState.Paused | ContainerState.Stopping | ContainerState.Stopped => "inactive",
+  ContainerState.Removing | ContainerState.Removed => "cleanup"
+}
+```
+
+## Early Returns with `?`
+
+The `?` operator for early returns on `Option` and `Result`:
+
+```dol
+pub fun parse_config(text: String) -> Result<Config, Error> {
+  let name = parse_name(text)?  // Returns Err if parse fails
+  let port = parse_port(text)?
+  let host = parse_host(text)?
+
+  Ok(Config { name, port, host })
+}
+```
 
 ## Key Takeaways
 
-- `if/else` is an expression that returns a value
-- `match` provides powerful pattern matching with guards and destructuring
-- `for` loops iterate over ranges and collections
-- `while` loops repeat while a condition is true
-- `break` and `continue` control loop execution
-- All control flow constructs are expressions in DOL
+- `if/else` are expressions that return values
+- `match` enables powerful pattern matching with destructuring
+- Patterns include literals, tuples, structs, variants, and wildcards
+- Use guards (`if condition`) in match arms for complex conditions
+- `for` iterates over collections, `while` loops on a condition
+- The `?` operator enables early returns for `Option` and `Result`
 
-## Challenge
+## Practice Exercise
 
-Create a function that classifies numbers using pattern matching:
+Write a function that categorizes container states:
 
-1. If the number is 0, return "zero"
-2. If the number is between 1-10, return "small positive"
-3. If the number is between 11-100, return "medium positive"
-4. If the number is over 100, return "large positive"
-5. For negative numbers, return "negative"
-
-<DOLRepl
-  code={`// Challenge: Number classifier
-fn classify(n: Int) -> String {
-    match n {
-        // Your patterns here...
-        _ => "unknown"
-    }
+```dol
+pub gene ContainerState {
+  type: enum {
+    Created,
+    Starting,
+    Running,
+    Paused,
+    Stopping,
+    Stopped,
+    Removing,
+    Removed
+  }
 }
 
-log(classify(0))
-log(classify(5))
-log(classify(50))
-log(classify(200))
-log(classify(-10))`}
-  title="challenge.dol"
-  output={`unknown
-unknown
-unknown
-unknown
-unknown`}
-/>
+pub fun describe_state(state: ContainerState) -> String {
+  // Use match to return:
+  // - "initializing" for Created, Starting
+  // - "active" for Running
+  // - "suspended" for Paused
+  // - "shutting down" for Stopping, Stopped
+  // - "cleanup" for Removing, Removed
+
+  match state {
+    // Your code here...
+  }
+}
+```
 
 ## Next Steps
 
-Now let us explore how to work with collections of data.
+In the next lesson, we'll explore DOL's collection types and functional operations.
 
 <div className="mt-8 flex justify-between">
-  <a
-    href="/dol/tutorials/003-functions"
-    className="btn-secondary inline-flex items-center gap-2"
-  >
-    <span>←</span>
-    Previous: Functions
-  </a>
-  <a
-    href="/dol/tutorials/005-collections"
-    className="btn-primary inline-flex items-center gap-2"
-  >
-    Next: Collections
-    <span>→</span>
-  </a>
+  <a href="/dol/tutorials/003-functions" className="btn-secondary inline-flex items-center gap-2">← Previous: Functions</a>
+  <a href="/dol/tutorials/005-collections" className="btn-primary inline-flex items-center gap-2">Next: Collections →</a>
 </div>

@@ -1,39 +1,71 @@
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { BookOpen, ArrowRight, ChevronRight } from "lucide-react";
+import { BookOpen, ArrowRight, ChevronRight, Clock, GraduationCap } from "lucide-react";
 
 const tutorials = [
     {
         number: "01",
-        title: "Getting Started",
-        description: "Introduction to Metal DOL and the DOL-first paradigm",
-        topics: ["Installation", "Your first DOL file", "Running dol-parse"],
+        title: "Hello DOL",
+        description: "Write your first DOL specification and learn the core concepts",
+        topics: ["genes", "exegesis", "has predicate", "qualified identifiers"],
+        link: "/dol/tutorials/001-hello-dol",
+        duration: "15 min",
     },
     {
         number: "02",
-        title: "Writing Genes",
-        description: "Deep dive into gene syntax and predicates",
-        topics: [
-            "has, is, derives predicates",
-            "Typed properties",
-            "Categories",
-        ],
+        title: "Values and Types",
+        description: "Learn about DOL's type system and typed gene declarations",
+        topics: ["primitive types", "typed fields", "generics", "type annotations"],
+        link: "/dol/tutorials/002-values-types",
+        duration: "15 min",
     },
     {
         number: "03",
-        title: "Composing Traits",
-        description: "Learn to build complex behaviors from simple units",
-        topics: ["uses keyword", "Emitting events", "State machines"],
+        title: "Functions",
+        description: "Add behavior to genes with methods and standalone functions",
+        topics: ["fun keyword", "methods", "return types", "closures"],
+        link: "/dol/tutorials/003-functions",
+        duration: "20 min",
     },
     {
         number: "04",
-        title: "System Design",
-        description: "Architect complete systems with version requirements",
-        topics: [
-            "requires keyword",
-            "Version constraints",
-            "System composition",
-        ],
+        title: "Control Flow",
+        description: "Conditionals, loops, and pattern matching in DOL",
+        topics: ["if/else", "match", "for loops", "pattern matching"],
+        link: "/dol/tutorials/004-control-flow",
+        duration: "20 min",
+    },
+    {
+        number: "05",
+        title: "Collections",
+        description: "Work with Lists, Maps, and functional operations in DOL",
+        topics: ["List", "Map", "Option", "functional methods"],
+        link: "/dol/tutorials/005-collections",
+        duration: "20 min",
+    },
+    {
+        number: "06",
+        title: "Traits and Constraints",
+        description: "Define behaviors and enforce invariants in DOL",
+        topics: ["trait", "constraint", "uses", "never", "invariants"],
+        link: "/dol/tutorials/006-traits-constraints",
+        duration: "25 min",
+    },
+    {
+        number: "07",
+        title: "Error Handling",
+        description: "Handle errors with Option, Result, and pattern matching",
+        topics: ["Option<T>", "Result<T, E>", "? operator", "error propagation"],
+        link: "/dol/tutorials/007-error-handling",
+        duration: "15 min",
+    },
+    {
+        number: "08",
+        title: "Modules and Imports",
+        description: "Organize DOL specifications into reusable modules",
+        topics: ["module", "use", "pub", "requires", "systems"],
+        link: "/dol/tutorials/008-modules-imports",
+        duration: "15 min",
     },
 ];
 
@@ -79,13 +111,43 @@ export default function DOLLearn() {
                         </h1>
                     </div>
                     <p
-                        className="text-xl max-w-2xl"
+                        className="text-xl max-w-2xl mb-6"
                         style={{ color: "var(--text-secondary)" }}
                     >
                         Master the Design Ontology Language through hands-on
                         tutorials. Start with the basics and progress to
                         building complete systems.
                     </p>
+
+                    {/* Track Stats */}
+                    <div className="flex flex-wrap items-center gap-6 mb-8">
+                        <div className="flex items-center gap-2">
+                            <GraduationCap className="w-5 h-5" style={{ color: "var(--glow-cyan)" }} />
+                            <span style={{ color: "var(--text-secondary)" }}>8 lessons</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Clock className="w-5 h-5" style={{ color: "var(--glow-gold)" }} />
+                            <span style={{ color: "var(--text-secondary)" }}>~2 hours total</span>
+                        </div>
+                        <span
+                            className="px-3 py-1 rounded-full text-sm"
+                            style={{
+                                backgroundColor: "var(--glow-cyan-dim)",
+                                color: "var(--glow-cyan)",
+                            }}
+                        >
+                            Beginner Friendly
+                        </span>
+                    </div>
+
+                    {/* CTA Button */}
+                    <Link
+                        to="/dol/tutorials/001-hello-dol"
+                        className="btn-primary inline-flex items-center gap-2"
+                    >
+                        Start Learning
+                        <ArrowRight className="w-4 h-4" />
+                    </Link>
                 </div>
             </section>
 
@@ -164,9 +226,10 @@ export default function DOLLearn() {
                     </h2>
                     <div className="space-y-6">
                         {tutorials.map((tutorial) => (
-                            <div
+                            <Link
                                 key={tutorial.number}
-                                className="card group cursor-pointer"
+                                to={tutorial.link}
+                                className="card group cursor-pointer block"
                             >
                                 <div className="flex items-start gap-6">
                                     <div
@@ -180,14 +243,25 @@ export default function DOLLearn() {
                                         {tutorial.number}
                                     </div>
                                     <div className="flex-1">
-                                        <h3
-                                            className="text-lg font-normal mb-2 group-hover:text-univrs-primary-400 transition-colors"
-                                            style={{
-                                                color: "var(--text-primary)",
-                                            }}
-                                        >
-                                            {tutorial.title}
-                                        </h3>
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <h3
+                                                className="text-lg font-normal group-hover:text-univrs-primary-400 transition-colors"
+                                                style={{
+                                                    color: "var(--text-primary)",
+                                                }}
+                                            >
+                                                {tutorial.title}
+                                            </h3>
+                                            <span
+                                                className="text-xs px-2 py-0.5 rounded"
+                                                style={{
+                                                    backgroundColor: "var(--glow-gold-dim, rgba(255, 215, 0, 0.15))",
+                                                    color: "var(--glow-gold)",
+                                                }}
+                                            >
+                                                {tutorial.duration}
+                                            </span>
+                                        </div>
                                         <p
                                             className="text-sm mb-3"
                                             style={{
@@ -213,11 +287,11 @@ export default function DOLLearn() {
                                         </div>
                                     </div>
                                     <ArrowRight
-                                        className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                                         style={{ color: "var(--glow-cyan)" }}
                                     />
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 </div>
@@ -259,16 +333,18 @@ export default function DOLLearn() {
                             className="p-6 text-sm font-mono overflow-x-auto"
                             style={{ color: "var(--glow-cyan)" }}
                         >
-                            {`gene container.exists @1.0.0 {
+                            {`gene container.exists {
+  container has identifier
+  container has name
+  container has created_at
 
-    has identifier: string
-    is entity
-    is persistent
+  container is entity
+  container is persistent
+}
 
-    exegesis {
-      A container exists in the system and has a unique identifier.
-      This is the most basic property of any container.
-    }
+exegesis {
+  A container exists in the system and has a unique identifier.
+  This is the most basic property of any container.
 }`}
                         </pre>
                     </div>
@@ -371,6 +447,43 @@ export default function DOLLearn() {
                                 </p>
                             </div>
                         ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Final CTA */}
+            <section
+                className="py-16"
+                style={{ backgroundColor: "var(--bg-secondary)" }}
+            >
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+                    <h2
+                        className="text-2xl font-light mb-4"
+                        style={{ color: "var(--text-primary)" }}
+                    >
+                        Ready to begin?
+                    </h2>
+                    <p
+                        className="text-lg mb-8 max-w-xl mx-auto"
+                        style={{ color: "var(--text-secondary)" }}
+                    >
+                        Start with your first gene definition and build your
+                        understanding step by step.
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-4">
+                        <Link
+                            to="/dol/tutorials/001-hello-dol"
+                            className="btn-primary inline-flex items-center gap-2"
+                        >
+                            Start with Hello DOL
+                            <ArrowRight className="w-4 h-4" />
+                        </Link>
+                        <Link
+                            to="/dol/playground"
+                            className="btn-secondary"
+                        >
+                            Try Playground
+                        </Link>
                     </div>
                 </div>
             </section>

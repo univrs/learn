@@ -3,82 +3,92 @@ import { Helmet } from "react-helmet-async";
 import { Terminal, ChevronRight, Lightbulb, Zap, Code2 } from "lucide-react";
 import DOLRepl from "../../components/DOLRepl";
 
-// Example code snippets for the playground
+// Example code snippets for the playground - GROUNDED in real DOL syntax
 const examples = {
     hello: {
         title: "Hello DOL",
-        description: "Your first DOL specification",
+        description: "Your first DOL gene definition",
         code: `// Welcome to DOL!
-// This is your first spec definition
+// Genes are the fundamental building blocks
 
-spec HelloWorld {
-  message: String
+gene hello.world {
+  message has content
+  message has sender
+  message has timestamp
 }
 
-// Try running this code!
-log("Hello from DOL!")
-log("Specs help define what things should be.")`,
+exegesis {
+  The hello.world gene defines a simple message
+  with content, sender, and timestamp properties.
+}
+
+print("Hello from DOL!")
+print("Genes define what things should be.")`,
         expectedOutput: "Hello from DOL!",
     },
-    entity: {
-        title: "Defining Entities",
-        description: "Create typed entity specifications",
-        code: `// Define a User entity with typed properties
+    gene: {
+        title: "Defining Genes",
+        description: "Create typed gene specifications",
+        code: `// Define a User gene with typed properties
+module example.user @ 0.1.0
 
-entity User {
-  id: UUID
-  name: String
-  email: Email
-  createdAt: Date
+pub gene User {
+  has id: UInt64
+  has name: String
+  has email: String
+  has created_at: Int64
 }
 
-log("User entity defined successfully")
+exegesis {
+  User gene with typed fields.
+  Each property has a type from DOL's type system.
+}
 
-// Entities are the building blocks of your domain model
-// Each property has a type from DOL's type system`,
+print("User gene defined successfully")`,
     },
     constraints: {
         title: "Adding Constraints",
         description: "Enforce business rules with constraints",
-        code: `// Constraints ensure data integrity
+        code: `// Constraints ensure invariants hold
+gene product.exists {
+  product has id
+  product has name
+  product has price
+}
 
-spec Product {
-  id: UUID
-  name: String
-  price: Number
+constraint product.valid {
+  price never negative
+  name never empty
+}
 
-  constraint positive_price {
-    price > 0
+exegesis {
+  Products must have positive prices
+  and non-empty names.
+}
+
+print("Product constraint validated")`,
+    },
+    functions: {
+        title: "Functions",
+        description: "Add behavior with functions",
+        code: `// Functions use the fun keyword
+pub gene Counter {
+  has value: Int64
+  has max: Int64
+
+  fun increment() -> Counter {
+    return Counter {
+      value: this.value + 1,
+      max: this.max
+    }
+  }
+
+  fun is_at_max() -> Bool {
+    return this.value >= this.max
   }
 }
 
-constraint non_empty_name
-
-log("Product spec with constraints validated")
-
-// Constraints can reference properties
-// and express complex business rules`,
-    },
-    tests: {
-        title: "Writing Tests",
-        description: "Validate your specifications",
-        code: `// Tests verify your specs work correctly
-
-spec Calculator {
-  add: (a: Number, b: Number) => Number
-}
-
-test "addition works correctly" {
-  assert 2 + 2 == 4
-  assert 0 + 0 == 0
-  assert -1 + 1 == 0
-}
-
-test "calculator spec is valid" {
-  assert true
-}
-
-log("All tests completed!")`,
+print("Counter with methods defined")`,
     },
 };
 
@@ -190,17 +200,17 @@ export default function DOLPlayground() {
                                 description={examples.hello.description}
                                 initialCode={examples.hello.code}
                                 expectedOutput={examples.hello.expectedOutput}
-                                height="280px"
+                                height="320px"
                             />
                         </div>
 
-                        {/* Entity Example */}
+                        {/* Gene Example */}
                         <div>
                             <DOLRepl
-                                title={examples.entity.title}
-                                description={examples.entity.description}
-                                initialCode={examples.entity.code}
-                                height="280px"
+                                title={examples.gene.title}
+                                description={examples.gene.description}
+                                initialCode={examples.gene.code}
+                                height="300px"
                             />
                         </div>
 
@@ -210,17 +220,17 @@ export default function DOLPlayground() {
                                 title={examples.constraints.title}
                                 description={examples.constraints.description}
                                 initialCode={examples.constraints.code}
-                                height="300px"
+                                height="320px"
                             />
                         </div>
 
-                        {/* Tests Example */}
+                        {/* Functions Example */}
                         <div>
                             <DOLRepl
-                                title={examples.tests.title}
-                                description={examples.tests.description}
-                                initialCode={examples.tests.code}
-                                height="320px"
+                                title={examples.functions.title}
+                                description={examples.functions.description}
+                                initialCode={examples.functions.code}
+                                height="340px"
                             />
                         </div>
                     </div>
@@ -252,54 +262,58 @@ export default function DOLPlayground() {
                     </p>
 
                     <DOLRepl
-                        title="Reference: Complete Spec Pattern"
-                        description="A complete specification following DOL best practices (read-only)"
+                        title="Reference: Complete System Pattern"
+                        description="A complete system specification following DOL best practices (read-only)"
                         readOnly={true}
-                        initialCode={`// Complete Specification Pattern
-// This demonstrates all DOL features together
+                        initialCode={`// Complete System Pattern
+// Demonstrates genes, traits, constraints, and systems
 
-spec OrderSystem @1.0.0 {
-  // Core entity
-  entity Order {
-    id: UUID
-    customer: Customer
-    items: [OrderItem]
-    status: OrderStatus
-    createdAt: Date
-    totalAmount: Number
-  }
+module order.system @ 1.0.0
 
-  // Status enumeration
-  enum OrderStatus {
-    pending
-    confirmed
-    shipped
-    delivered
-    cancelled
-  }
+// Core gene definition
+pub gene Order {
+  has id: UInt64
+  has customer_id: UInt64
+  has items: List<OrderItem>
+  has status: OrderStatus
+  has created_at: Int64
+  has total_amount: Float64
+}
 
-  // Business constraint
-  constraint valid_order {
-    items.length > 0
-    totalAmount > 0
-  }
-
-  // Lifecycle invariant
-  invariant order_lifecycle {
-    status == cancelled implies
-      items.every(i => i.refunded)
+// Enum-style gene for status
+pub gene OrderStatus {
+  type: enum {
+    Pending,
+    Confirmed,
+    Shipped,
+    Delivered,
+    Cancelled
   }
 }
 
-// This spec can generate:
-// - TypeScript interfaces
-// - GraphQL schema
-// - Database migrations
-// - API endpoints
-// - Test suites
+// Trait for orderable items
+trait order.valid {
+  uses order.exists
+  order has items
+  items never empty
+  total never negative
+}
 
-log("OrderSystem spec ready for generation")`}
-                        height="450px"
+// System composition
+system order.service @1.0.0 {
+  requires order.valid >= 0.0.1
+
+  uses Order
+  service has persistence.strategy
+}
+
+exegesis {
+  Order system with status tracking,
+  validation constraints, and service composition.
+}
+
+print("OrderSystem ready")`}
+                        height="500px"
                         showHistory={false}
                     />
                 </div>
@@ -337,7 +351,7 @@ log("OrderSystem spec ready for generation")`}
                                 className="text-lg font-mono mb-2"
                                 style={{ color: "var(--glow-cyan)" }}
                             >
-                                log("message")
+                                print("message")
                             </div>
                             <p
                                 className="text-sm"
@@ -365,13 +379,13 @@ log("OrderSystem spec ready for generation")`}
                                 className="text-lg font-mono mb-2"
                                 style={{ color: "var(--glow-cyan)" }}
                             >
-                                assert condition
+                                gene name { }
                             </div>
                             <p
                                 className="text-sm"
                                 style={{ color: "var(--text-secondary)" }}
                             >
-                                Validate conditions in your test blocks
+                                Define genes with properties using has keyword
                             </p>
                         </div>
                         <div className="card">

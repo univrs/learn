@@ -1,326 +1,335 @@
 ---
 title: "Functions"
-description: "Define and use functions, understand pure functions and closures"
+description: "Add behavior to genes with methods and standalone functions"
 lesson: 3
 track: "dol-fundamentals"
 duration: "20 minutes"
-concepts: ["function definition", "parameters", "return types", "pure functions", "closures", "higher-order functions"]
+concepts: ["fun keyword", "methods", "return types", "parameters", "closures"]
 prev: "/dol/tutorials/002-values-types"
 next: "/dol/tutorials/004-control-flow"
 ---
 
-import DOLRepl from '@/components/code/DOLRepl';
-
 # Functions
 
-Functions are the building blocks of any DOL program. They allow you to organize code into reusable units that transform inputs into outputs.
+Genes define structure, but functions define behavior. In this lesson, you'll learn how to add methods to genes and write standalone functions.
 
-## Defining Functions
+## Function Syntax
 
-Use the `fn` keyword to define a function:
-
-<DOLRepl
-  code={`// A simple function
-fn greet(name: String) -> String {
-    "Hello, " + name + "!"
-}
-
-log(greet("DOL Developer"))`}
-  title="simple-fn.dol"
-  output="Hello, DOL Developer!"
-/>
-
-Let us break down the syntax:
-
-- `fn` - keyword to define a function
-- `greet` - the function name
-- `(name: String)` - parameter with its type
-- `-> String` - return type
-- `{ ... }` - function body
-
-## Return Values
-
-In DOL, the last expression in a function is automatically returned. No `return` keyword needed!
-
-<DOLRepl
-  code={`// The last expression is the return value
-fn add(a: Int, b: Int) -> Int {
-    a + b  // No semicolon = return this value
-}
-
-fn multiply(x: Int, y: Int) -> Int {
-    let result = x * y
-    result  // Explicitly return result
-}
-
-log(add(5, 3))
-log(multiply(4, 7))`}
-  title="return.dol"
-  output={`8
-28`}
-/>
-
-## Multiple Parameters
-
-Functions can take multiple parameters:
-
-<DOLRepl
-  code={`// Function with multiple parameters
-fn calculate_bmi(weight_kg: Float, height_m: Float) -> Float {
-    weight_kg / (height_m * height_m)
-}
-
-let bmi = calculate_bmi(70.0, 1.75)
-log("BMI: " + bmi.to_string())`}
-  title="multi-params.dol"
-  output="BMI: 22.857142857142858"
-/>
-
-## Functions Without Return Values
-
-Some functions perform actions without returning a meaningful value. These return `Unit` (written as `()`):
-
-<DOLRepl
-  code={`// Function returning Unit
-fn print_header(title: String) -> () {
-    log("================")
-    log(title)
-    log("================")
-}
-
-print_header("Welcome to DOL")`}
-  title="unit-return.dol"
-  output={`================
-Welcome to DOL
-================`}
-/>
-
-You can also omit the `-> ()` for functions that return Unit:
+DOL uses the `fun` keyword for functions:
 
 ```dol
-fn print_header(title: String) {
-    log(title)
+/// Create a simple identifier expression
+pub fun ident(name: String, span: Span) -> Expr {
+  return Expr {
+    type: Expr.Ident { name: name },
+    span: span
+  }
 }
 ```
 
-## Pure Functions
+The syntax:
+- `pub` (optional) - makes the function public
+- `fun` - keyword for function definition
+- `ident` - function name
+- `(name: String, span: Span)` - parameters with types
+- `-> Expr` - return type
+- `{ ... }` - function body
 
-DOL emphasizes **pure functions** - functions that:
-1. Always return the same output for the same input
-2. Have no side effects (do not modify external state)
+## Methods on Genes
 
-<DOLRepl
-  code={`// Pure function - always same output for same input
-fn square(n: Int) -> Int {
-    n * n
+Add methods inside gene declarations:
+
+```dol
+pub gene MyceliumNode {
+  has id: UInt64
+  has position: Vec3
+  has connections: List<UInt64>
+
+  fun is_branching_point() -> Bool {
+    return this.connections.len() > 2
+  }
+
+  fun is_tip() -> Bool {
+    return this.connections.len() == 1
+  }
+
+  exegesis {
+    A node in the mycelium network graph.
+    Can be a tip (edge), relay (path), or junction (branch).
+  }
+}
+```
+
+Inside methods, `this` refers to the current instance.
+
+## Public vs Private Methods
+
+Methods follow the same visibility rules as fields:
+
+```dol
+pub gene Counter {
+  has value: Int64
+  has max: Int64
+
+  // Public method - accessible everywhere
+  pub fun increment() -> Counter {
+    return Counter {
+      value: this.value + 1,
+      max: this.max
+    }
+  }
+
+  // Private method - only accessible within this gene
+  fun validate() -> Bool {
+    return this.value <= this.max
+  }
+}
+```
+
+## Return Values
+
+The last expression without a semicolon is returned:
+
+```dol
+pub fun add(a: Int64, b: Int64) -> Int64 {
+  a + b  // No semicolon = return this value
 }
 
-// Calling with same input always gives same result
-log(square(5))  // Always 25
-log(square(5))  // Always 25
-log(square(5))  // Always 25`}
-  title="pure.dol"
-  output={`25
-25
-25`}
-/>
-
-Pure functions are easier to test, debug, and reason about.
-
-## Closures (Anonymous Functions)
-
-Closures are functions without names. They are useful for passing behavior to other functions:
-
-<DOLRepl
-  code={`// Closure syntax: |params| body
-let double = |x: Int| x * 2
-let add_one = |x: Int| x + 1
-
-log(double(5))
-log(add_one(10))`}
-  title="closures.dol"
-  output={`10
-11`}
-/>
-
-Closures can capture variables from their surrounding scope:
-
-<DOLRepl
-  code={`// Closures capture their environment
-let multiplier = 3
-
-let times_multiplier = |x: Int| x * multiplier
-
-log(times_multiplier(5))   // 5 * 3 = 15
-log(times_multiplier(10))  // 10 * 3 = 30`}
-  title="capture.dol"
-  output={`15
-30`}
-/>
-
-## Higher-Order Functions
-
-Functions can accept other functions as parameters. These are called **higher-order functions**:
-
-<DOLRepl
-  code={`// Higher-order function
-fn apply_twice(f: fn(Int) -> Int, x: Int) -> Int {
-    f(f(x))
+pub fun multiply(x: Int64, y: Int64) -> Int64 {
+  let result = x * y
+  result  // Explicitly return result
 }
+```
 
-let double = |x: Int| x * 2
+Use `return` for early returns:
 
-log(apply_twice(double, 3))  // double(double(3)) = 12`}
-  title="higher-order.dol"
-  output="12"
-/>
-
-## Function Composition
-
-Combine functions to create new ones:
-
-<DOLRepl
-  code={`// Composing functions
-fn add_one(x: Int) -> Int { x + 1 }
-fn double(x: Int) -> Int { x * 2 }
-fn square(x: Int) -> Int { x * x }
-
-// Apply functions in sequence
-let result = square(double(add_one(2)))
-// add_one(2) = 3
-// double(3) = 6
-// square(6) = 36
-
-log(result)`}
-  title="compose.dol"
-  output="36"
-/>
-
-DOL also provides a pipe operator for cleaner composition:
-
-<DOLRepl
-  code={`// Pipe operator for composition
-fn add_one(x: Int) -> Int { x + 1 }
-fn double(x: Int) -> Int { x * 2 }
-fn square(x: Int) -> Int { x * x }
-
-// More readable with pipe
-let result = 2
-    |> add_one
-    |> double
-    |> square
-
-log(result)`}
-  title="pipe.dol"
-  output="36"
-/>
-
-## Generic Functions
-
-Functions can work with multiple types using generics:
-
-<DOLRepl
-  code={`// Generic function
-fn identity<T>(x: T) -> T {
-    x
+```dol
+pub fun factorial(n: Int64) -> Int64 {
+  if n <= 1 {
+    return 1
+  }
+  return n * factorial(n - 1)
 }
+```
 
-log(identity(42))        // Works with Int
-log(identity("hello"))   // Works with String
-log(identity(true))      // Works with Bool`}
-  title="generics.dol"
-  output={`42
-hello
-true`}
-/>
-
-## Default Parameters
+## Parameters with Defaults
 
 Provide default values for optional parameters:
 
-<DOLRepl
-  code={`// Default parameter values
-fn greet(name: String, greeting: String = "Hello") -> String {
-    greeting + ", " + name + "!"
+```dol
+pub fun greet(name: String, greeting: String = "Hello") -> String {
+  return greeting + ", " + name + "!"
 }
 
-log(greet("Alice"))              // Uses default
-log(greet("Bob", "Good morning")) // Override default`}
-  title="defaults.dol"
-  output={`Hello, Alice!
-Good morning, Bob!`}
-/>
+// Usage:
+// greet("Alice")           -> "Hello, Alice!"
+// greet("Bob", "Welcome")  -> "Welcome, Bob!"
+```
 
-## Recursive Functions
+## Generic Functions
 
-Functions can call themselves for recursive algorithms:
+Functions can work with multiple types:
 
-<DOLRepl
-  code={`// Recursive factorial function
-fn factorial(n: Int) -> Int {
-    if n <= 1 {
-        1
-    } else {
-        n * factorial(n - 1)
+```dol
+/// Create an integer literal expression
+pub fun int_lit(value: Int64, span: Span) -> Expr {
+  return Expr {
+    type: Expr.IntLit { value: value, suffix: None },
+    span: span
+  }
+}
+
+/// Create a string literal expression
+pub fun string_lit(value: String, span: Span) -> Expr {
+  return Expr {
+    type: Expr.StringLit { value: value, is_raw: false },
+    span: span
+  }
+}
+
+/// Create a boolean literal expression
+pub fun bool_lit(value: Bool, span: Span) -> Expr {
+  return Expr {
+    type: Expr.BoolLit { value: value },
+    span: span
+  }
+}
+```
+
+Or use type parameters for truly generic functions:
+
+```dol
+pub fun identity<T>(x: T) -> T {
+  x
+}
+
+pub fun swap<T>(pair: (T, T)) -> (T, T) {
+  (pair.1, pair.0)
+}
+```
+
+## Lambda Expressions
+
+Anonymous functions use pipe syntax:
+
+```dol
+// Lambda syntax: |params| body
+let double = |x: Int64| x * 2
+let add = |a: Int64, b: Int64| a + b
+
+// Block lambdas for complex logic
+let calculate = |x: Int64| {
+  let squared = x * x
+  let doubled = squared * 2
+  doubled + 1
+}
+```
+
+Lambdas are commonly used with collection methods:
+
+```dol
+pub fun find_nearby_nodes(pos: Vec3, max_dist: Float64) -> List<UInt64> {
+  let mut result = []
+  for (id, node) in this.nodes {
+    let dx = pos.x - node.position.x
+    let dy = pos.y - node.position.y
+    let dz = pos.z - node.position.z
+    let dist = (dx * dx + dy * dy + dz * dz).sqrt()
+    if dist <= max_dist {
+      result.push(id)
     }
+  }
+  return result
+}
+```
+
+## Function Types
+
+Functions are first-class values:
+
+```dol
+type BinaryOp = (Int64, Int64) -> Int64
+type Predicate<T> = (T) -> Bool
+type Transformer = (Expr) -> Expr
+```
+
+Higher-order functions accept or return functions:
+
+```dol
+pub fun apply_twice(f: (Int64) -> Int64, x: Int64) -> Int64 {
+  f(f(x))
 }
 
-log(factorial(5))  // 5! = 120`}
-  title="recursive.dol"
-  output="120"
-/>
+// Usage:
+// let result = apply_twice(|x| x * 2, 3)  // -> 12
+```
+
+## System Functions
+
+Systems can have stateful functions:
+
+```dol
+pub system MyceliumNetwork {
+  uses Hyphal
+  uses Transport<Nutrient>
+
+  state nodes: Map<UInt64, MyceliumNode>
+  state edges: List<HyphalSegment>
+  state next_id: UInt64
+
+  pub fun from_spore(position: Vec3) -> MyceliumNetwork {
+    let initial_tip = HyphalTip {
+      position: position,
+      direction: Vec3 { x: 0.0, y: 0.0, z: 1.0 },
+      age: 0.0
+    }
+
+    let initial_node = MyceliumNode {
+      id: 0,
+      position: position,
+      tips: [initial_tip],
+      connections: []
+    }
+
+    return MyceliumNetwork {
+      nodes: Map.from([(0, initial_node)]),
+      edges: [],
+      next_id: 1
+    }
+  }
+
+  pub fun grow(nutrient_field: Gradient<Nutrient>) -> MyceliumNetwork {
+    // Complex growth logic...
+  }
+
+  exegesis {
+    Complete mycelium network simulation with hyphal tip
+    extension, branching, and nutrient transport.
+  }
+}
+```
+
+## Side Effects (SEX)
+
+DOL tracks side effects with the `sex` keyword:
+
+```dol
+// Pure function - no side effects
+pub fun calculate(x: Int64) -> Int64 {
+  x * 2 + 1
+}
+
+// Side-effectful function - marked with sex
+pub sex fun print_result(x: Int64) -> Void {
+  println!("Result: {}", x)
+}
+
+// Or using the SEX block
+pub fun process(data: Data) -> Result {
+  sex {
+    log("Processing data...")
+    write_to_disk(data)
+  }
+  return compute_result(data)
+}
+```
 
 ## Key Takeaways
 
-- Define functions with `fn name(params) -> ReturnType { body }`
-- The last expression is automatically returned
-- Pure functions have no side effects and are predictable
-- Closures are anonymous functions that capture their environment
-- Higher-order functions take or return other functions
-- Use the pipe operator `|>` for readable function composition
+- Define functions with `fun name(params) -> ReturnType { body }`
+- Methods inside genes use `this` to access the instance
+- The last expression (without semicolon) is returned
+- Use `pub` for public visibility
+- Lambdas: `|params| expression` or `|params| { block }`
+- Generic functions use type parameters: `fun name<T>(x: T) -> T`
+- Mark side-effectful functions with `sex`
 
-## Challenge
+## Practice Exercise
 
-Create a set of functions to build a simple calculator:
+Add methods to a `Rectangle` gene:
 
-1. Define functions for `add`, `subtract`, `multiply`, `divide`
-2. Create a higher-order function `calculate` that takes an operation function and two numbers
-3. Test your calculator with different operations
+```dol
+pub gene Rectangle {
+  has width: Float64
+  has height: Float64
 
-<DOLRepl
-  code={`// Challenge: Build a calculator
-
-fn add(a: Int, b: Int) -> Int {
-    // Your code here
-    0
+  // Add these methods:
+  // 1. area() -> Float64
+  // 2. perimeter() -> Float64
+  // 3. is_square() -> Bool
+  // 4. scale(factor: Float64) -> Rectangle
 }
 
-// Define subtract, multiply, divide...
-
-// Define calculate function that takes an operation...
-
-log("Complete this challenge!")`}
-  title="challenge.dol"
-  output="Complete this challenge!"
-/>
+exegesis {
+  A rectangle with width and height dimensions.
+}
+```
 
 ## Next Steps
 
-Functions become even more powerful when combined with control flow. Let us learn about conditionals and pattern matching next.
+In the next lesson, we'll explore control flow with conditionals and pattern matching.
 
 <div className="mt-8 flex justify-between">
-  <a
-    href="/dol/tutorials/002-values-types"
-    className="btn-secondary inline-flex items-center gap-2"
-  >
-    <span>←</span>
-    Previous: Values and Types
-  </a>
-  <a
-    href="/dol/tutorials/004-control-flow"
-    className="btn-primary inline-flex items-center gap-2"
-  >
-    Next: Control Flow
-    <span>→</span>
-  </a>
+  <a href="/dol/tutorials/002-values-types" className="btn-secondary inline-flex items-center gap-2">← Previous: Values and Types</a>
+  <a href="/dol/tutorials/004-control-flow" className="btn-primary inline-flex items-center gap-2">Next: Control Flow →</a>
 </div>

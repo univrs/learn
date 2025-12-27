@@ -57,8 +57,9 @@ function evaluateDOL(code: string): ExecutionResult {
 
   try {
     const lines = code.split('\n')
-    let inSpec = false
-    let specName = ''
+    let inBlock = false
+    let blockType = ''
+    let blockName = ''
     let braceCount = 0
 
     for (let i = 0; i < lines.length; i++) {
@@ -66,46 +67,82 @@ function evaluateDOL(code: string): ExecutionResult {
       const lineNum = i + 1
 
       // Skip empty lines and comments
-      if (!line || line.startsWith('//') || line.startsWith('#')) {
+      if (!line || line.startsWith('//') || line.startsWith('--')) {
         continue
       }
 
-      // Handle log() statements - extract and show output
-      const logMatch = line.match(/log\s*\(\s*["'](.*)["']\s*\)/)
-      if (logMatch) {
-        output.push(logMatch[1])
-        continue
-      }
-
-      // Handle print() statements
+      // Handle print() statements - the REAL DOL builtin
       const printMatch = line.match(/print\s*\(\s*["'](.*)["']\s*\)/)
       if (printMatch) {
         output.push(printMatch[1])
         continue
       }
 
-      // Handle spec declarations
-      const specMatch = line.match(/^spec\s+(\w+)\s*\{?/)
-      if (specMatch) {
-        inSpec = true
-        specName = specMatch[1]
-        braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
-        output.push(`[DOL] Parsing spec: ${specName}`)
+      // Handle module declarations
+      const moduleMatch = line.match(/^module\s+([\w.]+)\s*@?\s*([\d.]+)?/)
+      if (moduleMatch) {
+        output.push(`[DOL] Module: ${moduleMatch[1]}${moduleMatch[2] ? ' v' + moduleMatch[2] : ''}`)
         continue
       }
 
-      // Handle entity declarations
-      const entityMatch = line.match(/^entity\s+(\w+)\s*\{?/)
-      if (entityMatch) {
-        output.push(`[DOL] Defining entity: ${entityMatch[1]}`)
-        braceCount += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
+      // Handle gene declarations
+      const geneMatch = line.match(/^(?:pub\s+)?gene\s+([\w.<>]+)\s*\{?/)
+      if (geneMatch) {
+        inBlock = true
+        blockType = 'gene'
+        blockName = geneMatch[1]
+        braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
+        output.push(`[DOL] Defining gene: ${blockName}`)
+        continue
+      }
+
+      // Handle trait declarations
+      const traitMatch = line.match(/^(?:pub\s+)?trait\s+([\w.]+)\s*\{?/)
+      if (traitMatch) {
+        inBlock = true
+        blockType = 'trait'
+        blockName = traitMatch[1]
+        braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
+        output.push(`[DOL] Defining trait: ${blockName}`)
         continue
       }
 
       // Handle constraint declarations
-      const constraintMatch = line.match(/^constraint\s+(\w+)/)
+      const constraintMatch = line.match(/^constraint\s+([\w.]+)\s*\{?/)
       if (constraintMatch) {
-        output.push(`[DOL] Adding constraint: ${constraintMatch[1]}`)
+        inBlock = true
+        blockType = 'constraint'
+        blockName = constraintMatch[1]
+        braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
+        output.push(`[DOL] Adding constraint: ${blockName}`)
+        continue
+      }
+
+      // Handle system declarations
+      const systemMatch = line.match(/^(?:pub\s+)?system\s+([\w.]+)\s*@?([\d.]+)?\s*\{?/)
+      if (systemMatch) {
+        inBlock = true
+        blockType = 'system'
+        blockName = systemMatch[1]
+        braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
+        output.push(`[DOL] Defining system: ${blockName}${systemMatch[2] ? ' v' + systemMatch[2] : ''}`)
+        continue
+      }
+
+      // Handle function declarations
+      const funMatch = line.match(/^(?:pub\s+)?(?:sex\s+)?fun\s+(\w+)/)
+      if (funMatch) {
+        output.push(`[DOL] Defining function: ${funMatch[1]}`)
+        braceCount += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
+        continue
+      }
+
+      // Handle exegesis blocks
+      const exegesisMatch = line.match(/^exegesis\s*\{?/)
+      if (exegesisMatch) {
+        inBlock = true
+        blockType = 'exegesis'
+        braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
         continue
       }
 
@@ -117,36 +154,23 @@ function evaluateDOL(code: string): ExecutionResult {
         continue
       }
 
-      // Handle assert statements
-      const assertMatch = line.match(/^assert\s+(.+)/)
-      if (assertMatch) {
-        const condition = assertMatch[1]
-        // Simulate assertion - for mock, always pass unless contains "fail"
-        if (condition.toLowerCase().includes('fail') || condition.includes('false')) {
-          errors.push(`Assertion failed at line ${lineNum}: ${condition}`)
-        } else {
-          output.push(`[PASS] Assert: ${condition.substring(0, 50)}${condition.length > 50 ? '...' : ''}`)
-        }
-        continue
-      }
-
-      // Handle property declarations
-      const propMatch = line.match(/^(\w+)\s*:\s*(.+)/)
-      if (propMatch && inSpec) {
-        // Just parsing properties, no output needed
-        continue
-      }
-
       // Track brace depth
-      braceCount += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
-      if (braceCount === 0 && inSpec) {
-        inSpec = false
-        output.push(`[DOL] Spec ${specName} validated successfully`)
+      const openBraces = (line.match(/\{/g) || []).length
+      const closeBraces = (line.match(/\}/g) || []).length
+      braceCount += openBraces - closeBraces
+
+      if (braceCount === 0 && inBlock && closeBraces > 0) {
+        if (blockType !== 'exegesis') {
+          output.push(`[DOL] ${blockType.charAt(0).toUpperCase() + blockType.slice(1)} ${blockName} validated`)
+        }
+        inBlock = false
+        blockType = ''
+        blockName = ''
       }
 
       // Detect potential syntax errors
-      if (line.includes(';;') || line.match(/\{\s*\{/) || line.match(/\}\s*\}/)) {
-        errors.push(`Syntax warning at line ${lineNum}: Unusual token sequence`)
+      if (line.includes(';;')) {
+        errors.push(`Syntax warning at line ${lineNum}: Double semicolon`)
       }
     }
 
@@ -171,17 +195,32 @@ function evaluateDOL(code: string): ExecutionResult {
 // DOL Language Definition for Shiki
 // ============================================================================
 
-// Custom DOL syntax highlighting tokens
+// Custom DOL syntax highlighting tokens - GROUNDED in real DOL grammar
 const DOL_KEYWORDS = [
-  'spec', 'entity', 'constraint', 'test', 'assert',
-  'require', 'ensure', 'invariant', 'extends', 'implements',
-  'log', 'print', 'import', 'export', 'from', 'as',
-  'true', 'false', 'null', 'undefined'
+  // Core declarations
+  'gene', 'trait', 'constraint', 'system', 'evolves', 'exegesis',
+  // Predicates
+  'has', 'is', 'derives', 'from', 'requires', 'uses', 'emits', 'matches', 'never',
+  // Control flow
+  'if', 'else', 'match', 'for', 'while', 'loop', 'break', 'continue', 'return', 'in',
+  // Functions
+  'fun', 'pub', 'let', 'var', 'const', 'mut',
+  // Logic
+  'implies', 'forall', 'exists', 'not',
+  // Other
+  'module', 'use', 'impl', 'as', 'state', 'law', 'sex', 'each', 'all', 'no',
+  // Built-ins
+  'print', 'typeof', 'len',
+  // Literals
+  'true', 'false', 'null'
 ]
 
 const DOL_TYPES = [
-  'String', 'Number', 'Boolean', 'Date', 'UUID', 'Email',
-  'URL', 'Int', 'Float', 'Any', 'Void', 'Never'
+  'Int8', 'Int16', 'Int32', 'Int64',
+  'UInt8', 'UInt16', 'UInt32', 'UInt64',
+  'Float32', 'Float64',
+  'Bool', 'String', 'Void',
+  'List', 'Map', 'Option', 'Result', 'Tuple', 'Box'
 ]
 
 // ============================================================================
@@ -189,7 +228,7 @@ const DOL_TYPES = [
 // ============================================================================
 
 export default function DOLRepl({
-  initialCode = '// Write your DOL code here\nspec Example {\n  name: String\n}\n\nlog("Hello, DOL!")',
+  initialCode = '// Write your DOL code here\ngene example.hello {\n  message has content\n}\n\nexegesis {\n  A simple example gene.\n}\n\nprint("Hello, DOL!")',
   expectedOutput,
   readOnly = false,
   title,

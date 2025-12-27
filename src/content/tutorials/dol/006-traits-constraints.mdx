@@ -1,0 +1,371 @@
+---
+title: "Traits and Constraints"
+description: "Define behaviors and enforce invariants in DOL"
+lesson: 6
+track: "dol-fundamentals"
+duration: "25 minutes"
+concepts: ["trait", "constraint", "uses", "is", "matches", "never", "invariants"]
+prev: "/dol/tutorials/005-collections"
+next: "/dol/tutorials/007-error-handling"
+---
+
+# Traits and Constraints
+
+DOL's ontology system goes beyond genes. **Traits** define behaviors and state machines, while **constraints** enforce invariants. Together, they create robust, self-documenting specifications.
+
+## Traits
+
+A **trait** defines behaviors, states, and transitions that entities can exhibit:
+
+```dol
+trait container.lifecycle {
+  uses container.exists
+
+  container is created
+  container is starting
+  container is running
+  container is stopping
+  container is stopped
+  container is removing
+  container is removed
+
+  each transition emits event
+}
+
+exegesis {
+  The container lifecycle defines the state machine that governs
+  container execution. Transitions between states are atomic and
+  emit events for observability. The lifecycle ensures predictable
+  behavior from creation through removal.
+}
+```
+
+### Trait Syntax
+
+A trait declaration includes:
+- `trait domain.name { }` - declares the trait
+- `uses gene.name` - depends on another gene
+- `entity is state` - declares possible states
+- `exegesis { }` - explains the trait's purpose
+
+### State Declarations
+
+The `is` predicate declares states an entity can be in:
+
+```dol
+trait message.delivery {
+  uses hello.world
+
+  message is pending
+  message is delivered
+  message is failed
+  message is retrying
+
+  delivery has attempts
+  delivery has last_error
+}
+
+exegesis {
+  Message delivery tracks the state of message transmission.
+  Messages start pending, transition to delivered on success,
+  or to failed/retrying on error. The delivery state machine
+  ensures reliable message handling.
+}
+```
+
+### Composing Traits
+
+Traits can build on other traits using `uses`:
+
+```dol
+trait container.observable {
+  uses container.lifecycle
+
+  container emits metrics
+  container emits logs
+  container emits traces
+}
+
+exegesis {
+  Observable containers emit telemetry data. This trait
+  extends lifecycle to add observability requirements.
+  All state transitions produce structured events.
+}
+```
+
+## Constraints
+
+**Constraints** enforce rules that must always be true:
+
+```dol
+constraint container.integrity {
+  state matches declared
+  identity never changes
+  boundaries never expand
+  resources never exceeds
+}
+
+exegesis {
+  Container integrity constraints ensure that runtime behavior exactly matches
+  the ontological declarations made at creation time. This prevents the common
+  failure mode where containers drift from their intended specifications through
+  mutation, resource creep, or boundary violations. By requiring state to match
+  declared properties, we guarantee that what the system believes about a
+  container remains true throughout its lifecycle. The immutability of identity
+  ensures containers cannot masquerade as other entities, while fixed boundaries
+  prevent unauthorized expansion that could compromise isolation. Resource limits
+  protect the system from container overreach that could destabilize other
+  components. Together, these constraints form an invariant bridge between
+  ontology and runtime, making the abstract concrete and the declared enforceable.
+}
+```
+
+### Constraint Keywords
+
+DOL constraints use specific keywords:
+
+| Keyword | Meaning |
+|---------|---------|
+| `matches` | Value must equal declared specification |
+| `never` | Action is prohibited |
+| `always` | Condition must hold at all times |
+| `requires` | Prerequisite condition |
+
+### Property Constraints
+
+Ensure properties maintain specific relationships:
+
+```dol
+constraint resource.allocation {
+  used never exceeds allocated
+  allocated never exceeds maximum
+  minimum never exceeds allocated
+}
+
+exegesis {
+  Resource allocation constraints ensure resources stay within
+  defined bounds. Used resources cannot exceed allocation, and
+  allocation must stay between minimum and maximum limits.
+}
+```
+
+### Identity Constraints
+
+Protect immutable aspects of entities:
+
+```dol
+constraint identity.cryptographic {
+  keypair never changes
+  public_key derives from keypair
+  signature is verifiable
+}
+
+exegesis {
+  Cryptographic identity constraints ensure that identity remains
+  stable and verifiable throughout an entity's lifetime. The keypair
+  is generated once and never modified.
+}
+```
+
+## Typed Traits
+
+Traits can include typed declarations:
+
+```dol
+pub trait Hashable {
+  fun hash() -> UInt64
+
+  exegesis {
+    Hashable types can produce a deterministic hash value.
+  }
+}
+
+pub trait Comparable {
+  fun compare(other: Self) -> Ordering
+
+  exegesis {
+    Comparable types can be ordered relative to each other.
+  }
+}
+
+pub gene Ordering {
+  type: enum {
+    Less,
+    Equal,
+    Greater
+  }
+}
+```
+
+### Implementing Traits
+
+Genes can declare that they implement traits:
+
+```dol
+pub gene MyceliumNode {
+  has id: UInt64
+  has position: Vec3
+  has connections: List<UInt64>
+
+  implements Hashable {
+    fun hash() -> UInt64 {
+      return this.id
+    }
+  }
+
+  exegesis {
+    A node in the mycelium network. Uses its unique ID
+    as its hash value.
+  }
+}
+```
+
+## Combining Traits and Constraints
+
+A complete specification often uses both:
+
+```dol
+gene container.exists {
+  container has identity
+  container has status
+  container has boundaries
+  container has resources
+  container has image
+}
+
+exegesis {
+  The container gene defines essential container properties.
+}
+
+trait container.lifecycle {
+  uses container.exists
+
+  container is created
+  container is starting
+  container is running
+  container is stopping
+  container is stopped
+  container is removing
+  container is removed
+
+  each transition emits event
+}
+
+exegesis {
+  Container lifecycle manages state transitions.
+}
+
+constraint container.integrity {
+  state matches declared
+  identity never changes
+  boundaries never expand
+  resources never exceeds
+}
+
+exegesis {
+  Container integrity ensures runtime matches specification.
+}
+```
+
+## Trait Bounds
+
+Use traits as type constraints:
+
+```dol
+pub fun sort<T: Comparable>(items: List<T>) -> List<T> {
+  // T must implement Comparable
+  // implementation can use compare() method
+}
+
+pub fun store<T: Hashable + Comparable>(item: T) -> UInt64 {
+  // T must implement both Hashable and Comparable
+  return item.hash()
+}
+```
+
+## System Constraints
+
+Systems can have their own constraints:
+
+```dol
+system mycelium.network @0.1.0 {
+  requires transport.protocol >= 0.0.1
+  uses MyceliumNode
+
+  state nodes: Map<UInt64, MyceliumNode>
+  state edges: List<HyphalSegment>
+
+  constraint {
+    nodes.len() <= 10000
+    edges.len() <= nodes.len() * 10
+  }
+}
+
+exegesis {
+  Mycelium network system with size constraints.
+  Limits prevent unbounded growth.
+}
+```
+
+## Key Takeaways
+
+- **Traits** define behaviors and state machines with `trait name { }`
+- Use `is` to declare states: `entity is state`
+- Use `uses` to compose traits: `uses other.trait`
+- **Constraints** enforce invariants with `constraint name { }`
+- Use `matches` for equality: `value matches declared`
+- Use `never` for prohibitions: `property never changes`
+- Traits can include method signatures for implementation
+- Combine traits and constraints for complete specifications
+
+## Practice Exercise
+
+Create a trait and constraint for a user authentication system:
+
+```dol
+gene user.account {
+  user has username
+  user has email
+  user has password_hash
+  user has created_at
+  user has last_login
+}
+
+exegesis {
+  User account with authentication credentials.
+}
+
+trait user.authentication {
+  uses user.account
+
+  // Add states for:
+  // - user is active
+  // - user is suspended
+  // - user is locked
+  // - session states
+}
+
+exegesis {
+  // Your explanation here
+}
+
+constraint user.security {
+  // Add constraints for:
+  // - password_hash never exposed
+  // - email matches pattern
+  // - username never changes
+}
+
+exegesis {
+  // Your explanation here
+}
+```
+
+## Next Steps
+
+In the next lesson, we'll explore error handling with Option and Result types.
+
+<div className="mt-8 flex justify-between">
+  <a href="/dol/tutorials/005-collections" className="btn-secondary inline-flex items-center gap-2">← Previous: Collections</a>
+  <a href="/dol/tutorials/007-error-handling" className="btn-primary inline-flex items-center gap-2">Next: Error Handling →</a>
+</div>
