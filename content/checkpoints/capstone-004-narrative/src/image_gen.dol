@@ -1,0 +1,241 @@
+// Lion & Swan - Image Generation Module
+// Checkpoint 003: Image generation with network capability
+//
+// This module handles generating symbolic images via the Imaginarium API
+
+use std::host::{log, network, random}
+use crate::symbols::{Symbol, Allegiance}
+
+/// Image generation style options
+pub enum ImageStyle {
+  /// Painterly, classical art style
+  Classical,
+  /// Modern, stylized illustration
+  Modern,
+  /// Abstract, symbolic representation
+  Abstract,
+  /// Ethereal, dream-like quality
+  Ethereal,
+}
+
+impl ImageStyle {
+  /// Convert to API parameter string
+  pub fun to_param(self) -> String {
+    match self {
+      ImageStyle::Classical => "classical_painting",
+      ImageStyle::Modern => "modern_illustration",
+      ImageStyle::Abstract => "abstract_symbolic",
+      ImageStyle::Ethereal => "ethereal_dream",
+    }
+  }
+
+  exegesis {
+    Image styles affect the visual output of generated images.
+    Each style produces a distinct aesthetic appropriate for
+    different narrative contexts.
+  }
+}
+
+/// Configuration for image generation
+pub gene ImageConfig {
+  has width: UInt32 = 1024
+  has height: UInt32 = 1024
+  has style: ImageStyle = ImageStyle::Classical
+  has quality: Float64 = 0.8
+
+  constraint valid_dimensions {
+    this.width >= 256 && this.width <= 4096 &&
+    this.height >= 256 && this.height <= 4096
+  }
+
+  constraint valid_quality {
+    this.quality >= 0.1 && this.quality <= 1.0
+  }
+
+  /// Create default configuration for an allegiance
+  pub fun for_allegiance(allegiance: Allegiance) -> ImageConfig {
+    let style = match allegiance {
+      Allegiance::Lion => ImageStyle::Classical,
+      Allegiance::Swan => ImageStyle::Ethereal,
+    }
+    return ImageConfig {
+      width: 1024,
+      height: 1024,
+      style: style,
+      quality: 0.8,
+    }
+  }
+
+  exegesis {
+    ImageConfig controls the parameters for image generation.
+    Different allegiances default to different styles that
+    match their symbolic associations.
+  }
+}
+
+/// A generated image with metadata
+pub gene GeneratedImage {
+  has id: UInt64
+  has symbol_id: UInt64
+  has prompt: String
+  has url: String
+  has created_at: UInt64
+  has width: UInt32
+  has height: UInt32
+  has style: ImageStyle
+
+  exegesis {
+    GeneratedImage stores the result of an image generation
+    request, including the original prompt and resulting URL.
+  }
+}
+
+/// Image generation request builder
+pub gene ImageRequest {
+  has symbol: Symbol
+  has config: ImageConfig
+  has additional_context: Option<String>
+
+  /// Create a new image request for a symbol
+  pub fun new(symbol: Symbol) -> ImageRequest {
+    return ImageRequest {
+      symbol: symbol,
+      config: ImageConfig::for_allegiance(symbol.allegiance),
+      additional_context: None,
+    }
+  }
+
+  /// Set custom configuration
+  pub fun with_config(self, config: ImageConfig) -> ImageRequest {
+    return ImageRequest { ...self, config: config }
+  }
+
+  /// Add additional context to the prompt
+  pub fun with_context(self, context: String) -> ImageRequest {
+    return ImageRequest { ...self, additional_context: Some(context) }
+  }
+
+  /// Build the generation prompt
+  pub fun build_prompt(self) -> String {
+    let allegiance_context = match self.symbol.allegiance {
+      Allegiance::Lion => "golden light, regal, powerful, solar energy",
+      Allegiance::Swan => "silver moonlight, graceful, ethereal, lunar mystery",
+    }
+
+    let base_prompt = "{self.symbol.name}: {self.symbol.description}. {allegiance_context}"
+
+    match self.additional_context {
+      Some(ctx) => "{base_prompt}. {ctx}",
+      None => base_prompt,
+    }
+  }
+
+  exegesis {
+    ImageRequest provides a builder pattern for constructing
+    image generation requests with appropriate context for
+    the symbol's allegiance and narrative role.
+  }
+}
+
+/// The image generator service
+pub trait ImageGenerator {
+  /// Generate an image for a symbol
+  is generate(request: ImageRequest) -> Result<GeneratedImage, Error>
+
+  /// Check if generation is available
+  is is_available() -> Bool
+
+  /// Get remaining generation quota
+  is remaining_quota() -> UInt32
+}
+
+/// Implementation of ImageGenerator using the Imaginarium API
+pub gene ImaginatorClient {
+  has api_endpoint: String = "https://api.imaginarium.univrs.io/v1/generate"
+  has generated_count: UInt64 = 0
+
+  impl ImageGenerator {
+    /// Generate an image using the Imaginarium API
+    pub fun generate(request: ImageRequest) -> Result<GeneratedImage, Error> {
+      log::info("Generating image for symbol: {request.symbol.name}")
+
+      let prompt = request.build_prompt()
+      log::debug("Prompt: {prompt}")
+
+      let body = {
+        "prompt": prompt,
+        "width": request.config.width,
+        "height": request.config.height,
+        "style": request.config.style.to_param(),
+        "quality": request.config.quality,
+      }
+
+      let response = network::post(this.api_endpoint, body)?
+
+      if response.status != 200 {
+        log::error("Image generation failed: {response.status}")
+        return Err(Error::NetworkError("Generation failed"))
+      }
+
+      let result = response.json()?
+      let image = GeneratedImage {
+        id: random::u64(),
+        symbol_id: request.symbol.id,
+        prompt: prompt,
+        url: result["url"],
+        created_at: time::now(),
+        width: request.config.width,
+        height: request.config.height,
+        style: request.config.style,
+      }
+
+      log::info("Image generated successfully: {image.url}")
+      return Ok(image)
+    }
+
+    /// Check API availability
+    pub fun is_available() -> Bool {
+      match network::get("{this.api_endpoint}/health") {
+        Ok(response) => response.status == 200,
+        Err(_) => false,
+      }
+    }
+
+    /// Get remaining quota from API
+    pub fun remaining_quota() -> UInt32 {
+      match network::get("{this.api_endpoint}/quota") {
+        Ok(response) => response.json()["remaining"] as UInt32,
+        Err(_) => 0,
+      }
+    }
+  }
+
+  exegesis {
+    ImaginatorClient connects to the Imaginarium API to generate
+    symbolic images. It handles request construction, API communication,
+    and response parsing.
+  }
+}
+
+/// Generate images for a list of symbols
+pub fun generate_batch(
+  client: ImaginatorClient,
+  symbols: List<Symbol>,
+  config: Option<ImageConfig>
+) -> Result<List<GeneratedImage>, Error> {
+  let mut results = []
+
+  for symbol in symbols {
+    let request = match config {
+      Some(cfg) => ImageRequest::new(symbol).with_config(cfg),
+      None => ImageRequest::new(symbol),
+    }
+
+    match client.generate(request) {
+      Ok(image) => results.push(image),
+      Err(e) => log::warn("Failed to generate image for {symbol.name}: {e}"),
+    }
+  }
+
+  return Ok(results)
+}

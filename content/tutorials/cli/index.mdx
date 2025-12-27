@@ -1,0 +1,117 @@
+---
+title: "CLI Mastery Track"
+description: "Master the VUDO command-line interface for efficient DOL development"
+track: "cli"
+order: 0
+duration: "2 hours total"
+prerequisites:
+  - "DOL fundamentals (Track 1)"
+  - "Terminal/shell basics"
+outcomes:
+  - "Navigate all VUDO commands confidently"
+  - "Use project templates effectively"
+  - "Master the interactive REPL"
+  - "Apply code quality tools in your workflow"
+  - "Work with the DOL registry"
+---
+
+# CLI Mastery Track
+
+Welcome to the CLI Mastery track. This track teaches you to become proficient with the VUDO command-line interface, the primary tool for DOL development.
+
+## What is VUDO?
+
+VUDO (Visionary Unified Development Operator) is the official CLI for DOL development. It provides a unified interface for:
+
+- **Project scaffolding** - Create new projects from templates
+- **Interactive development** - REPL for exploration and testing
+- **Code quality** - Syntax checking, type validation, formatting
+- **Registry operations** - Install and share DOL modules
+
+```bash
+# Quick install
+cargo install vudo
+
+# Verify installation
+vudo --version
+# vudo 0.2.3
+```
+
+## Track Overview
+
+<TutorialGrid>
+  <TutorialCard
+    number="01"
+    title="CLI Overview"
+    duration="15 min"
+    description="Tour of all VUDO commands and capabilities"
+    href="/tutorials/cli/001-overview"
+  />
+  <TutorialCard
+    number="02"
+    title="Project Templates"
+    duration="20 min"
+    description="Create projects with basic, ai-image, and ai-text templates"
+    href="/tutorials/cli/002-templates"
+  />
+  <TutorialCard
+    number="03"
+    title="The DOL REPL"
+    duration="25 min"
+    description="Interactive development with expression evaluation and inspection"
+    href="/tutorials/cli/003-repl"
+  />
+  <TutorialCard
+    number="04"
+    title="Code Quality Tools"
+    duration="20 min"
+    description="Syntax checking, type validation, formatting, and documentation"
+    href="/tutorials/cli/004-quality-tools"
+  />
+  <TutorialCard
+    number="05"
+    title="Registry Operations"
+    duration="20 min"
+    description="Install, search, and publish DOL modules"
+    href="/tutorials/cli/005-registry"
+  />
+</TutorialGrid>
+
+## Prerequisites
+
+Before starting this track, ensure you have:
+
+1. **VUDO installed** - Follow the [Quick Start](/dol/quickstart) if needed
+2. **DOL fundamentals** - Complete [Track 1: DOL Fundamentals](/tutorials/dol)
+3. **Terminal comfort** - Basic shell navigation and command execution
+
+## Learning Path
+
+```
+                    CLI Mastery Track
+
+    [01 Overview] --> [02 Templates] --> [03 REPL]
+                                              |
+                                              v
+                        [05 Registry] <-- [04 Quality Tools]
+```
+
+Each tutorial builds on the previous one. Start with the Overview to understand the full command landscape, then proceed sequentially through the remaining tutorials.
+
+## Quick Reference
+
+| Command | Purpose |
+|---------|---------|
+| `vudo new` | Create new project from template |
+| `vudo repl` | Start interactive REPL session |
+| `vudo check` | Validate syntax and types |
+| `vudo fmt` | Auto-format DOL files |
+| `vudo doc` | Generate documentation |
+| `vudo install` | Install a registry module |
+| `vudo search` | Search the registry |
+
+## Ready to Start?
+
+<CallToAction href="/tutorials/cli/001-overview">
+  Begin with CLI Overview
+</CallToAction>

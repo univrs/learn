@@ -1,0 +1,481 @@
+---
+title: "Modules and Imports"
+description: "Organize code into reusable modules with proper visibility"
+lesson: 8
+track: "dol-fundamentals"
+duration: "15 minutes"
+concepts: ["modules", "imports", "pub/private", "visibility", "standard library", "packages"]
+prev: "/dol/tutorials/007-error-handling"
+next: null
+---
+
+import DOLRepl from '@/components/code/DOLRepl';
+
+# Modules and Imports
+
+As your DOL projects grow, you need to organize code into modules. Modules help you:
+- Group related functionality
+- Control what is public vs private
+- Avoid naming conflicts
+- Create reusable libraries
+
+## Defining Modules
+
+Use the `mod` keyword to create a module:
+
+<DOLRepl
+  code={`// Define a module
+mod math {
+    pub fn add(a: Int, b: Int) -> Int {
+        a + b
+    }
+
+    pub fn multiply(a: Int, b: Int) -> Int {
+        a * b
+    }
+
+    // Private function - only accessible within module
+    fn internal_helper() -> Int {
+        42
+    }
+}
+
+// Use the module
+log(math::add(5, 3))
+log(math::multiply(4, 7))`}
+  title="modules.dol"
+  output={`8
+28`}
+/>
+
+## Public vs Private
+
+By default, everything in a module is **private**. Use `pub` to make items public:
+
+<DOLRepl
+  code={`mod user {
+    // Public - accessible outside module
+    pub struct User {
+        pub name: String,  // Public field
+        age: Int           // Private field
+    }
+
+    pub fn create(name: String, age: Int) -> User {
+        User { name, age }
+    }
+
+    // Public function
+    pub fn get_name(user: &User) -> String {
+        user.name.clone()
+    }
+
+    // Private function
+    fn validate_age(age: Int) -> Bool {
+        age >= 0 && age <= 150
+    }
+}
+
+let alice = user::create("Alice", 30)
+log(user::get_name(&alice))`}
+  title="visibility.dol"
+  output="Alice"
+/>
+
+## Nested Modules
+
+Modules can contain other modules:
+
+<DOLRepl
+  code={`mod game {
+    pub mod player {
+        pub struct Stats {
+            pub health: Int,
+            pub level: Int
+        }
+
+        pub fn new_stats() -> Stats {
+            Stats { health: 100, level: 1 }
+        }
+    }
+
+    pub mod enemy {
+        pub struct Enemy {
+            pub name: String,
+            pub damage: Int
+        }
+    }
+}
+
+let stats = game::player::new_stats()
+log("Health: " + stats.health.to_string())`}
+  title="nested.dol"
+  output="Health: 100"
+/>
+
+## Imports with use
+
+The `use` statement brings items into scope:
+
+<DOLRepl
+  code={`mod math {
+    pub fn add(a: Int, b: Int) -> Int { a + b }
+    pub fn sub(a: Int, b: Int) -> Int { a - b }
+    pub fn mul(a: Int, b: Int) -> Int { a * b }
+    pub fn div(a: Int, b: Int) -> Int { a / b }
+}
+
+// Import specific items
+use math::add
+use math::sub
+
+// Now use without prefix
+log(add(10, 5))
+log(sub(10, 5))
+
+// Still need prefix for non-imported
+log(math::mul(10, 5))`}
+  title="use.dol"
+  output={`15
+5
+50`}
+/>
+
+### Import Multiple Items
+
+<DOLRepl
+  code={`mod collections {
+    pub struct List<T> { items: Vec<T> }
+    pub struct Map<K, V> { entries: Vec<(K, V)> }
+    pub struct Set<T> { items: Vec<T> }
+}
+
+// Import multiple items
+use collections::{List, Map, Set}
+
+// Or import all public items
+use collections::*
+
+log("Collections imported")`}
+  title="multi-import.dol"
+  output="Collections imported"
+/>
+
+### Renaming Imports
+
+<DOLRepl
+  code={`mod long_module_name {
+    pub fn very_long_function_name() -> Int { 42 }
+}
+
+// Rename for convenience
+use long_module_name::very_long_function_name as short_fn
+
+log(short_fn())`}
+  title="rename.dol"
+  output="42"
+/>
+
+## File-Based Modules
+
+In larger projects, modules correspond to files:
+
+```
+my_project/
+├── main.dol          # Main entry point
+├── lib.dol           # Library root
+├── math/
+│   ├── mod.dol       # math module declaration
+│   ├── algebra.dol   # math::algebra
+│   └── geometry.dol  # math::geometry
+└── utils/
+    ├── mod.dol       # utils module declaration
+    └── strings.dol   # utils::strings
+```
+
+**main.dol:**
+```dol
+// Declare modules from files
+mod math;
+mod utils;
+
+use math::algebra::quadratic;
+use utils::strings::capitalize;
+
+fn main() {
+    let result = quadratic(1, -5, 6);
+    log(capitalize("hello"));
+}
+```
+
+**math/mod.dol:**
+```dol
+// Submodule declarations
+pub mod algebra;
+pub mod geometry;
+```
+
+## Re-exports
+
+Make nested items available at a higher level:
+
+<DOLRepl
+  code={`mod internal {
+    pub mod deep {
+        pub fn helper() -> Int { 42 }
+    }
+}
+
+mod api {
+    // Re-export from internal
+    pub use internal::deep::helper;
+}
+
+// Users can access via api directly
+log(api::helper())`}
+  title="reexport.dol"
+  output="42"
+/>
+
+## The Standard Library
+
+DOL comes with a standard library (`std`). Key modules include:
+
+<DOLRepl
+  code={`// Standard library imports
+use std::io::{read_file, write_file}
+use std::collections::{HashMap, HashSet}
+use std::time::{now, Duration}
+use std::math::{sqrt, pow, PI}
+
+// Using std::math
+let radius = 5.0
+let area = PI * pow(radius, 2.0)
+log("Circle area: " + area.to_string())
+
+// Using std::time
+let start = now()
+// ... some work ...
+let elapsed = now() - start
+log("Elapsed: " + elapsed.to_string())`}
+  title="stdlib.dol"
+  output={`Circle area: 78.53981633974483
+Elapsed: 0ms`}
+/>
+
+### Common Standard Library Modules
+
+| Module | Description |
+|--------|-------------|
+| `std::io` | File and console I/O |
+| `std::collections` | Data structures |
+| `std::string` | String utilities |
+| `std::math` | Mathematical functions |
+| `std::time` | Time and duration |
+| `std::fs` | Filesystem operations |
+| `std::net` | Networking |
+| `std::json` | JSON parsing |
+
+## Prelude
+
+Some items are automatically imported via the **prelude**:
+
+<DOLRepl
+  code={`// These are always available (prelude)
+// - Option, Some, None
+// - Result, Ok, Err
+// - Bool, Int, Float, String
+// - List, Map basic types
+// - log(), assert!(), etc.
+
+let maybe: Option<Int> = Some(42)
+let result: Result<Int, String> = Ok(42)
+
+log(maybe)
+log(result)`}
+  title="prelude.dol"
+  output={`Some(42)
+Ok(42)`}
+/>
+
+## Creating Packages
+
+A **package** is a collection of modules distributed together:
+
+**dol.toml:**
+```toml
+[package]
+name = "my_library"
+version = "1.0.0"
+authors = ["Your Name <you@example.com>"]
+
+[dependencies]
+some_library = "2.0"
+another_lib = { git = "https://github.com/user/repo" }
+```
+
+## Visibility Levels
+
+DOL has several visibility levels:
+
+| Visibility | Syntax | Accessible From |
+|------------|--------|-----------------|
+| Private | (default) | Same module only |
+| Public | `pub` | Anywhere |
+| Crate-public | `pub(crate)` | Same package only |
+| Parent-public | `pub(super)` | Parent module |
+| Path-restricted | `pub(in path)` | Specific module path |
+
+<DOLRepl
+  code={`mod outer {
+    pub mod inner {
+        // Only visible in outer and its children
+        pub(super) fn restricted() -> Int { 42 }
+
+        // Visible everywhere
+        pub fn public_fn() -> Int { restricted() }
+    }
+
+    pub fn use_inner() -> Int {
+        inner::restricted()  // OK - we're in outer
+    }
+}
+
+// inner::restricted() not accessible here
+log(outer::inner::public_fn())`}
+  title="visibility-levels.dol"
+  output="42"
+/>
+
+## Module Best Practices
+
+### 1. Keep modules focused
+
+```dol
+// Good: focused modules
+mod user;     // User-related code
+mod auth;     // Authentication
+mod database; // Database access
+
+// Bad: catch-all module
+mod utils;    // Too vague
+```
+
+### 2. Minimize public API
+
+<DOLRepl
+  code={`mod api {
+    // Only expose what users need
+    pub struct Config {
+        pub timeout: Int
+    }
+
+    pub fn init(config: Config) -> () {
+        internal_setup(config.timeout);
+    }
+
+    // Keep implementation private
+    fn internal_setup(timeout: Int) {
+        log("Setup with timeout: " + timeout.to_string())
+    }
+}
+
+api::init(api::Config { timeout: 30 })`}
+  title="minimal-api.dol"
+  output="Setup with timeout: 30"
+/>
+
+### 3. Use re-exports for clean APIs
+
+```dol
+// lib.dol - Clean public API
+pub use crate::core::Engine;
+pub use crate::config::Config;
+pub use crate::error::Error;
+
+// Internal modules remain hidden
+mod core;
+mod config;
+mod error;
+mod internal;
+```
+
+## Key Takeaways
+
+- Use `mod` to define modules and organize code
+- Items are private by default; use `pub` to expose them
+- `use` brings items into scope for convenient access
+- File-based modules map to your directory structure
+- The standard library (`std`) provides common functionality
+- Re-exports create clean public APIs
+- Follow best practices: focused modules, minimal public API
+
+## Challenge
+
+Create a small library structure:
+
+1. Define a `math` module with `add` and `multiply` functions
+2. Define a `utils` module with a `format_number` function
+3. Create a `calculator` module that uses both
+4. Re-export key functions at the top level
+
+<DOLRepl
+  code={`// Challenge: Build a mini library
+
+mod math {
+    // Your code here
+}
+
+mod utils {
+    // Your code here
+}
+
+mod calculator {
+    // Use math and utils
+}
+
+// Re-export at top level
+pub use calculator::calculate;
+
+log("Complete this challenge!")`}
+  title="challenge.dol"
+  output="Complete this challenge!"
+/>
+
+## Congratulations!
+
+You have completed the DOL Fundamentals track! You now have a solid foundation in:
+
+- Basic syntax and the REPL
+- Types and type inference
+- Functions and closures
+- Control flow and pattern matching
+- Collections and functional methods
+- Entity-component architecture
+- Error handling with Result and Option
+- Modules and code organization
+
+## What's Next?
+
+Continue your DOL journey with these resources:
+
+- **[DOL Reference](/dol/reference)** - Complete language specification
+- **[Standard Library](/dol/stdlib)** - Explore built-in modules
+- **[Examples](/dol/examples)** - Real-world DOL projects
+- **[Metal DOL](/dol/language)** - Advanced ontology features
+
+<div className="mt-8 flex justify-between">
+  <a
+    href="/dol/tutorials/007-error-handling"
+    className="btn-secondary inline-flex items-center gap-2"
+  >
+    <span>←</span>
+    Previous: Error Handling
+  </a>
+  <a
+    href="/dol/reference"
+    className="btn-primary inline-flex items-center gap-2"
+  >
+    Explore the Reference
+    <span>→</span>
+  </a>
+</div>

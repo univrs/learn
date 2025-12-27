@@ -1,0 +1,191 @@
+// Lion & Swan - Symbol Definitions
+// Checkpoint 002: Symbol entities and Allegiance component
+//
+// This module defines the core symbolic entities that drive the narrative
+
+use std::host::{random, time}
+
+/// The two allegiances in the Lion & Swan universe
+pub enum Allegiance {
+  /// The Lion: Strength, courage, sovereignty, solar power
+  Lion,
+  /// The Swan: Grace, transformation, beauty, lunar mystery
+  Swan,
+}
+
+impl Allegiance {
+  /// Get the opposing allegiance
+  pub fun opposite(self) -> Allegiance {
+    match self {
+      Allegiance::Lion => Allegiance::Swan,
+      Allegiance::Swan => Allegiance::Lion,
+    }
+  }
+
+  /// Get the primary color associated with this allegiance
+  pub fun primary_color(self) -> String {
+    match self {
+      Allegiance::Lion => "gold",
+      Allegiance::Swan => "silver",
+    }
+  }
+
+  /// Get the element associated with this allegiance
+  pub fun element(self) -> String {
+    match self {
+      Allegiance::Lion => "fire",
+      Allegiance::Swan => "water",
+    }
+  }
+
+  /// Get the time of day associated with this allegiance
+  pub fun time_of_day(self) -> String {
+    match self {
+      Allegiance::Lion => "dawn",
+      Allegiance::Swan => "dusk",
+    }
+  }
+
+  exegesis {
+    The Allegiance enum represents the fundamental duality at the heart
+    of the Lion & Swan narrative. Each allegiance carries its own
+    symbolic associations: colors, elements, times, and virtues.
+
+    The Lion represents solar, masculine, active principles.
+    The Swan represents lunar, feminine, receptive principles.
+
+    Neither is superior; they exist in eternal balance.
+  }
+}
+
+/// A symbolic archetype in the narrative
+pub gene Symbol {
+  has id: UInt64
+  has name: String
+  has allegiance: Allegiance
+  has description: String
+  has created_at: UInt64
+  has power_level: Float64 = 1.0
+
+  constraint valid_power {
+    this.power_level >= 0.0 && this.power_level <= 10.0
+  }
+
+  constraint name_not_empty {
+    this.name.len() > 0
+  }
+
+  /// Create a new symbol with the given name and allegiance
+  pub fun new(name: String, allegiance: Allegiance, description: String) -> Symbol {
+    return Symbol {
+      id: random::u64(),
+      name: name,
+      allegiance: allegiance,
+      description: description,
+      created_at: time::now(),
+      power_level: 1.0,
+    }
+  }
+
+  /// Increase the symbol's power through narrative focus
+  pub fun empower(self, amount: Float64) -> Symbol {
+    let new_power = (self.power_level + amount).min(10.0)
+    return Symbol { ...self, power_level: new_power }
+  }
+
+  /// Check if this symbol is aligned with another
+  pub fun is_aligned(self, other: Symbol) -> Bool {
+    return self.allegiance == other.allegiance
+  }
+
+  /// Check if this symbol is opposed to another
+  pub fun is_opposed(self, other: Symbol) -> Bool {
+    return self.allegiance != other.allegiance
+  }
+
+  exegesis {
+    A Symbol represents an archetypal concept within the Lion & Swan
+    narrative framework. Each symbol belongs to an allegiance and
+    carries descriptive properties that influence story generation.
+
+    Symbols can be empowered through narrative focus, increasing their
+    influence on generated content. Aligned symbols strengthen each
+    other, while opposed symbols create dramatic tension.
+  }
+}
+
+/// A collection of symbols for a story
+pub gene SymbolRegistry {
+  has symbols: Map<UInt64, Symbol>
+  has lion_count: UInt64 = 0
+  has swan_count: UInt64 = 0
+
+  /// Create an empty registry
+  pub fun new() -> SymbolRegistry {
+    return SymbolRegistry {
+      symbols: Map::new(),
+      lion_count: 0,
+      swan_count: 0,
+    }
+  }
+
+  /// Add a symbol to the registry
+  pub fun add(self, symbol: Symbol) -> SymbolRegistry {
+    let new_symbols = self.symbols.insert(symbol.id, symbol)
+    let (lion, swan) = match symbol.allegiance {
+      Allegiance::Lion => (self.lion_count + 1, self.swan_count),
+      Allegiance::Swan => (self.lion_count, self.swan_count + 1),
+    }
+    return SymbolRegistry {
+      symbols: new_symbols,
+      lion_count: lion,
+      swan_count: swan,
+    }
+  }
+
+  /// Get the dominant allegiance (or None if balanced)
+  pub fun dominant_allegiance(self) -> Option<Allegiance> {
+    if self.lion_count > self.swan_count {
+      return Some(Allegiance::Lion)
+    } else if self.swan_count > self.lion_count {
+      return Some(Allegiance::Swan)
+    } else {
+      return None
+    }
+  }
+
+  /// Get all symbols of a given allegiance
+  pub fun by_allegiance(self, allegiance: Allegiance) -> List<Symbol> {
+    return self.symbols.values()
+      .filter(|s| s.allegiance == allegiance)
+      .collect()
+  }
+
+  exegesis {
+    The SymbolRegistry maintains a collection of symbols and tracks
+    the balance between the two allegiances. It provides methods for
+    querying symbols and determining narrative dominance.
+  }
+}
+
+/// Predefined symbols for the Lion allegiance
+pub fun lion_archetypes() -> List<Symbol> {
+  return [
+    Symbol::new("The Golden Crown", Allegiance::Lion, "Symbol of rightful sovereignty and noble rule"),
+    Symbol::new("The Roaring Sun", Allegiance::Lion, "The source of all warmth and life-giving power"),
+    Symbol::new("The Mane of Flame", Allegiance::Lion, "Untamed passion and fierce protection"),
+    Symbol::new("The Lion's Gate", Allegiance::Lion, "Threshold between the mundane and sacred"),
+    Symbol::new("The Proud Heart", Allegiance::Lion, "Courage that never wavers in darkness"),
+  ]
+}
+
+/// Predefined symbols for the Swan allegiance
+pub fun swan_archetypes() -> List<Symbol> {
+  return [
+    Symbol::new("The Silver Lake", Allegiance::Swan, "Mirror of truth reflecting inner nature"),
+    Symbol::new("The Feathered Moon", Allegiance::Swan, "Guide through the darkness of transformation"),
+    Symbol::new("The Swan Song", Allegiance::Swan, "Beauty found in endings and beginnings"),
+    Symbol::new("The Graceful Glide", Allegiance::Swan, "Effortless movement through troubled waters"),
+    Symbol::new("The White Wings", Allegiance::Swan, "Transcendence and spiritual flight"),
+  ]
+}

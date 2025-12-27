@@ -1,0 +1,84 @@
+// Lion & Swan - Capstone Project
+// A generative storytelling spirit that creates symbolic imagery and narratives
+//
+// Checkpoint 002: Symbol entities integrated
+// Now with Symbol and Allegiance support
+
+use std::host::{log, time}
+use crate::symbols::{Symbol, Allegiance, SymbolRegistry, lion_archetypes, swan_archetypes}
+
+/// The Lion & Swan spirit entry point
+pub system LionSwan @ 0.1.0 {
+  state registry: SymbolRegistry
+
+  /// Spirit initialization
+  pub fun init() -> LionSwan {
+    log::info("Lion & Swan spirit initialized")
+    log::info("Version: 0.1.0")
+
+    // Initialize the symbol registry with archetypes
+    let mut registry = SymbolRegistry::new()
+
+    for symbol in lion_archetypes() {
+      registry = registry.add(symbol)
+      log::debug("Registered Lion symbol: {symbol.name}")
+    }
+
+    for symbol in swan_archetypes() {
+      registry = registry.add(symbol)
+      log::debug("Registered Swan symbol: {symbol.name}")
+    }
+
+    log::info("Loaded {registry.lion_count} Lion symbols")
+    log::info("Loaded {registry.swan_count} Swan symbols")
+
+    return LionSwan { registry: registry }
+  }
+
+  /// Main execution entry point
+  pub fun run(self) -> Result<(), Error> {
+    let start_time = time::now()
+
+    log::info("Lion & Swan beginning execution...")
+
+    // Display current symbol balance
+    match self.registry.dominant_allegiance() {
+      Some(Allegiance::Lion) => log::info("The Lion holds dominance"),
+      Some(Allegiance::Swan) => log::info("The Swan holds dominance"),
+      None => log::info("The allegiances are in balance"),
+    }
+
+    // TODO: Implement image generation
+    // TODO: Implement narrative generation
+    // TODO: Implement gallery display
+
+    let elapsed = time::now() - start_time
+    log::info("Execution completed in {elapsed}ms")
+
+    return Ok(())
+  }
+
+  /// Add a custom symbol to the registry
+  pub fun add_symbol(self, name: String, allegiance: Allegiance, description: String) -> LionSwan {
+    let symbol = Symbol::new(name, allegiance, description)
+    log::info("Created new symbol: {name} ({allegiance})")
+    return LionSwan {
+      registry: self.registry.add(symbol)
+    }
+  }
+
+  /// Get symbols by allegiance
+  pub fun symbols_of(self, allegiance: Allegiance) -> List<Symbol> {
+    return self.registry.by_allegiance(allegiance)
+  }
+
+  exegesis {
+    The Lion & Swan is a generative storytelling spirit that explores
+    the duality of symbols through two allegiances: the noble Lion
+    representing strength and courage, and the graceful Swan representing
+    beauty and transformation.
+
+    This checkpoint adds the Symbol entity and Allegiance component,
+    allowing the spirit to maintain a registry of symbolic archetypes.
+  }
+}

@@ -1,0 +1,418 @@
+---
+title: "CLI Overview"
+description: "Tour of all VUDO commands and the complete command-line interface"
+track: "cli"
+tutorial: 1
+duration: "15 min"
+objectives:
+  - "Understand the VUDO command structure"
+  - "Learn all available command categories"
+  - "Navigate help documentation effectively"
+tags:
+  - "cli"
+  - "vudo"
+  - "commands"
+  - "getting-started"
+---
+
+# CLI Overview
+
+In this tutorial, you will learn the complete VUDO command-line interface. By the end, you will be able to navigate any command and understand where each tool fits in your workflow.
+
+## The VUDO Command Structure
+
+VUDO uses a subcommand pattern similar to Git, Cargo, and Docker:
+
+```bash
+vudo <command> [options] [arguments]
+```
+
+Every command supports the `--help` flag for detailed documentation:
+
+```bash
+vudo --help
+vudo new --help
+vudo check --help
+```
+
+## Getting Help
+
+The most important command to learn first is `--help`:
+
+<Terminal title="vudo --help">
+```
+$ vudo --help
+VUDO - Visionary Unified Development Operator
+
+The official CLI for Design Ontology Language (DOL) development.
+Tools for specification-driven, ontology-first development.
+
+USAGE:
+    vudo <COMMAND> [OPTIONS]
+
+COMMANDS:
+    new       Create a new DOL project from template
+    repl      Start interactive REPL session
+    check     Validate DOL file syntax and types
+    fmt       Auto-format DOL source files
+    doc       Generate documentation from DOL files
+    install   Install a module from the registry
+    search    Search the DOL registry
+    publish   Publish a module to the registry
+    version   Display version information
+
+OPTIONS:
+    -h, --help       Print help information
+    -V, --version    Print version information
+    -v, --verbose    Enable verbose output
+    -q, --quiet      Suppress non-essential output
+
+Run 'vudo <COMMAND> --help' for more information on a command.
+```
+</Terminal>
+
+## Command Categories
+
+VUDO commands fall into five categories:
+
+### 1. Project Management
+
+Commands for creating and managing DOL projects.
+
+| Command | Purpose | Example |
+|---------|---------|---------|
+| `vudo new` | Create new project | `vudo new my-app --template basic` |
+| `vudo init` | Initialize in existing directory | `vudo init .` |
+
+<Terminal title="Creating a new project">
+```
+$ vudo new my-project --template basic
+Creating project 'my-project'...
+  Using template: basic
+  Creating directory structure...
+  Writing project.dol...
+  Writing .dolrc...
+  Initializing git repository...
+
+Project created successfully!
+
+Next steps:
+  cd my-project
+  vudo repl
+```
+</Terminal>
+
+### 2. Interactive Development
+
+Commands for interactive exploration and testing.
+
+| Command | Purpose | Example |
+|---------|---------|---------|
+| `vudo repl` | Start REPL session | `vudo repl` |
+| `vudo repl --load` | Start with file | `vudo repl --load project.dol` |
+
+<Terminal title="Starting the REPL">
+```
+$ vudo repl
+DOL REPL v0.2.3
+Type :help for available commands, :quit to exit
+
+dol>
+```
+</Terminal>
+
+### 3. Code Quality
+
+Commands for validating and formatting code.
+
+| Command | Purpose | Example |
+|---------|---------|---------|
+| `vudo check` | Syntax validation | `vudo check src/*.dol` |
+| `vudo check --strict` | Type checking | `vudo check --strict project.dol` |
+| `vudo fmt` | Auto-format | `vudo fmt src/` |
+| `vudo fmt --check` | Check formatting | `vudo fmt --check src/` |
+
+<Terminal title="Checking code quality">
+```
+$ vudo check src/
+Checking 3 files...
+
+src/domain.dol ... OK
+src/traits.dol ... OK
+src/system.dol ... OK
+
+All files passed validation.
+
+$ vudo check --strict src/
+Checking 3 files (strict mode)...
+
+src/domain.dol ... OK (12 genes, 0 warnings)
+src/traits.dol ... OK (5 traits, 0 warnings)
+src/system.dol ... OK (2 systems, 0 warnings)
+
+Type checking passed.
+```
+</Terminal>
+
+### 4. Documentation
+
+Commands for generating and viewing documentation.
+
+| Command | Purpose | Example |
+|---------|---------|---------|
+| `vudo doc` | Generate docs | `vudo doc src/ -o docs/` |
+| `vudo doc --serve` | Serve locally | `vudo doc --serve` |
+| `vudo doc --format` | Choose format | `vudo doc --format markdown` |
+
+<Terminal title="Generating documentation">
+```
+$ vudo doc src/ -o docs/
+Generating documentation...
+
+Processing src/domain.dol...
+  - User (gene)
+  - Product (gene)
+  - Order (gene)
+
+Processing src/traits.dol...
+  - Auditable (trait)
+  - Lifecycle (trait)
+
+Writing docs/index.html...
+Writing docs/domain/index.html...
+Writing docs/traits/index.html...
+
+Documentation generated: docs/
+  14 genes documented
+  5 traits documented
+  2 systems documented
+
+Serve locally with: vudo doc --serve
+```
+</Terminal>
+
+### 5. Registry Operations
+
+Commands for working with the DOL registry.
+
+| Command | Purpose | Example |
+|---------|---------|---------|
+| `vudo install` | Install module | `vudo install std/collections` |
+| `vudo search` | Search registry | `vudo search "state machine"` |
+| `vudo publish` | Publish module | `vudo publish` |
+| `vudo login` | Authenticate | `vudo login` |
+
+<Terminal title="Working with the registry">
+```
+$ vudo search validation
+Searching registry...
+
+RESULTS (3 matches):
+
+std/validation @1.2.0
+  Common validation patterns for DOL genes
+  Downloads: 1,234 | License: MIT
+
+contrib/email-validator @0.3.1
+  Email and domain validation genes
+  Downloads: 456 | License: Apache-2.0
+
+contrib/schema-validator @0.1.0
+  JSON Schema compatible validation
+  Downloads: 123 | License: MIT
+
+$ vudo install std/validation
+Installing std/validation@1.2.0...
+  Downloading...
+  Extracting to ~/.vudo/registry/std/validation/1.2.0/
+
+Installed successfully.
+Add to your project: uses std/validation
+```
+</Terminal>
+
+## Global Options
+
+These options work with any command:
+
+| Option | Short | Purpose |
+|--------|-------|---------|
+| `--help` | `-h` | Show help for command |
+| `--version` | `-V` | Show version info |
+| `--verbose` | `-v` | Detailed output |
+| `--quiet` | `-q` | Minimal output |
+| `--no-color` | | Disable colored output |
+| `--config` | `-c` | Use specific config file |
+
+<Terminal title="Using global options">
+```
+$ vudo --version
+vudo 0.2.3
+
+$ vudo check --verbose src/domain.dol
+[DEBUG] Loading configuration from .dolrc
+[DEBUG] Parsing src/domain.dol
+[DEBUG] Building AST (47 nodes)
+[DEBUG] Running validation passes
+[INFO]  Checking semantic constraints
+[INFO]  Validating version requirements
+[DEBUG] All checks passed
+
+src/domain.dol ... OK
+```
+</Terminal>
+
+## Configuration File
+
+VUDO looks for configuration in these locations (in order):
+
+1. `--config <path>` flag
+2. `.dolrc` in current directory
+3. `.dolrc` in project root
+4. `~/.config/vudo/config.toml`
+
+<CodeBlock title=".dolrc" language="toml">
+```toml
+[project]
+name = "my-app"
+version = "1.0.0"
+
+[check]
+strict = true
+warnings_as_errors = false
+
+[fmt]
+indent_size = 4
+max_line_length = 100
+
+[registry]
+default_source = "https://registry.dol.dev"
+```
+</CodeBlock>
+
+## Tips and Best Practices
+
+<Tip type="info">
+**Use shell completion**: VUDO supports tab completion for Bash, Zsh, and Fish.
+```bash
+# Generate completion script
+vudo completions bash > ~/.bash_completion.d/vudo
+
+# Or for Zsh
+vudo completions zsh > ~/.zfunc/_vudo
+```
+</Tip>
+
+<Tip type="success">
+**Chain commands**: Use shell operators to chain VUDO commands.
+```bash
+# Format, check, then generate docs
+vudo fmt src/ && vudo check --strict src/ && vudo doc src/
+```
+</Tip>
+
+<Tip type="warning">
+**Check before commit**: Add VUDO checks to your pre-commit hooks.
+```bash
+# .git/hooks/pre-commit
+#!/bin/sh
+vudo check --strict src/
+vudo fmt --check src/
+```
+</Tip>
+
+## Common Issues
+
+### Command Not Found
+
+If `vudo` is not recognized:
+
+```bash
+# Check if installed
+which vudo
+# or
+cargo install --list | grep vudo
+
+# Reinstall if needed
+cargo install vudo --force
+```
+
+### Version Mismatch
+
+If you see version warnings:
+
+<Terminal title="Version mismatch warning">
+```
+$ vudo check project.dol
+Warning: Project requires VUDO >= 0.3.0, but you have 0.2.3
+         Some features may not work correctly.
+
+Run 'cargo install vudo' to update.
+```
+</Terminal>
+
+### Permission Errors
+
+If you get permission errors with the registry:
+
+```bash
+# Check registry directory permissions
+ls -la ~/.vudo/registry/
+
+# Fix permissions if needed
+chmod -R u+rw ~/.vudo/
+```
+
+## Summary
+
+You now understand the complete VUDO command structure:
+
+- **Project Management**: `new`, `init`
+- **Interactive Development**: `repl`
+- **Code Quality**: `check`, `fmt`
+- **Documentation**: `doc`
+- **Registry**: `install`, `search`, `publish`
+
+## Next Steps
+
+<NextTutorial
+  title="Project Templates"
+  href="/tutorials/cli/002-templates"
+  description="Learn to create projects with basic, ai-image, and ai-text templates"
+/>
+
+## Quick Reference Card
+
+```
+VUDO Quick Reference
+====================
+
+PROJECT
+  vudo new <name> [--template <t>]   Create project
+  vudo init [path]                   Initialize here
+
+DEVELOPMENT
+  vudo repl                          Interactive REPL
+  vudo repl --load <file>            REPL with file
+
+QUALITY
+  vudo check <files>                 Syntax check
+  vudo check --strict <files>        Type check
+  vudo fmt <files>                   Format code
+  vudo fmt --check <files>           Check format
+
+DOCS
+  vudo doc <src> [-o <out>]          Generate docs
+  vudo doc --serve                   Serve locally
+
+REGISTRY
+  vudo install <module>              Install module
+  vudo search <query>                Search registry
+  vudo publish                       Publish project
+
+GLOBAL OPTIONS
+  -h, --help                         Show help
+  -V, --version                      Show version
+  -v, --verbose                      Verbose mode
+  -q, --quiet                        Quiet mode
+```

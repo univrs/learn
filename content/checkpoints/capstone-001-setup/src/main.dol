@@ -1,0 +1,48 @@
+// Lion & Swan - Capstone Project
+// A generative storytelling spirit that creates symbolic imagery and narratives
+//
+// Checkpoint 001: Initial Setup
+// This establishes the project structure and entry point
+
+use std::host::{log, time}
+
+/// The Lion & Swan spirit entry point
+pub system LionSwan @ 0.1.0 {
+  /// Spirit initialization
+  pub fun init() {
+    log::info("Lion & Swan spirit initialized")
+    log::info("Version: 0.1.0")
+    log::info("Ready for symbolic storytelling")
+  }
+
+  /// Main execution entry point
+  pub fun run() -> Result<(), Error> {
+    let start_time = time::now()
+
+    log::info("Lion & Swan beginning execution...")
+
+    // TODO: Implement symbol generation
+    // TODO: Implement image generation
+    // TODO: Implement narrative generation
+    // TODO: Implement gallery display
+
+    let elapsed = time::now() - start_time
+    log::info("Execution completed in {elapsed}ms")
+
+    return Ok(())
+  }
+
+  exegesis {
+    The Lion & Swan is a generative storytelling spirit that explores
+    the duality of symbols through two allegiances: the noble Lion
+    representing strength and courage, and the graceful Swan representing
+    beauty and transformation.
+
+    This capstone project demonstrates:
+    - Entity modeling with DOL
+    - Host function integration
+    - Persistent storage
+    - Network capabilities for image generation
+    - Credit-based resource management
+  }
+}

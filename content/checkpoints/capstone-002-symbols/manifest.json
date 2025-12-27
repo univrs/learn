@@ -1,0 +1,28 @@
+{
+  "name": "lion-swan",
+  "version": "0.1.0",
+  "description": "The Lion & Swan: A generative storytelling spirit that creates symbolic imagery and narratives",
+  "author": "Your Name",
+  "license": "MIT",
+
+  "spirit": {
+    "entry": "src/main.dol",
+    "capabilities": [
+      "time",
+      "logging",
+      "random",
+      "storage"
+    ]
+  },
+
+  "build": {
+    "target": "wasm32-unknown-unknown",
+    "optimization": "release"
+  },
+
+  "metadata": {
+    "tags": ["storytelling", "generative", "symbols", "capstone"],
+    "category": "creative",
+    "homepage": "https://learn.univrs.io/tutorials/capstone"
+  }
+}

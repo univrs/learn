@@ -1,0 +1,993 @@
+---
+title: "Persistent Storage"
+description: "Store and retrieve data across Spirit invocations with the storage API"
+track: "spirits"
+tutorial: 4
+duration: "40 min"
+level: "intermediate"
+prerequisites:
+  - "003-host-functions"
+concepts:
+  - "storage::read/write/delete"
+  - "Data serialization"
+  - "Namespaces"
+  - "Building a note-taking Spirit"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+import { Terminal } from '@/components/ui/Terminal'
+import { FileTree } from '@/components/ui/FileTree'
+
+# Persistent Storage
+
+Spirits are stateless by default - they start fresh each invocation. The storage API lets you persist data across invocations, enabling Spirits that remember user preferences, accumulate state, and maintain complex data structures.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Use storage::read, storage::write, and storage::delete
+- Serialize and deserialize complex data structures
+- Organize data with namespaces and key conventions
+- Build a complete note-taking Spirit
+
+## Storage Fundamentals
+
+The storage API provides key-value storage with these characteristics:
+
+- **Persistent**: Data survives across invocations
+- **Isolated**: Each Spirit has its own storage namespace
+- **Typed**: You store and retrieve bytes; serialization is your responsibility
+- **Limited**: Storage quota is defined in the manifest
+
+### Capability Declaration
+
+Request storage capabilities in your manifest:
+
+```json
+{
+  "capabilities": {
+    "storage": {
+      "read": true,
+      "write": true,
+      "delete": true,
+      "namespace": "my-data"
+    }
+  },
+  "limits": {
+    "storage_bytes": 1048576
+  }
+}
+```
+
+<Callout type="info" title="Storage Limits">
+The `storage_bytes` limit applies to total storage used by this Spirit. Exceeding it will cause write operations to fail.
+</Callout>
+
+## Basic Operations
+
+### Writing Data
+
+Store bytes at a key:
+
+```rust
+use vudo_spirit::storage;
+
+#[vudo_spirit::main]
+pub fn save_setting(key: String, value: String) -> Result<(), vudo_spirit::Error> {
+    // Convert string to bytes
+    let bytes = value.as_bytes();
+
+    // Write to storage
+    storage::write(&key, bytes)?;
+
+    log::info!("Saved {} bytes to key '{}'", bytes.len(), key);
+
+    Ok(())
+}
+```
+
+### Reading Data
+
+Retrieve bytes from a key:
+
+```rust
+use vudo_spirit::storage;
+
+#[vudo_spirit::main]
+pub fn load_setting(key: String) -> Result<Option<String>, vudo_spirit::Error> {
+    // Read from storage
+    match storage::read(&key)? {
+        Some(bytes) => {
+            // Convert bytes to string
+            let value = String::from_utf8(bytes)?;
+            log::info!("Loaded {} chars from key '{}'", value.len(), key);
+            Ok(Some(value))
+        }
+        None => {
+            log::debug!("Key '{}' not found", key);
+            Ok(None)
+        }
+    }
+}
+```
+
+### Deleting Data
+
+Remove a key from storage:
+
+```rust
+use vudo_spirit::storage;
+
+#[vudo_spirit::main]
+pub fn delete_setting(key: String) -> Result<bool, vudo_spirit::Error> {
+    // Check if key exists
+    let existed = storage::read(&key)?.is_some();
+
+    if existed {
+        storage::delete(&key)?;
+        log::info!("Deleted key '{}'", key);
+    }
+
+    Ok(existed)
+}
+```
+
+### Checking Existence
+
+Check if a key exists without reading its value:
+
+```rust
+use vudo_spirit::storage;
+
+pub fn key_exists(key: &str) -> Result<bool, vudo_spirit::Error> {
+    Ok(storage::read(key)?.is_some())
+}
+```
+
+## Data Serialization
+
+For complex data structures, use serialization libraries like `serde_json`:
+
+### Serializing Structs
+
+```rust
+use vudo_spirit::storage;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+struct UserProfile {
+    name: String,
+    email: String,
+    preferences: Preferences,
+}
+
+#[derive(Serialize, Deserialize)]
+struct Preferences {
+    theme: String,
+    notifications: bool,
+}
+
+pub fn save_profile(profile: &UserProfile) -> Result<(), vudo_spirit::Error> {
+    let key = format!("profiles/{}", profile.email);
+    let data = serde_json::to_vec(profile)?;
+
+    storage::write(&key, &data)?;
+
+    log::info!("Saved profile for {}", profile.email);
+    Ok(())
+}
+
+pub fn load_profile(email: &str) -> Result<Option<UserProfile>, vudo_spirit::Error> {
+    let key = format!("profiles/{}", email);
+
+    match storage::read(&key)? {
+        Some(data) => {
+            let profile: UserProfile = serde_json::from_slice(&data)?;
+            Ok(Some(profile))
+        }
+        None => Ok(None)
+    }
+}
+```
+
+### Handling Version Changes
+
+When your data structure evolves, handle backwards compatibility:
+
+```rust
+use serde::{Deserialize, Serialize};
+
+// Version 1 of our data
+#[derive(Serialize, Deserialize)]
+struct DataV1 {
+    value: String,
+}
+
+// Version 2 adds a new field
+#[derive(Serialize, Deserialize)]
+struct DataV2 {
+    value: String,
+    count: u32,
+}
+
+// Current version with version tag
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "version")]
+enum VersionedData {
+    #[serde(rename = "1")]
+    V1(DataV1),
+    #[serde(rename = "2")]
+    V2(DataV2),
+}
+
+impl VersionedData {
+    fn migrate(self) -> DataV2 {
+        match self {
+            VersionedData::V1(v1) => DataV2 {
+                value: v1.value,
+                count: 0,  // Default for new field
+            },
+            VersionedData::V2(v2) => v2,
+        }
+    }
+}
+
+pub fn load_data(key: &str) -> Result<DataV2, vudo_spirit::Error> {
+    let data = storage::read(key)?
+        .ok_or_else(|| vudo_spirit::Error::not_found("Data not found"))?;
+
+    let versioned: VersionedData = serde_json::from_slice(&data)?;
+    Ok(versioned.migrate())
+}
+```
+
+### Binary Serialization
+
+For performance-critical or large data, use binary formats:
+
+```rust
+use vudo_spirit::storage;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+struct LargeData {
+    points: Vec<(f64, f64, f64)>,
+    // ... more fields
+}
+
+// Using bincode for compact binary serialization
+pub fn save_binary(key: &str, data: &LargeData) -> Result<(), vudo_spirit::Error> {
+    let bytes = bincode::serialize(data)?;
+    storage::write(key, &bytes)?;
+    Ok(())
+}
+
+pub fn load_binary(key: &str) -> Result<Option<LargeData>, vudo_spirit::Error> {
+    match storage::read(key)? {
+        Some(bytes) => {
+            let data: LargeData = bincode::deserialize(&bytes)?;
+            Ok(Some(data))
+        }
+        None => Ok(None)
+    }
+}
+```
+
+<Callout type="tip" title="Choosing a Format">
+
+| Format | Size | Speed | Human Readable | Versioning |
+|--------|------|-------|----------------|------------|
+| JSON | Large | Slow | Yes | Easy |
+| Bincode | Small | Fast | No | Harder |
+| MessagePack | Medium | Fast | No | Medium |
+
+Use JSON for debugging and small data; use binary for large data or performance.
+</Callout>
+
+## Key Organization
+
+Organize your storage keys like a filesystem:
+
+### Hierarchical Keys
+
+```rust
+// Users
+"users/{user_id}"
+"users/{user_id}/profile"
+"users/{user_id}/settings"
+
+// Content
+"posts/{post_id}"
+"posts/{post_id}/comments/{comment_id}"
+
+// Indexes
+"index/users_by_email/{email}"
+"index/posts_by_date/{date}/{post_id}"
+```
+
+### Key Patterns in Practice
+
+```rust
+use vudo_spirit::storage;
+
+struct UserStore;
+
+impl UserStore {
+    const PREFIX: &'static str = "users";
+
+    fn user_key(id: &str) -> String {
+        format!("{}/{}", Self::PREFIX, id)
+    }
+
+    fn profile_key(id: &str) -> String {
+        format!("{}/{}/profile", Self::PREFIX, id)
+    }
+
+    fn settings_key(id: &str) -> String {
+        format!("{}/{}/settings", Self::PREFIX, id)
+    }
+
+    pub fn save_user(id: &str, user: &User) -> Result<(), vudo_spirit::Error> {
+        let data = serde_json::to_vec(user)?;
+        storage::write(&Self::user_key(id), &data)?;
+        Ok(())
+    }
+
+    pub fn get_user(id: &str) -> Result<Option<User>, vudo_spirit::Error> {
+        storage::read(&Self::user_key(id))?
+            .map(|data| serde_json::from_slice(&data))
+            .transpose()
+            .map_err(Into::into)
+    }
+}
+```
+
+### Listing Keys
+
+The storage API provides key listing with prefix matching:
+
+```rust
+use vudo_spirit::storage;
+
+pub fn list_user_ids() -> Result<Vec<String>, vudo_spirit::Error> {
+    let keys = storage::list("users/")?;
+
+    // Extract user IDs from keys like "users/123"
+    let ids: Vec<String> = keys
+        .into_iter()
+        .filter_map(|key| {
+            key.strip_prefix("users/")
+                .map(|s| s.to_string())
+        })
+        .collect();
+
+    Ok(ids)
+}
+```
+
+## Transactions and Atomicity
+
+The storage API doesn't provide transactions, so you need patterns for consistency:
+
+### Optimistic Locking
+
+```rust
+use vudo_spirit::{storage, time};
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+struct VersionedRecord<T> {
+    version: u64,
+    updated_at: u64,
+    data: T,
+}
+
+pub fn update_with_version<T, F>(
+    key: &str,
+    updater: F,
+) -> Result<T, vudo_spirit::Error>
+where
+    T: Serialize + for<'de> Deserialize<'de> + Clone,
+    F: FnOnce(&T) -> T,
+{
+    // Load current version
+    let current: Option<VersionedRecord<T>> = storage::read(key)?
+        .and_then(|data| serde_json::from_slice(&data).ok());
+
+    let (new_version, new_data) = match current {
+        Some(record) => {
+            let updated = updater(&record.data);
+            (record.version + 1, updated)
+        }
+        None => {
+            let default = updater(&Default::default());
+            (1, default)
+        }
+    };
+
+    let new_record = VersionedRecord {
+        version: new_version,
+        updated_at: time::now()?,
+        data: new_data.clone(),
+    };
+
+    let bytes = serde_json::to_vec(&new_record)?;
+    storage::write(key, &bytes)?;
+
+    Ok(new_data)
+}
+```
+
+### Write-Ahead Logging
+
+For multi-step operations:
+
+```rust
+use vudo_spirit::{storage, time};
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+struct PendingOperation {
+    id: String,
+    operation: String,
+    data: serde_json::Value,
+    created_at: u64,
+}
+
+pub fn safe_transfer(
+    from_account: &str,
+    to_account: &str,
+    amount: u64,
+) -> Result<(), vudo_spirit::Error> {
+    // 1. Write intention to log
+    let op_id = generate_id()?;
+    let pending = PendingOperation {
+        id: op_id.clone(),
+        operation: "transfer".to_string(),
+        data: serde_json::json!({
+            "from": from_account,
+            "to": to_account,
+            "amount": amount
+        }),
+        created_at: time::now()?,
+    };
+    storage::write(&format!("pending/{}", op_id), &serde_json::to_vec(&pending)?)?;
+
+    // 2. Perform the transfer
+    debit_account(from_account, amount)?;
+    credit_account(to_account, amount)?;
+
+    // 3. Remove pending operation
+    storage::delete(&format!("pending/{}", op_id))?;
+
+    Ok(())
+}
+
+// On startup, check for incomplete operations
+#[vudo_spirit::init]
+fn recover_pending_operations() {
+    let pending_keys = storage::list("pending/").unwrap_or_default();
+
+    for key in pending_keys {
+        log::warn!("Found incomplete operation: {}", key);
+        // Decide whether to complete or rollback
+        // ...
+    }
+}
+```
+
+## Mini-Project: Note-Taking Spirit
+
+Let's build a complete note-taking Spirit that demonstrates storage patterns.
+
+### manifest.json
+
+```json
+{
+  "$schema": "https://vudo.dev/schemas/manifest-v1.json",
+  "name": "notes-spirit",
+  "version": "1.0.0",
+  "description": "A note-taking Spirit with tags and search",
+
+  "spirit": {
+    "entry": "create",
+    "format": "wasm32-component"
+  },
+
+  "capabilities": {
+    "logging": true,
+    "time": {
+      "now": true
+    },
+    "random": true,
+    "storage": {
+      "read": true,
+      "write": true,
+      "delete": true,
+      "list": true,
+      "namespace": "notes"
+    }
+  },
+
+  "limits": {
+    "memory_pages": 16,
+    "execution_time_ms": 1000,
+    "storage_bytes": 10485760
+  }
+}
+```
+
+### src/lib.rs
+
+```rust
+use vudo_spirit::{log, time, random, storage};
+use serde::{Deserialize, Serialize};
+
+// ============================================================================
+// Data Types
+// ============================================================================
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Note {
+    pub id: String,
+    pub title: String,
+    pub content: String,
+    pub tags: Vec<String>,
+    pub created_at: u64,
+    pub updated_at: u64,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+struct TagIndex {
+    note_ids: Vec<String>,
+}
+
+#[derive(Serialize)]
+pub struct NoteList {
+    pub notes: Vec<NoteSummary>,
+    pub total: usize,
+}
+
+#[derive(Serialize)]
+pub struct NoteSummary {
+    pub id: String,
+    pub title: String,
+    pub tags: Vec<String>,
+    pub updated_at: u64,
+}
+
+#[derive(Deserialize)]
+pub struct CreateNoteInput {
+    pub title: String,
+    pub content: String,
+    pub tags: Option<Vec<String>>,
+}
+
+#[derive(Deserialize)]
+pub struct UpdateNoteInput {
+    pub id: String,
+    pub title: Option<String>,
+    pub content: Option<String>,
+    pub tags: Option<Vec<String>>,
+}
+
+#[derive(Deserialize)]
+pub struct SearchInput {
+    pub query: Option<String>,
+    pub tag: Option<String>,
+    pub limit: Option<usize>,
+}
+
+// ============================================================================
+// Storage Helpers
+// ============================================================================
+
+fn note_key(id: &str) -> String {
+    format!("note:{}", id)
+}
+
+fn tag_index_key(tag: &str) -> String {
+    format!("index:tag:{}", tag.to_lowercase())
+}
+
+fn generate_id() -> Result<String, vudo_spirit::Error> {
+    let bytes = random::bytes(8)?;
+    Ok(hex::encode(&bytes))
+}
+
+fn save_note(note: &Note) -> Result<(), vudo_spirit::Error> {
+    let data = serde_json::to_vec(note)?;
+    storage::write(&note_key(&note.id), &data)?;
+    Ok(())
+}
+
+fn load_note(id: &str) -> Result<Option<Note>, vudo_spirit::Error> {
+    storage::read(&note_key(id))?
+        .map(|data| serde_json::from_slice(&data))
+        .transpose()
+        .map_err(Into::into)
+}
+
+fn add_to_tag_index(tag: &str, note_id: &str) -> Result<(), vudo_spirit::Error> {
+    let key = tag_index_key(tag);
+    let mut index: TagIndex = storage::read(&key)?
+        .and_then(|data| serde_json::from_slice(&data).ok())
+        .unwrap_or_default();
+
+    if !index.note_ids.contains(&note_id.to_string()) {
+        index.note_ids.push(note_id.to_string());
+        let data = serde_json::to_vec(&index)?;
+        storage::write(&key, &data)?;
+    }
+
+    Ok(())
+}
+
+fn remove_from_tag_index(tag: &str, note_id: &str) -> Result<(), vudo_spirit::Error> {
+    let key = tag_index_key(tag);
+    if let Some(data) = storage::read(&key)? {
+        let mut index: TagIndex = serde_json::from_slice(&data)?;
+        index.note_ids.retain(|id| id != note_id);
+
+        if index.note_ids.is_empty() {
+            storage::delete(&key)?;
+        } else {
+            let data = serde_json::to_vec(&index)?;
+            storage::write(&key, &data)?;
+        }
+    }
+    Ok(())
+}
+
+// ============================================================================
+// Spirit Entry Points
+// ============================================================================
+
+/// Create a new note
+#[vudo_spirit::export]
+pub fn create(input: CreateNoteInput) -> Result<Note, vudo_spirit::Error> {
+    let now = time::now()?;
+    let id = generate_id()?;
+    let tags = input.tags.unwrap_or_default();
+
+    let note = Note {
+        id: id.clone(),
+        title: input.title,
+        content: input.content,
+        tags: tags.clone(),
+        created_at: now,
+        updated_at: now,
+    };
+
+    // Save the note
+    save_note(&note)?;
+
+    // Update tag indexes
+    for tag in &tags {
+        add_to_tag_index(tag, &id)?;
+    }
+
+    log::info!(note_id = %id, tags = ?tags; "Note created");
+
+    Ok(note)
+}
+
+/// Get a note by ID
+#[vudo_spirit::export]
+pub fn get(id: String) -> Result<Option<Note>, vudo_spirit::Error> {
+    let note = load_note(&id)?;
+
+    if note.is_some() {
+        log::debug!(note_id = %id; "Note retrieved");
+    } else {
+        log::debug!(note_id = %id; "Note not found");
+    }
+
+    Ok(note)
+}
+
+/// Update an existing note
+#[vudo_spirit::export]
+pub fn update(input: UpdateNoteInput) -> Result<Note, vudo_spirit::Error> {
+    let mut note = load_note(&input.id)?
+        .ok_or_else(|| vudo_spirit::Error::not_found("Note not found"))?;
+
+    let old_tags = note.tags.clone();
+
+    // Apply updates
+    if let Some(title) = input.title {
+        note.title = title;
+    }
+    if let Some(content) = input.content {
+        note.content = content;
+    }
+    if let Some(tags) = input.tags {
+        note.tags = tags;
+    }
+    note.updated_at = time::now()?;
+
+    // Save the note
+    save_note(&note)?;
+
+    // Update tag indexes
+    // Remove from old tags that are no longer present
+    for old_tag in &old_tags {
+        if !note.tags.contains(old_tag) {
+            remove_from_tag_index(old_tag, &note.id)?;
+        }
+    }
+    // Add to new tags
+    for new_tag in &note.tags {
+        if !old_tags.contains(new_tag) {
+            add_to_tag_index(new_tag, &note.id)?;
+        }
+    }
+
+    log::info!(note_id = %note.id; "Note updated");
+
+    Ok(note)
+}
+
+/// Delete a note
+#[vudo_spirit::export]
+pub fn delete(id: String) -> Result<bool, vudo_spirit::Error> {
+    let note = match load_note(&id)? {
+        Some(n) => n,
+        None => return Ok(false),
+    };
+
+    // Remove from tag indexes
+    for tag in &note.tags {
+        remove_from_tag_index(tag, &id)?;
+    }
+
+    // Delete the note
+    storage::delete(&note_key(&id))?;
+
+    log::info!(note_id = %id; "Note deleted");
+
+    Ok(true)
+}
+
+/// List and search notes
+#[vudo_spirit::export]
+pub fn search(input: SearchInput) -> Result<NoteList, vudo_spirit::Error> {
+    let limit = input.limit.unwrap_or(100);
+
+    // Get candidate note IDs
+    let note_ids: Vec<String> = if let Some(tag) = &input.tag {
+        // Search by tag using index
+        let key = tag_index_key(tag);
+        storage::read(&key)?
+            .and_then(|data| serde_json::from_slice::<TagIndex>(&data).ok())
+            .map(|idx| idx.note_ids)
+            .unwrap_or_default()
+    } else {
+        // List all notes
+        storage::list("note:")?
+            .into_iter()
+            .filter_map(|key| key.strip_prefix("note:").map(String::from))
+            .collect()
+    };
+
+    // Load and filter notes
+    let mut notes: Vec<Note> = note_ids
+        .iter()
+        .filter_map(|id| load_note(id).ok().flatten())
+        .collect();
+
+    // Filter by query if provided
+    if let Some(query) = &input.query {
+        let query_lower = query.to_lowercase();
+        notes.retain(|note| {
+            note.title.to_lowercase().contains(&query_lower)
+                || note.content.to_lowercase().contains(&query_lower)
+        });
+    }
+
+    // Sort by updated_at descending
+    notes.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
+
+    let total = notes.len();
+
+    // Convert to summaries and apply limit
+    let summaries: Vec<NoteSummary> = notes
+        .into_iter()
+        .take(limit)
+        .map(|note| NoteSummary {
+            id: note.id,
+            title: note.title,
+            tags: note.tags,
+            updated_at: note.updated_at,
+        })
+        .collect();
+
+    log::debug!(
+        count = summaries.len(),
+        total = total,
+        query = ?input.query,
+        tag = ?input.tag;
+        "Search completed"
+    );
+
+    Ok(NoteList {
+        notes: summaries,
+        total,
+    })
+}
+
+/// Get all unique tags
+#[vudo_spirit::export]
+pub fn list_tags() -> Result<Vec<String>, vudo_spirit::Error> {
+    let keys = storage::list("index:tag:")?;
+
+    let tags: Vec<String> = keys
+        .into_iter()
+        .filter_map(|key| key.strip_prefix("index:tag:").map(String::from))
+        .collect();
+
+    log::debug!(count = tags.len(); "Listed tags");
+
+    Ok(tags)
+}
+```
+
+### Testing the Notes Spirit
+
+<Terminal>
+```bash
+# Build the spirit
+$ vudo build
+
+# Create a note
+$ vudo run notes-spirit --function create --input '{
+  "title": "My First Note",
+  "content": "This is the content of my first note.",
+  "tags": ["personal", "ideas"]
+}'
+{
+  "id": "a1b2c3d4e5f6g7h8",
+  "title": "My First Note",
+  "content": "This is the content of my first note.",
+  "tags": ["personal", "ideas"],
+  "created_at": 1703520000,
+  "updated_at": 1703520000
+}
+
+# Create another note
+$ vudo run notes-spirit --function create --input '{
+  "title": "Work Tasks",
+  "content": "1. Review PR\n2. Update docs",
+  "tags": ["work", "todo"]
+}'
+
+# Search by tag
+$ vudo run notes-spirit --function search --input '{"tag": "personal"}'
+{
+  "notes": [
+    {
+      "id": "a1b2c3d4e5f6g7h8",
+      "title": "My First Note",
+      "tags": ["personal", "ideas"],
+      "updated_at": 1703520000
+    }
+  ],
+  "total": 1
+}
+
+# Search by query
+$ vudo run notes-spirit --function search --input '{"query": "PR"}'
+{
+  "notes": [
+    {
+      "id": "...",
+      "title": "Work Tasks",
+      "tags": ["work", "todo"],
+      "updated_at": 1703520001
+    }
+  ],
+  "total": 1
+}
+
+# List all tags
+$ vudo run notes-spirit --function list_tags
+["personal", "ideas", "work", "todo"]
+
+# Update a note
+$ vudo run notes-spirit --function update --input '{
+  "id": "a1b2c3d4e5f6g7h8",
+  "tags": ["personal", "important"]
+}'
+
+# Delete a note
+$ vudo run notes-spirit --function delete --input '{"id": "a1b2c3d4e5f6g7h8"}'
+true
+```
+</Terminal>
+
+## Best Practices
+
+### Storage Efficiency
+
+```rust
+// DO: Use compact keys
+storage::write("u:123", &data)?;
+
+// DON'T: Use verbose keys
+storage::write("users/user_id_123/profile_data", &data)?;
+
+// DO: Compress large data
+let compressed = zstd::encode_all(&data[..], 3)?;
+storage::write(key, &compressed)?;
+
+// DO: Clean up unused data
+storage::delete(&old_key)?;
+```
+
+### Error Handling
+
+```rust
+// Always handle storage errors gracefully
+match storage::read(key) {
+    Ok(Some(data)) => process(data),
+    Ok(None) => use_default(),
+    Err(e) => {
+        log::error!("Storage read failed: {}", e);
+        // Decide: fail or use fallback
+    }
+}
+```
+
+### Testing Storage
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_note_roundtrip() {
+        // Use mock storage in tests
+        vudo_spirit::test::with_mock_storage(|_| {
+            let note = create(CreateNoteInput {
+                title: "Test".into(),
+                content: "Content".into(),
+                tags: None,
+            }).unwrap();
+
+            let loaded = get(note.id.clone()).unwrap();
+            assert_eq!(loaded.unwrap().title, "Test");
+        });
+    }
+}
+```
+
+## Key Takeaways
+
+1. **Storage persists data across invocations** using a simple key-value API
+
+2. **Serialization is your responsibility** - use JSON for flexibility or binary for performance
+
+3. **Organize keys hierarchically** to enable listing and logical grouping
+
+4. **Build indexes for search** since there's no built-in query capability
+
+5. **Handle version changes** in your data structures for backwards compatibility
+
+## What's Next?
+
+Now that you can persist data, let's connect to the outside world. In the next tutorial, you'll learn:
+
+- Making HTTP requests from Spirits
+- Handling responses and errors
+- Working with rate limiting
+
+Continue to [Networking](/tutorials/spirits/005-networking).
+
+## Additional Resources
+
+- [Storage API Reference](/dol/reference/storage)
+- [Serialization Guide](/dol/guides/serialization)
+- [Notes Spirit Example](https://github.com/univrs/spirit-examples/tree/main/notes)

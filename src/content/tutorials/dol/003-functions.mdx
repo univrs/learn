@@ -1,0 +1,326 @@
+---
+title: "Functions"
+description: "Define and use functions, understand pure functions and closures"
+lesson: 3
+track: "dol-fundamentals"
+duration: "20 minutes"
+concepts: ["function definition", "parameters", "return types", "pure functions", "closures", "higher-order functions"]
+prev: "/dol/tutorials/002-values-types"
+next: "/dol/tutorials/004-control-flow"
+---
+
+import DOLRepl from '@/components/code/DOLRepl';
+
+# Functions
+
+Functions are the building blocks of any DOL program. They allow you to organize code into reusable units that transform inputs into outputs.
+
+## Defining Functions
+
+Use the `fn` keyword to define a function:
+
+<DOLRepl
+  code={`// A simple function
+fn greet(name: String) -> String {
+    "Hello, " + name + "!"
+}
+
+log(greet("DOL Developer"))`}
+  title="simple-fn.dol"
+  output="Hello, DOL Developer!"
+/>
+
+Let us break down the syntax:
+
+- `fn` - keyword to define a function
+- `greet` - the function name
+- `(name: String)` - parameter with its type
+- `-> String` - return type
+- `{ ... }` - function body
+
+## Return Values
+
+In DOL, the last expression in a function is automatically returned. No `return` keyword needed!
+
+<DOLRepl
+  code={`// The last expression is the return value
+fn add(a: Int, b: Int) -> Int {
+    a + b  // No semicolon = return this value
+}
+
+fn multiply(x: Int, y: Int) -> Int {
+    let result = x * y
+    result  // Explicitly return result
+}
+
+log(add(5, 3))
+log(multiply(4, 7))`}
+  title="return.dol"
+  output={`8
+28`}
+/>
+
+## Multiple Parameters
+
+Functions can take multiple parameters:
+
+<DOLRepl
+  code={`// Function with multiple parameters
+fn calculate_bmi(weight_kg: Float, height_m: Float) -> Float {
+    weight_kg / (height_m * height_m)
+}
+
+let bmi = calculate_bmi(70.0, 1.75)
+log("BMI: " + bmi.to_string())`}
+  title="multi-params.dol"
+  output="BMI: 22.857142857142858"
+/>
+
+## Functions Without Return Values
+
+Some functions perform actions without returning a meaningful value. These return `Unit` (written as `()`):
+
+<DOLRepl
+  code={`// Function returning Unit
+fn print_header(title: String) -> () {
+    log("================")
+    log(title)
+    log("================")
+}
+
+print_header("Welcome to DOL")`}
+  title="unit-return.dol"
+  output={`================
+Welcome to DOL
+================`}
+/>
+
+You can also omit the `-> ()` for functions that return Unit:
+
+```dol
+fn print_header(title: String) {
+    log(title)
+}
+```
+
+## Pure Functions
+
+DOL emphasizes **pure functions** - functions that:
+1. Always return the same output for the same input
+2. Have no side effects (do not modify external state)
+
+<DOLRepl
+  code={`// Pure function - always same output for same input
+fn square(n: Int) -> Int {
+    n * n
+}
+
+// Calling with same input always gives same result
+log(square(5))  // Always 25
+log(square(5))  // Always 25
+log(square(5))  // Always 25`}
+  title="pure.dol"
+  output={`25
+25
+25`}
+/>
+
+Pure functions are easier to test, debug, and reason about.
+
+## Closures (Anonymous Functions)
+
+Closures are functions without names. They are useful for passing behavior to other functions:
+
+<DOLRepl
+  code={`// Closure syntax: |params| body
+let double = |x: Int| x * 2
+let add_one = |x: Int| x + 1
+
+log(double(5))
+log(add_one(10))`}
+  title="closures.dol"
+  output={`10
+11`}
+/>
+
+Closures can capture variables from their surrounding scope:
+
+<DOLRepl
+  code={`// Closures capture their environment
+let multiplier = 3
+
+let times_multiplier = |x: Int| x * multiplier
+
+log(times_multiplier(5))   // 5 * 3 = 15
+log(times_multiplier(10))  // 10 * 3 = 30`}
+  title="capture.dol"
+  output={`15
+30`}
+/>
+
+## Higher-Order Functions
+
+Functions can accept other functions as parameters. These are called **higher-order functions**:
+
+<DOLRepl
+  code={`// Higher-order function
+fn apply_twice(f: fn(Int) -> Int, x: Int) -> Int {
+    f(f(x))
+}
+
+let double = |x: Int| x * 2
+
+log(apply_twice(double, 3))  // double(double(3)) = 12`}
+  title="higher-order.dol"
+  output="12"
+/>
+
+## Function Composition
+
+Combine functions to create new ones:
+
+<DOLRepl
+  code={`// Composing functions
+fn add_one(x: Int) -> Int { x + 1 }
+fn double(x: Int) -> Int { x * 2 }
+fn square(x: Int) -> Int { x * x }
+
+// Apply functions in sequence
+let result = square(double(add_one(2)))
+// add_one(2) = 3
+// double(3) = 6
+// square(6) = 36
+
+log(result)`}
+  title="compose.dol"
+  output="36"
+/>
+
+DOL also provides a pipe operator for cleaner composition:
+
+<DOLRepl
+  code={`// Pipe operator for composition
+fn add_one(x: Int) -> Int { x + 1 }
+fn double(x: Int) -> Int { x * 2 }
+fn square(x: Int) -> Int { x * x }
+
+// More readable with pipe
+let result = 2
+    |> add_one
+    |> double
+    |> square
+
+log(result)`}
+  title="pipe.dol"
+  output="36"
+/>
+
+## Generic Functions
+
+Functions can work with multiple types using generics:
+
+<DOLRepl
+  code={`// Generic function
+fn identity<T>(x: T) -> T {
+    x
+}
+
+log(identity(42))        // Works with Int
+log(identity("hello"))   // Works with String
+log(identity(true))      // Works with Bool`}
+  title="generics.dol"
+  output={`42
+hello
+true`}
+/>
+
+## Default Parameters
+
+Provide default values for optional parameters:
+
+<DOLRepl
+  code={`// Default parameter values
+fn greet(name: String, greeting: String = "Hello") -> String {
+    greeting + ", " + name + "!"
+}
+
+log(greet("Alice"))              // Uses default
+log(greet("Bob", "Good morning")) // Override default`}
+  title="defaults.dol"
+  output={`Hello, Alice!
+Good morning, Bob!`}
+/>
+
+## Recursive Functions
+
+Functions can call themselves for recursive algorithms:
+
+<DOLRepl
+  code={`// Recursive factorial function
+fn factorial(n: Int) -> Int {
+    if n <= 1 {
+        1
+    } else {
+        n * factorial(n - 1)
+    }
+}
+
+log(factorial(5))  // 5! = 120`}
+  title="recursive.dol"
+  output="120"
+/>
+
+## Key Takeaways
+
+- Define functions with `fn name(params) -> ReturnType { body }`
+- The last expression is automatically returned
+- Pure functions have no side effects and are predictable
+- Closures are anonymous functions that capture their environment
+- Higher-order functions take or return other functions
+- Use the pipe operator `|>` for readable function composition
+
+## Challenge
+
+Create a set of functions to build a simple calculator:
+
+1. Define functions for `add`, `subtract`, `multiply`, `divide`
+2. Create a higher-order function `calculate` that takes an operation function and two numbers
+3. Test your calculator with different operations
+
+<DOLRepl
+  code={`// Challenge: Build a calculator
+
+fn add(a: Int, b: Int) -> Int {
+    // Your code here
+    0
+}
+
+// Define subtract, multiply, divide...
+
+// Define calculate function that takes an operation...
+
+log("Complete this challenge!")`}
+  title="challenge.dol"
+  output="Complete this challenge!"
+/>
+
+## Next Steps
+
+Functions become even more powerful when combined with control flow. Let us learn about conditionals and pattern matching next.
+
+<div className="mt-8 flex justify-between">
+  <a
+    href="/dol/tutorials/002-values-types"
+    className="btn-secondary inline-flex items-center gap-2"
+  >
+    <span>←</span>
+    Previous: Values and Types
+  </a>
+  <a
+    href="/dol/tutorials/004-control-flow"
+    className="btn-primary inline-flex items-center gap-2"
+  >
+    Next: Control Flow
+    <span>→</span>
+  </a>
+</div>

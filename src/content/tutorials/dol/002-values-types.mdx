@@ -1,0 +1,321 @@
+---
+title: "Values and Types"
+description: "Learn about DOL's type system, primitive values, and type inference"
+lesson: 2
+track: "dol-fundamentals"
+duration: "15 minutes"
+concepts: ["integers", "floats", "strings", "booleans", "type inference", "type annotations"]
+prev: "/dol/tutorials/001-hello-dol"
+next: "/dol/tutorials/003-functions"
+---
+
+import DOLRepl from '@/components/code/DOLRepl';
+
+# Values and Types
+
+Every value in DOL has a **type**. Types help catch errors early and make your code more reliable. In this lesson, you will learn about DOL's primitive types and how type inference works.
+
+## Primitive Types
+
+DOL has four primitive types that form the building blocks for all data:
+
+| Type | Description | Examples |
+|------|-------------|----------|
+| `Int` | Whole numbers | `42`, `-17`, `0` |
+| `Float` | Decimal numbers | `3.14`, `-0.5`, `1.0` |
+| `String` | Text | `"hello"`, `"DOL"` |
+| `Bool` | True or false | `true`, `false` |
+
+### Integers
+
+Integers are whole numbers without decimal points:
+
+<DOLRepl
+  code={`// Integer examples
+let age = 25
+let year = 2024
+let negative = -100
+let zero = 0
+
+log(age)
+log(year + 1)`}
+  title="integers.dol"
+  output={`25
+2025`}
+/>
+
+Integers support standard arithmetic operations:
+
+<DOLRepl
+  code={`// Integer arithmetic
+let a = 10
+let b = 3
+
+log(a + b)   // Addition: 13
+log(a - b)   // Subtraction: 7
+log(a * b)   // Multiplication: 30
+log(a / b)   // Integer division: 3
+log(a % b)   // Remainder (modulo): 1`}
+  title="int-math.dol"
+  output={`13
+7
+30
+3
+1`}
+/>
+
+### Floats
+
+Floats are numbers with decimal points:
+
+<DOLRepl
+  code={`// Float examples
+let pi = 3.14159
+let temperature = -40.5
+let ratio = 0.75
+
+log(pi)
+log(temperature * 2.0)`}
+  title="floats.dol"
+  output={`3.14159
+-81.0`}
+/>
+
+Note that when mixing operations with floats, all values become floats:
+
+<DOLRepl
+  code={`// Float arithmetic preserves precision
+let x = 10.0
+let y = 3.0
+
+log(x / y)   // Float division: 3.333...`}
+  title="float-div.dol"
+  output="3.3333333333333335"
+/>
+
+### Strings
+
+Strings represent text and are enclosed in double quotes:
+
+<DOLRepl
+  code={`// String examples
+let greeting = "Hello"
+let name = "DOL Developer"
+let empty = ""
+
+log(greeting + ", " + name)
+log("Length: " + greeting.len())`}
+  title="strings.dol"
+  output={`Hello, DOL Developer
+Length: 5`}
+/>
+
+String methods:
+
+<DOLRepl
+  code={`// Common string operations
+let text = "  Hello, World!  "
+
+log(text.trim())           // Remove whitespace
+log(text.to_uppercase())   // Convert to uppercase
+log(text.to_lowercase())   // Convert to lowercase
+log(text.contains("World")) // Check if contains substring`}
+  title="string-methods.dol"
+  output={`Hello, World!
+  HELLO, WORLD!
+  hello, world!
+true`}
+/>
+
+### Booleans
+
+Booleans represent truth values:
+
+<DOLRepl
+  code={`// Boolean examples
+let is_active = true
+let is_complete = false
+
+log(is_active)
+log(!is_complete)  // Negation: true
+log(is_active && is_complete)  // AND: false
+log(is_active || is_complete)  // OR: true`}
+  title="booleans.dol"
+  output={`true
+true
+false
+true`}
+/>
+
+## Type Inference
+
+DOL automatically figures out the type of values. This is called **type inference**:
+
+<DOLRepl
+  code={`// DOL infers these types automatically
+let count = 42        // Inferred as Int
+let price = 19.99     // Inferred as Float
+let name = "Alice"    // Inferred as String
+let active = true     // Inferred as Bool
+
+// You can verify with :type in the REPL
+log(count)
+log(price)`}
+  title="inference.dol"
+  output={`42
+19.99`}
+/>
+
+You do not need to write types explicitly because DOL figures them out for you.
+
+## Type Annotations
+
+While type inference is convenient, you can explicitly declare types using the `:` syntax:
+
+<DOLRepl
+  code={`// Explicit type annotations
+let count: Int = 42
+let price: Float = 19.99
+let name: String = "Alice"
+let active: Bool = true
+
+log(count)
+log(name)`}
+  title="annotations.dol"
+  output={`42
+Alice`}
+/>
+
+Type annotations are useful for:
+- Documentation (making your intent clear)
+- Catching type mismatches early
+- Disambiguating between similar types
+
+## Type Errors
+
+DOL catches type errors at compile time. This prevents bugs before your code runs:
+
+```dol
+// This will NOT compile - type mismatch!
+let age: Int = "twenty"  // Error: expected Int, got String
+```
+
+You also cannot mix incompatible types in operations:
+
+```dol
+// Type error - cannot add String and Int
+let result = "Age: " + 25  // Error!
+
+// Correct way - convert Int to String first
+let result = "Age: " + 25.to_string()  // OK
+```
+
+## Type Conversion
+
+Convert between types using built-in methods:
+
+<DOLRepl
+  code={`// Type conversions
+let num = 42
+let float_num = 3.14
+
+// To string
+log(num.to_string())
+log(float_num.to_string())
+
+// String to number (returns Result)
+let parsed = "100".parse_int()
+log(parsed)`}
+  title="conversion.dol"
+  output={`"42"
+"3.14"
+Ok(100)`}
+/>
+
+Parsing strings returns a `Result` type because the string might not be a valid number. We will cover `Result` in the error handling lesson.
+
+## The Unit Type
+
+DOL has a special type called `Unit` (written as `()`) that represents "no meaningful value":
+
+<DOLRepl
+  code={`// Functions that don't return anything return Unit
+let result = log("Hello")  // log() returns ()
+// result is of type Unit`}
+  title="unit.dol"
+  output="Hello"
+/>
+
+## Comparison Operators
+
+Compare values using these operators:
+
+<DOLRepl
+  code={`// Comparison operators
+let a = 10
+let b = 20
+
+log(a == b)   // Equal: false
+log(a != b)   // Not equal: true
+log(a < b)    // Less than: true
+log(a <= b)   // Less than or equal: true
+log(a > b)    // Greater than: false
+log(a >= b)   // Greater than or equal: false`}
+  title="comparison.dol"
+  output={`false
+true
+true
+true
+false
+false`}
+/>
+
+Comparisons always return `Bool` values.
+
+## Key Takeaways
+
+- DOL has four primitive types: `Int`, `Float`, `String`, `Bool`
+- Type inference automatically determines types from values
+- Use `:` syntax for explicit type annotations
+- Type errors are caught at compile time
+- Use conversion methods like `.to_string()` to change types
+
+## Challenge
+
+Create a program that:
+
+1. Declares your age as an `Int` with explicit type annotation
+2. Calculates your age in months (hint: multiply by 12)
+3. Creates a string that says "I am X months old"
+4. Logs the result
+
+<DOLRepl
+  code={`// Challenge: Age calculator
+let age: Int = 25
+
+// Your code here...
+log("Complete this challenge!")`}
+  title="challenge.dol"
+  output="Complete this challenge!"
+/>
+
+## Next Steps
+
+Now that you understand DOL's type system, let us learn how to define and use functions.
+
+<div className="mt-8 flex justify-between">
+  <a
+    href="/dol/tutorials/001-hello-dol"
+    className="btn-secondary inline-flex items-center gap-2"
+  >
+    <span>←</span>
+    Previous: Hello DOL
+  </a>
+  <a
+    href="/dol/tutorials/003-functions"
+    className="btn-primary inline-flex items-center gap-2"
+  >
+    Next: Functions
+    <span>→</span>
+  </a>
+</div>

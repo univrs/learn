@@ -1,0 +1,282 @@
+---
+title: "Project Overview - Lion & Swan"
+description: "Introduction to the Lion & Swan mythology and what you will build"
+chapter: 0
+---
+
+import { Link } from 'react-router-dom';
+import { Crown, Sparkles, BookOpen, Sword, Eye, Zap, Heart, ChevronRight } from 'lucide-react';
+
+# Project Overview: The Lion & Swan
+
+<div className="flex items-center gap-2 text-sm mb-6" style={{ color: 'var(--soft-gray)' }}>
+  <Link to="/tutorials/capstone" className="hover:opacity-80 transition-opacity">
+    Capstone
+  </Link>
+  <ChevronRight className="w-4 h-4" />
+  <span style={{ color: 'var(--text-primary)' }}>Overview</span>
+</div>
+
+In this capstone project, you will build a **mythic content generator** called the
+**Lion & Swan Creator**. This Spirit uses DOL ontologies to define mythological
+entities and generates both imagery and narrative through AI capabilities.
+
+## The Mythology
+
+<div className="my-8 p-6 rounded-xl" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <h3 className="text-xl font-light mb-6" style={{ color: 'var(--glow-gold)' }}>
+    The Eternal Dance
+  </h3>
+  <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+    In the beginning, there were two forces: **Light** and **Transformation**. The
+    Black Lion emerged from the void as the Keeper of Light, guardian of all that
+    is harmonious and true. The White Swan arose from the waters of change, the
+    Spirit of Transformation who weaves new patterns into existence.
+  </p>
+  <p style={{ color: 'var(--text-secondary)' }}>
+    Together, they maintain the balance of creation. Where the Lion guards, the
+    Swan transforms. Where the Swan changes, the Lion preserves. This is the
+    eternal dance described in **TheBook** - the corrupted text of Revivalism that
+    your Spirit will help interpret and visualize.
+  </p>
+</div>
+
+## The Entities
+
+### Black Lion - Keeper of Light
+
+<div className="card mb-6" style={{ borderLeft: '4px solid var(--glow-gold)' }}>
+  <div className="flex items-center gap-3 mb-4">
+    <Crown className="w-8 h-8" style={{ color: 'var(--glow-gold)' }} />
+    <div>
+      <h4 className="font-normal" style={{ color: 'var(--glow-gold)' }}>The Black Lion</h4>
+      <span className="text-sm" style={{ color: 'var(--soft-gray)' }}>Guardian of Harmony</span>
+    </div>
+  </div>
+
+  <div className="grid sm:grid-cols-2 gap-4 text-sm">
+    <div>
+      <p className="mb-2" style={{ color: 'var(--text-secondary)' }}>
+        <strong style={{ color: 'var(--text-primary)' }}>Essence:</strong> Obsidian
+      </p>
+      <p className="mb-2" style={{ color: 'var(--text-secondary)' }}>
+        <strong style={{ color: 'var(--text-primary)' }}>Power:</strong> 100
+      </p>
+      <p style={{ color: 'var(--text-secondary)' }}>
+        <strong style={{ color: 'var(--text-primary)' }}>Role:</strong> Keeper
+      </p>
+    </div>
+    <div>
+      <p className="mb-2" style={{ color: 'var(--text-secondary)' }}>
+        <strong style={{ color: 'var(--text-primary)' }}>Domain:</strong> Light, Truth, Order
+      </p>
+      <p style={{ color: 'var(--text-secondary)' }}>
+        <strong style={{ color: 'var(--text-primary)' }}>Symbol:</strong> The Obsidian Mane
+      </p>
+    </div>
+  </div>
+</div>
+
+### White Swan - Spirit of Transformation
+
+<div className="card mb-6" style={{ borderLeft: '4px solid var(--mycelium-white)' }}>
+  <div className="flex items-center gap-3 mb-4">
+    <Sparkles className="w-8 h-8" style={{ color: 'var(--mycelium-white)' }} />
+    <div>
+      <h4 className="font-normal" style={{ color: 'var(--mycelium-white)' }}>The White Swan</h4>
+      <span className="text-sm" style={{ color: 'var(--soft-gray)' }}>Weaver of Change</span>
+    </div>
+  </div>
+
+  <div className="grid sm:grid-cols-2 gap-4 text-sm">
+    <div>
+      <p className="mb-2" style={{ color: 'var(--text-secondary)' }}>
+        <strong style={{ color: 'var(--text-primary)' }}>Essence:</strong> Pearl
+      </p>
+      <p className="mb-2" style={{ color: 'var(--text-secondary)' }}>
+        <strong style={{ color: 'var(--text-primary)' }}>Power:</strong> 85
+      </p>
+      <p style={{ color: 'var(--text-secondary)' }}>
+        <strong style={{ color: 'var(--text-primary)' }}>Role:</strong> Transformer
+      </p>
+    </div>
+    <div>
+      <p className="mb-2" style={{ color: 'var(--text-secondary)' }}>
+        <strong style={{ color: 'var(--text-primary)' }}>Domain:</strong> Change, Grace, Renewal
+      </p>
+      <p style={{ color: 'var(--text-secondary)' }}>
+        <strong style={{ color: 'var(--text-primary)' }}>Symbol:</strong> The Pearl Feather
+      </p>
+    </div>
+  </div>
+</div>
+
+## TheBook and Scene Types
+
+**TheBook** is the corrupted text of Revivalism that describes the interactions
+between the Lion and Swan. Your Spirit will generate scenes from this mythology
+using four primary scene types:
+
+<div className="grid sm:grid-cols-2 gap-4 my-8">
+  <div className="card">
+    <div className="flex items-center gap-2 mb-3">
+      <Sword className="w-5 h-5" style={{ color: 'var(--glow-cyan)' }} />
+      <h4 className="font-normal" style={{ color: 'var(--glow-cyan)' }}>Confrontation</h4>
+    </div>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      When Lion and Swan meet in opposition, testing each other's resolve and
+      purpose. High tension, dramatic lighting.
+    </p>
+  </div>
+
+  <div className="card">
+    <div className="flex items-center gap-2 mb-3">
+      <Eye className="w-5 h-5" style={{ color: 'var(--spore-purple)' }} />
+      <h4 className="font-normal" style={{ color: 'var(--spore-purple)' }}>Interrogation</h4>
+    </div>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      Deep questioning of truth and identity. One entity challenges the other's
+      understanding of their nature.
+    </p>
+  </div>
+
+  <div className="card">
+    <div className="flex items-center gap-2 mb-3">
+      <Zap className="w-5 h-5" style={{ color: 'var(--glow-gold)' }} />
+      <h4 className="font-normal" style={{ color: 'var(--glow-gold)' }}>Transformation</h4>
+    </div>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      Moments of metamorphosis where one or both entities undergo fundamental
+      change. Visual spectacle.
+    </p>
+  </div>
+
+  <div className="card">
+    <div className="flex items-center gap-2 mb-3">
+      <Heart className="w-5 h-5" style={{ color: '#ff6b9d' }} />
+      <h4 className="font-normal" style={{ color: '#ff6b9d' }}>Revelation</h4>
+    </div>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      Truths unveiled, secrets exposed. The veil between worlds parts briefly
+      to reveal deeper meaning.
+    </p>
+  </div>
+</div>
+
+## What You Will Build
+
+By the end of this capstone, you will have created a Spirit that:
+
+<div className="card my-6">
+  <ul className="space-y-4">
+    <li className="flex items-start gap-3">
+      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--glow-cyan-dim)', color: 'var(--glow-cyan)' }}>1</div>
+      <div>
+        <strong style={{ color: 'var(--text-primary)' }}>Defines mythological entities</strong>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+          Using DOL to create Symbol, Entity, and Allegiance types
+        </p>
+      </div>
+    </li>
+    <li className="flex items-start gap-3">
+      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--glow-cyan-dim)', color: 'var(--glow-cyan)' }}>2</div>
+      <div>
+        <strong style={{ color: 'var(--text-primary)' }}>Generates AI imagery</strong>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+          Connecting to planetserve.io for image generation
+        </p>
+      </div>
+    </li>
+    <li className="flex items-start gap-3">
+      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--glow-cyan-dim)', color: 'var(--glow-cyan)' }}>3</div>
+      <div>
+        <strong style={{ color: 'var(--text-primary)' }}>Creates narrative content</strong>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+          Generating mythic passages for each scene type
+        </p>
+      </div>
+    </li>
+    <li className="flex items-start gap-3">
+      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--glow-cyan-dim)', color: 'var(--glow-cyan)' }}>4</div>
+      <div>
+        <strong style={{ color: 'var(--text-primary)' }}>Manages credits responsibly</strong>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+          Checking balance, reserving, consuming, and releasing credits
+        </p>
+      </div>
+    </li>
+    <li className="flex items-start gap-3">
+      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--glow-cyan-dim)', color: 'var(--glow-cyan)' }}>5</div>
+      <div>
+        <strong style={{ color: 'var(--text-primary)' }}>Provides a gallery interface</strong>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+          HTML views for browsing generated content
+        </p>
+      </div>
+    </li>
+    <li className="flex items-start gap-3">
+      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--glow-cyan-dim)', color: 'var(--glow-cyan)' }}>6</div>
+      <div>
+        <strong style={{ color: 'var(--text-primary)' }}>Is tested and published</strong>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+          Complete with unit tests and registry publication
+        </p>
+      </div>
+    </li>
+  </ul>
+</div>
+
+## Prerequisites Checklist
+
+Ensure you have completed these before continuing:
+
+<div className="card my-6" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+  <h4 className="mb-4 font-normal" style={{ color: 'var(--text-primary)' }}>Required Knowledge</h4>
+  <div className="space-y-3">
+    {[
+      { item: 'DOL gene and trait definitions', link: '/dol/learn' },
+      { item: 'VUDO Spirit creation and lifecycle', link: '/tutorials/vudo-basics' },
+      { item: 'Credit system fundamentals', link: '/tutorials/credits' },
+      { item: 'Basic terminal/CLI operations', link: null },
+    ].map((prereq, i) => (
+      <div key={i} className="flex items-center justify-between">
+        <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{prereq.item}</span>
+        {prereq.link && (
+          <Link to={prereq.link} className="text-xs" style={{ color: 'var(--glow-cyan)' }}>
+            Review
+          </Link>
+        )}
+      </div>
+    ))}
+  </div>
+</div>
+
+<div className="card my-6" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+  <h4 className="mb-4 font-normal" style={{ color: 'var(--text-primary)' }}>Required Tools</h4>
+  <div className="space-y-3">
+    <div className="flex items-center gap-3">
+      <code className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--glow-cyan)' }}>vudo</code>
+      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>VUDO CLI installed and configured</span>
+    </div>
+    <div className="flex items-center gap-3">
+      <code className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--glow-cyan)' }}>dol</code>
+      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>DOL parser and validator</span>
+    </div>
+    <div className="flex items-center gap-3">
+      <code className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--glow-cyan)' }}>credits</code>
+      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>At least 50 credits for API calls</span>
+    </div>
+  </div>
+</div>
+
+## Time Commitment
+
+This capstone project is designed to take approximately **3-4 hours** to complete.
+You can work through it in one session or break it into multiple sessions across
+the chapter boundaries.
+
+<div className="flex gap-4 mt-8">
+  <Link to="/tutorials/capstone/001-project-setup" className="btn-primary">
+    Start Chapter 1: Project Setup
+  </Link>
+</div>

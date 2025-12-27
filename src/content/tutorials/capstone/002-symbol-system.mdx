@@ -1,0 +1,395 @@
+---
+title: "The Symbol System"
+description: "Define mythological entities using DOL ontologies"
+chapter: 2
+---
+
+import { Link } from 'react-router-dom';
+import { Crown, Sparkles, FileCode, ChevronRight, CheckCircle, Layers } from 'lucide-react';
+
+# Chapter 2: The Symbol System
+
+<div className="flex items-center gap-2 text-sm mb-6" style={{ color: 'var(--soft-gray)' }}>
+  <Link to="/tutorials/capstone" className="hover:opacity-80 transition-opacity">
+    Capstone
+  </Link>
+  <ChevronRight className="w-4 h-4" />
+  <span style={{ color: 'var(--text-primary)' }}>Symbol System</span>
+</div>
+
+In this chapter, you will define the core ontology for the Lion & Swan mythology
+using DOL. This includes the Symbol entity, the two primary symbols (Black Lion
+and White Swan), and the Allegiance component system.
+
+## The Symbol Entity
+
+Open `src/ontology/main.dol` and define the base Symbol entity:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <FileCode className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>src/ontology/main.dol</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`module lion_swan @ 1.0.0
+
+/// Role defines the cosmic function of a Symbol
+pub enum Role {
+    Keeper,      // Preserves and guards
+    Transformer, // Changes and renews
+    Witness,     // Observes and records
+    Herald       // Announces and proclaims
+}
+
+/// Essence represents the material manifestation of a Symbol
+pub enum Essence {
+    Obsidian,  // Dark, protective, grounding
+    Pearl,     // Light, transformative, pure
+    Amber,     // Golden, preserved, ancient
+    Mist       // Ethereal, transitional, mysterious
+}
+
+/// Symbol is the base entity for mythological figures
+pub gene Symbol {
+    has name: String
+    has essence: Essence
+    has power: Int = 50
+    has role: Role
+    has domain: List<String>
+
+    is entity
+    is mythological
+
+    /// Power must be between 0 and 100
+    invariant power_range {
+        this.power >= 0 && this.power <= 100
+    }
+
+    /// Symbols must have at least one domain
+    invariant has_domain {
+        this.domain.len() > 0
+    }
+
+    fun describe() -> String {
+        return format!("{} of {}", this.role, this.name)
+    }
+
+    exegesis {
+        A Symbol represents a mythological entity with cosmic significance.
+        Each Symbol has an essence that defines its material nature, a role
+        that defines its function in the cosmic order, and domains that
+        define its spheres of influence.
+    }
+}`}
+  </pre>
+</div>
+
+## The Black Lion
+
+Now define the Black Lion, the Keeper of Light:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <Crown className="w-4 h-4" style={{ color: 'var(--glow-gold)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>Continuing in main.dol</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`/// BlackLion is the Keeper of Light, Guardian of Harmony
+pub gene BlackLion derives Symbol {
+    // Override defaults with specific values
+    has name: String = "Black Lion"
+    has essence: Essence = Essence::Obsidian
+    has power: Int = 100
+    has role: Role = Role::Keeper
+    has domain: List<String> = ["Light", "Truth", "Order", "Harmony"]
+
+    // Additional properties specific to the Lion
+    has mane_luminosity: Float = 0.9
+    has roar_frequency: Float = 432.0  // Hz of cosmic resonance
+
+    is guardian
+    is celestial
+
+    /// The Lion's roar can shatter illusions
+    fun roar() -> Effect {
+        emit Event::CosmicRoar {
+            source: this.name,
+            frequency: this.roar_frequency,
+            power: this.power
+        }
+    }
+
+    /// The Lion can illuminate darkness
+    fun illuminate(target: Entity) -> Void {
+        target.receive_light(this.power * this.mane_luminosity)
+    }
+
+    exegesis {
+        The Black Lion is the supreme guardian of cosmic harmony. Despite
+        its dark obsidian essence, it is paradoxically the Keeper of Light,
+        demonstrating that true illumination comes from understanding darkness.
+        Its mane radiates with contained starlight, and its roar resonates
+        at the frequency of universal truth.
+    }
+}`}
+  </pre>
+</div>
+
+<div className="card my-6" style={{ borderLeft: '4px solid var(--glow-gold)' }}>
+  <h4 className="font-normal mb-3" style={{ color: 'var(--glow-gold)' }}>Key Concept: Derivation</h4>
+  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+    The <code style={{ color: 'var(--glow-cyan)' }}>derives</code> keyword creates a specialized
+    version of Symbol. BlackLion inherits all properties from Symbol but overrides
+    specific values and adds new properties like <code>mane_luminosity</code>.
+  </p>
+</div>
+
+## The White Swan
+
+Define the White Swan, Spirit of Transformation:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <Sparkles className="w-4 h-4" style={{ color: 'var(--mycelium-white)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>Continuing in main.dol</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`/// WhiteSwan is the Spirit of Transformation, Weaver of Change
+pub gene WhiteSwan derives Symbol {
+    has name: String = "White Swan"
+    has essence: Essence = Essence::Pearl
+    has power: Int = 85
+    has role: Role = Role::Transformer
+    has domain: List<String> = ["Change", "Grace", "Renewal", "Beauty"]
+
+    // Additional properties specific to the Swan
+    has feather_count: Int = 1000
+    has transformation_cycles: Int = 0
+
+    is ethereal
+    is mutable
+
+    /// The Swan can transform entities
+    fun transform(target: Entity, new_form: Form) -> Result<Entity> {
+        if this.power >= new_form.required_power {
+            this.transformation_cycles += 1
+            emit Event::Transformation {
+                transformer: this.name,
+                target: target.name,
+                new_form: new_form,
+                cycle: this.transformation_cycles
+            }
+            return Ok(target.apply_form(new_form))
+        }
+        return Err("Insufficient power for transformation")
+    }
+
+    /// The Swan can shed a feather as a gift
+    fun gift_feather() -> Feather {
+        this.feather_count -= 1
+        return Feather {
+            source: this.name,
+            power: this.power / 100,
+            blessing: "transformation"
+        }
+    }
+
+    exegesis {
+        The White Swan embodies the principle of graceful transformation.
+        Unlike violent change, the Swan's transformations are gentle,
+        beautiful, and inevitable. Each pearl-white feather carries a
+        fraction of its transformative power, and the Swan freely gives
+        these gifts to those who seek genuine change.
+    }
+}`}
+  </pre>
+</div>
+
+## The Allegiance Component
+
+The Allegiance component allows entities to declare their cosmic alignment:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <Layers className="w-4 h-4" style={{ color: 'var(--spore-purple)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>Continuing in main.dol</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`/// AllegianceType defines which cosmic force an entity aligns with
+pub enum AllegianceType {
+    Lion,      // Aligned with preservation and light
+    Swan,      // Aligned with transformation and change
+    Neutral,   // Balanced between both
+    TheBook    // Aligned with the corrupted text
+}
+
+/// Allegiance is a component that can be attached to any entity
+pub trait Allegiance {
+    has allegiance_type: AllegianceType
+    has devotion_level: Float = 0.5  // 0.0 to 1.0
+    has sworn_at: Timestamp?
+
+    /// Devotion affects power bonuses
+    invariant valid_devotion {
+        this.devotion_level >= 0.0 && this.devotion_level <= 1.0
+    }
+
+    /// Calculate power bonus from allegiance
+    fun allegiance_bonus() -> Float {
+        match this.allegiance_type {
+            AllegianceType::Lion => this.devotion_level * 0.2,
+            AllegianceType::Swan => this.devotion_level * 0.15,
+            AllegianceType::Neutral => 0.0,
+            AllegianceType::TheBook => this.devotion_level * -0.1
+        }
+    }
+
+    /// Swear allegiance to a cosmic force
+    fun swear(allegiance: AllegianceType) -> Void {
+        this.allegiance_type = allegiance
+        this.sworn_at = now()
+        emit Event::AllegianceSworn {
+            entity: this,
+            allegiance: allegiance
+        }
+    }
+
+    exegesis {
+        Allegiance represents the cosmic alignment of an entity. While
+        Symbols are fixed in their nature, other entities may choose
+        their allegiance and change it over time. Devotion level affects
+        the strength of the connection and any bonuses received.
+    }
+}`}
+  </pre>
+</div>
+
+## Scene Types Enum
+
+Define the scene types for content generation:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <FileCode className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>Continuing in main.dol</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`/// SceneType defines the dramatic moment being depicted
+pub enum SceneType {
+    Confrontation,   // Lion and Swan in opposition
+    Interrogation,   // Deep questioning of truth
+    Transformation,  // Metamorphosis in progress
+    Revelation       // Truths unveiled
+}
+
+/// Scene represents a moment in the mythology
+pub gene Scene {
+    has scene_type: SceneType
+    has primary_symbol: Symbol
+    has secondary_symbol: Symbol?
+    has setting: String
+    has mood: String
+    has generated_at: Timestamp
+
+    is content
+    is generatable
+
+    /// Create a prompt for image generation
+    fun to_image_prompt() -> String {
+        let base = format!(
+            "{} scene: {} in {}. Mood: {}.",
+            this.scene_type,
+            this.primary_symbol.describe(),
+            this.setting,
+            this.mood
+        )
+
+        if let Some(secondary) = this.secondary_symbol {
+            return format!("{} With {}.", base, secondary.describe())
+        }
+
+        return base
+    }
+
+    exegesis {
+        A Scene captures a dramatic moment in the Lion & Swan mythology.
+        Scenes are the primary unit of generated content, combining
+        visual and narrative elements into a cohesive mythic expression.
+    }
+}`}
+  </pre>
+</div>
+
+## Validate the Ontology
+
+Save your file and validate it:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-secondary)' }}>
+{`$ dol-check src/ontology/main.dol
+
+`}<span style={{ color: 'var(--glow-cyan)' }}>&#10003;</span>{` Parsed module lion_swan @ 1.0.0
+`}<span style={{ color: 'var(--glow-cyan)' }}>&#10003;</span>{` Validated 4 enums
+`}<span style={{ color: 'var(--glow-cyan)' }}>&#10003;</span>{` Validated 4 genes
+`}<span style={{ color: 'var(--glow-cyan)' }}>&#10003;</span>{` Validated 1 trait
+`}<span style={{ color: 'var(--glow-cyan)' }}>&#10003;</span>{` All invariants satisfied
+`}<span style={{ color: 'var(--glow-cyan)' }}>&#10003;</span>{` All exegesis blocks present
+
+Module lion_swan is valid.`}
+  </pre>
+</div>
+
+## Chapter Complete
+
+<div className="card my-6" style={{ borderColor: 'var(--glow-cyan)', borderWidth: '1px' }}>
+  <div className="flex items-center gap-3 mb-4">
+    <CheckCircle className="w-6 h-6" style={{ color: 'var(--glow-cyan)' }} />
+    <span className="font-normal" style={{ color: 'var(--glow-cyan)' }}>Symbol System Complete</span>
+  </div>
+  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+    You have defined the complete ontology for the Lion & Swan mythology. The next
+    chapter will use these definitions to generate AI imagery.
+  </p>
+</div>
+
+## What You Learned
+
+- How to define enums for constrained values (Role, Essence, SceneType)
+- Creating base entities with invariants and methods
+- Using <code>derives</code> to create specialized entities
+- Defining traits for cross-cutting concerns (Allegiance)
+- Writing exegesis documentation blocks
+
+## Entity Summary
+
+<div className="grid sm:grid-cols-2 gap-4 my-6">
+  <div className="card">
+    <Crown className="w-6 h-6 mb-3" style={{ color: 'var(--glow-gold)' }} />
+    <h4 className="font-normal mb-2" style={{ color: 'var(--glow-gold)' }}>Black Lion</h4>
+    <ul className="text-xs space-y-1" style={{ color: 'var(--text-secondary)' }}>
+      <li>Essence: Obsidian</li>
+      <li>Power: 100</li>
+      <li>Role: Keeper</li>
+      <li>Domains: Light, Truth, Order, Harmony</li>
+    </ul>
+  </div>
+  <div className="card">
+    <Sparkles className="w-6 h-6 mb-3" style={{ color: 'var(--mycelium-white)' }} />
+    <h4 className="font-normal mb-2" style={{ color: 'var(--mycelium-white)' }}>White Swan</h4>
+    <ul className="text-xs space-y-1" style={{ color: 'var(--text-secondary)' }}>
+      <li>Essence: Pearl</li>
+      <li>Power: 85</li>
+      <li>Role: Transformer</li>
+      <li>Domains: Change, Grace, Renewal, Beauty</li>
+    </ul>
+  </div>
+</div>
+
+<div className="flex gap-4 mt-8">
+  <Link to="/tutorials/capstone/003-image-generation" className="btn-primary">
+    Next: Image Generation
+  </Link>
+  <Link to="/tutorials/capstone/001-project-setup" className="btn-secondary">
+    Previous: Project Setup
+  </Link>
+</div>

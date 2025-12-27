@@ -1,0 +1,396 @@
+---
+title: "Collections"
+description: "Work with lists, maps, sets, and functional collection methods"
+lesson: 5
+track: "dol-fundamentals"
+duration: "20 minutes"
+concepts: ["lists", "maps", "sets", "map", "filter", "reduce", "functional methods"]
+prev: "/dol/tutorials/004-control-flow"
+next: "/dol/tutorials/006-entities-components"
+---
+
+import DOLRepl from '@/components/code/DOLRepl';
+
+# Collections
+
+Collections let you work with groups of related data. DOL provides three primary collection types, each optimized for different use cases.
+
+## Lists
+
+Lists are ordered collections of items of the same type:
+
+<DOLRepl
+  code={`// Creating lists
+let numbers = [1, 2, 3, 4, 5]
+let names = ["Alice", "Bob", "Charlie"]
+let empty: List<Int> = []
+
+log(numbers)
+log(names)`}
+  title="lists.dol"
+  output={`[1, 2, 3, 4, 5]
+["Alice", "Bob", "Charlie"]`}
+/>
+
+### Accessing Elements
+
+<DOLRepl
+  code={`// Access by index (0-based)
+let fruits = ["apple", "banana", "cherry"]
+
+log(fruits[0])  // First element
+log(fruits[2])  // Third element
+
+// Negative indices count from end
+log(fruits[-1])  // Last element`}
+  title="list-access.dol"
+  output={`apple
+cherry
+cherry`}
+/>
+
+### List Methods
+
+<DOLRepl
+  code={`// Common list operations
+let numbers = [1, 2, 3, 4, 5]
+
+log(numbers.len())        // Length: 5
+log(numbers.first())      // First element
+log(numbers.last())       // Last element
+log(numbers.is_empty())   // Is it empty?
+log(numbers.contains(3))  // Does it contain 3?`}
+  title="list-methods.dol"
+  output={`5
+Some(1)
+Some(5)
+false
+true`}
+/>
+
+### Modifying Lists
+
+Lists in DOL are immutable by default. Operations return new lists:
+
+<DOLRepl
+  code={`// List operations create new lists
+let original = [1, 2, 3]
+
+let with_four = original.push(4)      // Add to end
+let with_zero = original.prepend(0)   // Add to beginning
+let without_first = original.tail()   // Remove first
+
+log("Original: " + original.to_string())
+log("With 4: " + with_four.to_string())
+log("With 0: " + with_zero.to_string())
+log("Without first: " + without_first.to_string())`}
+  title="list-modify.dol"
+  output={`Original: [1, 2, 3]
+With 4: [1, 2, 3, 4]
+With 0: [0, 1, 2, 3]
+Without first: [2, 3]`}
+/>
+
+## Maps
+
+Maps store key-value pairs with unique keys:
+
+<DOLRepl
+  code={`// Creating maps
+let ages = {
+    "Alice": 30,
+    "Bob": 25,
+    "Charlie": 35
+}
+
+log(ages["Alice"])  // Access by key
+log(ages.get("Bob"))  // Returns Option`}
+  title="maps.dol"
+  output={`30
+Some(25)`}
+/>
+
+### Map Operations
+
+<DOLRepl
+  code={`// Map methods
+let scores = {
+    "math": 95,
+    "english": 87,
+    "science": 92
+}
+
+log(scores.len())           // Number of entries
+log(scores.keys())          // All keys
+log(scores.values())        // All values
+log(scores.contains_key("math"))  // Check key exists`}
+  title="map-ops.dol"
+  output={`3
+["math", "english", "science"]
+[95, 87, 92]
+true`}
+/>
+
+### Updating Maps
+
+<DOLRepl
+  code={`// Map updates create new maps
+let original = { "a": 1, "b": 2 }
+
+let updated = original.insert("c", 3)   // Add entry
+let removed = original.remove("a")      // Remove entry
+
+log("Original: " + original.to_string())
+log("Updated: " + updated.to_string())
+log("Removed: " + removed.to_string())`}
+  title="map-update.dol"
+  output={`Original: {"a": 1, "b": 2}
+Updated: {"a": 1, "b": 2, "c": 3}
+Removed: {"b": 2}`}
+/>
+
+## Sets
+
+Sets are unordered collections of unique values:
+
+<DOLRepl
+  code={`// Creating sets
+let unique_numbers = #{1, 2, 3, 2, 1}  // Duplicates removed
+
+log(unique_numbers)
+log(unique_numbers.len())`}
+  title="sets.dol"
+  output={`#{1, 2, 3}
+3`}
+/>
+
+### Set Operations
+
+<DOLRepl
+  code={`// Set operations
+let a = #{1, 2, 3, 4}
+let b = #{3, 4, 5, 6}
+
+log(a.union(b))        // All elements from both
+log(a.intersection(b)) // Elements in both
+log(a.difference(b))   // Elements in a but not b
+log(a.is_subset(b))    // Is a a subset of b?`}
+  title="set-ops.dol"
+  output={`#{1, 2, 3, 4, 5, 6}
+#{3, 4}
+#{1, 2}
+false`}
+/>
+
+## Functional Methods
+
+DOL collections shine with functional programming methods. These methods transform collections without mutation.
+
+### Map
+
+Transform each element:
+
+<DOLRepl
+  code={`// map transforms each element
+let numbers = [1, 2, 3, 4, 5]
+
+let doubled = numbers.map(|x| x * 2)
+let squared = numbers.map(|x| x * x)
+
+log("Doubled: " + doubled.to_string())
+log("Squared: " + squared.to_string())`}
+  title="map-fn.dol"
+  output={`Doubled: [2, 4, 6, 8, 10]
+Squared: [1, 4, 9, 16, 25]`}
+/>
+
+### Filter
+
+Keep elements matching a condition:
+
+<DOLRepl
+  code={`// filter keeps matching elements
+let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+let evens = numbers.filter(|x| x % 2 == 0)
+let greater_than_5 = numbers.filter(|x| x > 5)
+
+log("Evens: " + evens.to_string())
+log("Greater than 5: " + greater_than_5.to_string())`}
+  title="filter.dol"
+  output={`Evens: [2, 4, 6, 8, 10]
+Greater than 5: [6, 7, 8, 9, 10]`}
+/>
+
+### Reduce (Fold)
+
+Combine all elements into a single value:
+
+<DOLRepl
+  code={`// reduce combines elements
+let numbers = [1, 2, 3, 4, 5]
+
+let sum = numbers.reduce(0, |acc, x| acc + x)
+let product = numbers.reduce(1, |acc, x| acc * x)
+
+log("Sum: " + sum.to_string())
+log("Product: " + product.to_string())`}
+  title="reduce.dol"
+  output={`Sum: 15
+Product: 120`}
+/>
+
+### Chaining Methods
+
+Methods can be chained for powerful transformations:
+
+<DOLRepl
+  code={`// Chain methods together
+let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+// Sum of squares of even numbers
+let result = numbers
+    .filter(|x| x % 2 == 0)     // [2, 4, 6, 8, 10]
+    .map(|x| x * x)              // [4, 16, 36, 64, 100]
+    .reduce(0, |acc, x| acc + x) // 220
+
+log("Sum of squares of evens: " + result.to_string())`}
+  title="chain.dol"
+  output="Sum of squares of evens: 220"
+/>
+
+### Find and Find Index
+
+<DOLRepl
+  code={`// Find elements
+let numbers = [1, 4, 9, 16, 25]
+
+let first_gt_10 = numbers.find(|x| x > 10)
+let index_of_9 = numbers.find_index(|x| x == 9)
+
+log(first_gt_10)   // First element > 10
+log(index_of_9)    // Index of 9`}
+  title="find.dol"
+  output={`Some(16)
+Some(2)`}
+/>
+
+### Any and All
+
+<DOLRepl
+  code={`// Check conditions across collection
+let numbers = [2, 4, 6, 8, 10]
+
+let any_odd = numbers.any(|x| x % 2 != 0)
+let all_even = numbers.all(|x| x % 2 == 0)
+let all_positive = numbers.all(|x| x > 0)
+
+log("Any odd? " + any_odd.to_string())
+log("All even? " + all_even.to_string())
+log("All positive? " + all_positive.to_string())`}
+  title="any-all.dol"
+  output={`Any odd? false
+All even? true
+All positive? true`}
+/>
+
+### Take and Skip
+
+<DOLRepl
+  code={`// Take and skip elements
+let letters = ["a", "b", "c", "d", "e"]
+
+log(letters.take(3))     // First 3
+log(letters.skip(2))     // Skip first 2
+log(letters.take_while(|x| x != "d"))  // Until condition`}
+  title="take-skip.dol"
+  output={`["a", "b", "c"]
+["c", "d", "e"]
+["a", "b", "c"]`}
+/>
+
+### Flat Map
+
+Map and flatten in one step:
+
+<DOLRepl
+  code={`// flat_map - map then flatten
+let numbers = [1, 2, 3]
+
+let expanded = numbers.flat_map(|x| [x, x * 10])
+
+log(expanded)  // Each number expanded to [x, x*10]`}
+  title="flatmap.dol"
+  output="[1, 10, 2, 20, 3, 30]"
+/>
+
+### Zip
+
+Combine two lists element by element:
+
+<DOLRepl
+  code={`// Zip two lists together
+let names = ["Alice", "Bob", "Charlie"]
+let ages = [30, 25, 35]
+
+let people = names.zip(ages)
+
+for (name, age) in people {
+    log(name + " is " + age.to_string())
+}`}
+  title="zip.dol"
+  output={`Alice is 30
+Bob is 25
+Charlie is 35`}
+/>
+
+## Key Takeaways
+
+- Lists are ordered, Maps are key-value pairs, Sets are unique values
+- Collections are immutable - operations return new collections
+- `map` transforms elements, `filter` selects elements, `reduce` combines elements
+- Chain methods for powerful data transformations
+- Use `find`, `any`, `all` for searching and checking conditions
+
+## Challenge
+
+Given a list of student scores, write code that:
+
+1. Filters out failing scores (below 60)
+2. Calculates letter grades (A: 90+, B: 80+, C: 70+, D: 60+)
+3. Counts how many students got each grade
+
+<DOLRepl
+  code={`// Challenge: Grade analyzer
+let scores = [85, 92, 78, 45, 88, 95, 62, 73, 89, 55]
+
+// Your code here...
+// 1. Filter passing scores
+// 2. Map to letter grades
+// 3. Count grades
+
+log("Complete this challenge!")`}
+  title="challenge.dol"
+  output="Complete this challenge!"
+/>
+
+## Next Steps
+
+Now that you can work with collections, let us learn about DOL's entity and component system for modeling real-world domains.
+
+<div className="mt-8 flex justify-between">
+  <a
+    href="/dol/tutorials/004-control-flow"
+    className="btn-secondary inline-flex items-center gap-2"
+  >
+    <span>←</span>
+    Previous: Control Flow
+  </a>
+  <a
+    href="/dol/tutorials/006-entities-components"
+    className="btn-primary inline-flex items-center gap-2"
+  >
+    Next: Entities and Components
+    <span>→</span>
+  </a>
+</div>

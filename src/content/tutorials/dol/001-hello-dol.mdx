@@ -1,0 +1,197 @@
+---
+title: "Hello DOL"
+description: "Write your first DOL program and learn the basics of the REPL"
+lesson: 1
+track: "dol-fundamentals"
+duration: "10 minutes"
+concepts: ["REPL", "log()", "comments", "basic syntax"]
+prev: null
+next: "/dol/tutorials/002-values-types"
+---
+
+import DOLRepl from '@/components/code/DOLRepl';
+
+# Hello DOL
+
+Welcome to your first DOL lesson! In this tutorial, you will learn how to use the DOL REPL (Read-Eval-Print Loop) and write your first program.
+
+## What is DOL?
+
+DOL (Design Ontology Language) is a specification language for building self-aware systems. Unlike traditional programming languages that focus on *how* to do things, DOL focuses on *what* things are and how they relate to each other.
+
+But before we dive into ontologies and specifications, let us start with the basics.
+
+## The DOL REPL
+
+The REPL is an interactive environment where you can type DOL code and see results immediately. It is perfect for learning and experimenting.
+
+To start the REPL on your machine, run:
+
+```bash
+dol repl
+```
+
+You will see a prompt like this:
+
+```
+DOL v0.2.3 REPL
+Type :help for commands, :quit to exit
+
+dol>
+```
+
+## Your First Program
+
+The traditional first program in any language is "Hello, World!" In DOL, we use the `log()` function to output text.
+
+Try running this code:
+
+<DOLRepl
+  code={`// Your first DOL program
+log("Hello, DOL!")`}
+  title="hello.dol"
+  output="Hello, DOL!"
+/>
+
+Congratulations! You have written your first DOL program.
+
+## Understanding the Code
+
+Let us break down what happened:
+
+### Comments
+
+The line starting with `//` is a **comment**. Comments are ignored by DOL and are used to explain your code to humans (including your future self).
+
+```dol
+// This is a single-line comment
+
+/* This is a
+   multi-line comment */
+```
+
+### The log() Function
+
+`log()` is a built-in function that outputs values to the console. It can print strings, numbers, and any other DOL value.
+
+<DOLRepl
+  code={`// log() can output different types
+log("A string")
+log(42)
+log(3.14)
+log(true)`}
+  title="log-examples.dol"
+  output={`A string
+42
+3.14
+true`}
+/>
+
+### Strings
+
+Text in DOL is represented as **strings**. Strings are enclosed in double quotes (`""`):
+
+```dol
+"Hello, DOL!"
+"This is a string"
+"Strings can contain numbers: 123"
+```
+
+## Multiple Statements
+
+You can write multiple statements in a DOL program. Each statement is executed in order:
+
+<DOLRepl
+  code={`// Multiple log statements
+log("First line")
+log("Second line")
+log("Third line")`}
+  title="multiple.dol"
+  output={`First line
+Second line
+Third line`}
+/>
+
+## String Concatenation
+
+You can combine strings using the `+` operator:
+
+<DOLRepl
+  code={`// Combining strings
+let greeting = "Hello"
+let name = "World"
+log(greeting + ", " + name + "!")`}
+  title="concat.dol"
+  output="Hello, World!"
+/>
+
+We will learn more about `let` bindings in the next lesson, but this gives you a preview of how DOL handles variables.
+
+## REPL Commands
+
+The DOL REPL has special commands that start with `:`. Here are the most useful ones:
+
+| Command | Description |
+|---------|-------------|
+| `:help` | Show available commands |
+| `:quit` or `:q` | Exit the REPL |
+| `:clear` | Clear the screen |
+| `:type <expr>` | Show the type of an expression |
+| `:load <file>` | Load and run a DOL file |
+
+Try typing `:type "hello"` in the REPL to see the type of a string.
+
+## Expressions vs Statements
+
+In DOL, almost everything is an **expression** that produces a value. This is different from many languages where statements do not return values.
+
+<DOLRepl
+  code={`// The last expression's value is returned
+let x = 5
+let y = 10
+x + y`}
+  title="expressions.dol"
+  output="15"
+/>
+
+When you type an expression in the REPL without using `log()`, the REPL automatically shows its value.
+
+## Key Takeaways
+
+- The DOL REPL lets you interactively run code
+- Use `log()` to output values
+- Comments start with `//` for single-line or `/* */` for multi-line
+- Strings are enclosed in double quotes
+- Almost everything in DOL is an expression
+
+## Challenge
+
+Now it is your turn! Modify the code below to:
+
+1. Print your name
+2. Print today's date
+3. Add a comment explaining what the program does
+
+<DOLRepl
+  code={`// Challenge: Personalize this program
+log("Hello, DOL!")
+log("Today is a great day to learn!")`}
+  title="challenge.dol"
+  output={`Hello, DOL!
+Today is a great day to learn!`}
+/>
+
+## Next Steps
+
+In the next lesson, we will explore DOL's type system and learn about all the different values you can work with.
+
+<div className="mt-8 flex justify-between">
+  <span></span>
+  <a
+    href="/dol/tutorials/002-values-types"
+    className="btn-primary inline-flex items-center gap-2"
+  >
+    Next: Values and Types
+    <span>→</span>
+  </a>
+</div>

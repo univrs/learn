@@ -1,0 +1,756 @@
+---
+title: "Your First Spirit"
+description: "Create, build, and run your first Spirit using vudo new and the manifest system"
+track: "spirits"
+tutorial: 2
+duration: "30 min"
+level: "intermediate"
+prerequisites:
+  - "001-what-is-spirit"
+  - "VUDO CLI installed"
+concepts:
+  - "vudo new command"
+  - "manifest.json structure"
+  - "Spirit entry points"
+  - "Building and running Spirits"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+import { Terminal } from '@/components/ui/Terminal'
+import { FileTree } from '@/components/ui/FileTree'
+
+# Your First Spirit
+
+In this tutorial, you'll create your first Spirit from scratch. You'll learn how to use the VUDO CLI to scaffold a project, understand the manifest structure, and build and run your Spirit.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Create a new Spirit project using `vudo new`
+- Understand the manifest.json structure
+- Write a Spirit entry point
+- Build a Spirit to WebAssembly
+- Run and test your Spirit locally
+
+## Prerequisites
+
+Ensure you have the following installed:
+
+```bash
+# Check VUDO CLI
+vudo --version
+# Expected: vudo 0.2.x or higher
+
+# Check Rust toolchain
+rustc --version
+# Expected: rustc 1.70.0 or higher
+
+# Verify wasm32 target
+rustup target list --installed | grep wasm32
+# Expected: wasm32-unknown-unknown
+```
+
+If missing any tools, run:
+
+```bash
+# Install VUDO CLI
+cargo install vudo-cli
+
+# Add WebAssembly target
+rustup target add wasm32-unknown-unknown
+
+# Install cargo-component for Spirit builds
+cargo install cargo-component
+```
+
+## Step 1: Create a New Spirit
+
+Use `vudo new` to scaffold a Spirit project:
+
+<Terminal>
+```bash
+$ vudo new hello-spirit
+Creating new Spirit: hello-spirit
+  Generating manifest.json...
+  Generating Cargo.toml...
+  Generating src/lib.rs...
+  Initializing git repository...
+
+Spirit created successfully!
+
+Next steps:
+  cd hello-spirit
+  vudo build
+  vudo run
+```
+</Terminal>
+
+Navigate to your new project:
+
+```bash
+cd hello-spirit
+```
+
+## Step 2: Explore the Project Structure
+
+The `vudo new` command creates a complete Spirit project:
+
+<FileTree>
+```
+hello-spirit/
+├── manifest.json       # Spirit metadata and capabilities
+├── Cargo.toml          # Rust dependencies
+├── src/
+│   └── lib.rs          # Spirit entry point
+└── tests/
+    └── integration.rs  # Integration tests
+```
+</FileTree>
+
+Let's examine each file.
+
+### manifest.json
+
+The manifest defines your Spirit's identity and capabilities:
+
+```json
+{
+  "$schema": "https://vudo.dev/schemas/manifest-v1.json",
+  "name": "hello-spirit",
+  "version": "0.1.0",
+  "description": "A simple greeting Spirit",
+  "authors": ["Your Name <you@example.com>"],
+  "license": "MIT",
+
+  "spirit": {
+    "entry": "hello",
+    "format": "wasm32-component"
+  },
+
+  "capabilities": {
+    "logging": true
+  },
+
+  "limits": {
+    "memory_pages": 16,
+    "execution_time_ms": 1000,
+    "storage_bytes": 0
+  }
+}
+```
+
+<Callout type="info" title="Manifest Fields Explained">
+
+| Field | Description |
+|-------|-------------|
+| `name` | Unique identifier for your Spirit |
+| `version` | Semantic version (major.minor.patch) |
+| `spirit.entry` | Name of the main function to call |
+| `spirit.format` | WebAssembly format (component model) |
+| `capabilities` | Resources the Spirit needs access to |
+| `limits` | Resource constraints for execution |
+
+</Callout>
+
+### Cargo.toml
+
+The Cargo configuration for building a Spirit:
+
+```toml
+[package]
+name = "hello-spirit"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+vudo-spirit = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[profile.release]
+opt-level = "s"      # Optimize for size
+lto = true           # Link-time optimization
+strip = true         # Strip debug symbols
+```
+
+Key points:
+- `crate-type = ["cdylib"]` produces a WebAssembly module
+- `vudo-spirit` provides the Spirit runtime interface
+- Release profile optimizes for small binary size
+
+### src/lib.rs
+
+The Spirit entry point:
+
+```rust
+use vudo_spirit::log;
+
+/// The main entry point for the Spirit.
+/// This function is called when the Spirit is invoked.
+#[vudo_spirit::main]
+pub fn hello(name: Option<String>) -> String {
+    let name = name.unwrap_or_else(|| "World".to_string());
+
+    log::info!("Greeting: {}", name);
+
+    format!("Hello, {}!", name)
+}
+```
+
+Let's break this down:
+
+```rust
+#[vudo_spirit::main]
+```
+This attribute marks the function as the Spirit's entry point. The function name must match `spirit.entry` in manifest.json.
+
+```rust
+pub fn hello(name: Option<String>) -> String
+```
+The entry point can accept parameters (deserialized from JSON input) and return a value (serialized to JSON output).
+
+## Step 3: Build the Spirit
+
+Build your Spirit with the VUDO CLI:
+
+<Terminal>
+```bash
+$ vudo build
+   Compiling vudo-spirit v0.2.3
+   Compiling hello-spirit v0.1.0
+    Finished release [optimized] target(s) in 2.34s
+  Packaging hello-spirit.spirit
+
+Build successful!
+  Output: target/spirit/hello-spirit.spirit
+  Size: 42.3 KB
+  Checksum: sha256:a1b2c3d4...
+```
+</Terminal>
+
+The build process:
+1. Compiles Rust to WebAssembly
+2. Optimizes the WASM binary
+3. Packages with manifest into a `.spirit` file
+4. Generates checksums for verification
+
+### Understanding the .spirit File
+
+The `.spirit` file is a package containing:
+- Compiled WebAssembly module
+- manifest.json
+- Signature (if signed)
+- Checksums
+
+```bash
+# Inspect a Spirit package
+vudo inspect target/spirit/hello-spirit.spirit
+```
+
+<Terminal>
+```bash
+$ vudo inspect target/spirit/hello-spirit.spirit
+
+Spirit: hello-spirit v0.1.0
+  Description: A simple greeting Spirit
+  Entry: hello
+  Format: wasm32-component
+
+Capabilities:
+  - logging: enabled
+
+Limits:
+  - Memory: 16 pages (1 MB)
+  - Execution: 1000 ms
+  - Storage: 0 bytes
+
+Package:
+  - Size: 42.3 KB
+  - Checksum: sha256:a1b2c3d4e5f6...
+  - Signed: No
+```
+</Terminal>
+
+## Step 4: Run the Spirit
+
+Execute your Spirit locally:
+
+<Terminal>
+```bash
+$ vudo run hello-spirit
+"Hello, World!"
+```
+</Terminal>
+
+Pass arguments to your Spirit:
+
+<Terminal>
+```bash
+$ vudo run hello-spirit --input '{"name": "Developer"}'
+"Hello, Developer!"
+```
+</Terminal>
+
+The `--input` flag accepts JSON that's deserialized into your entry point's parameters.
+
+### Interactive Mode
+
+For development, use interactive mode:
+
+<Terminal>
+```bash
+$ vudo run hello-spirit --interactive
+VUDO Spirit Runner (interactive mode)
+Type JSON input and press Enter. Ctrl+C to exit.
+
+> {"name": "Alice"}
+"Hello, Alice!"
+
+> {"name": "Bob"}
+"Hello, Bob!"
+
+> {}
+"Hello, World!"
+
+> ^C
+Goodbye!
+```
+</Terminal>
+
+## Step 5: Add More Functionality
+
+Let's enhance our Spirit with more capabilities.
+
+### Adding Time
+
+Update manifest.json to request time capabilities:
+
+```json
+{
+  "capabilities": {
+    "logging": true,
+    "time": {
+      "now": true
+    }
+  }
+}
+```
+
+Update src/lib.rs to use time:
+
+```rust
+use vudo_spirit::{log, time};
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize)]
+pub struct Greeting {
+    message: String,
+    timestamp: u64,
+}
+
+#[vudo_spirit::main]
+pub fn hello(name: Option<String>) -> Result<Greeting, vudo_spirit::Error> {
+    let name = name.unwrap_or_else(|| "World".to_string());
+    let timestamp = time::now()?;
+
+    log::info!("Greeting {} at {}", name, timestamp);
+
+    Ok(Greeting {
+        message: format!("Hello, {}!", name),
+        timestamp,
+    })
+}
+```
+
+Rebuild and run:
+
+<Terminal>
+```bash
+$ vudo build && vudo run hello-spirit --input '{"name": "Developer"}'
+{
+  "message": "Hello, Developer!",
+  "timestamp": 1703520000
+}
+```
+</Terminal>
+
+### Adding Storage
+
+For persistence, add storage capabilities:
+
+```json
+{
+  "capabilities": {
+    "logging": true,
+    "time": {
+      "now": true
+    },
+    "storage": {
+      "read": true,
+      "write": true,
+      "namespace": "greetings"
+    }
+  },
+  "limits": {
+    "storage_bytes": 10240
+  }
+}
+```
+
+Update the Spirit to remember greetings:
+
+```rust
+use vudo_spirit::{log, time, storage};
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Default)]
+struct VisitorLog {
+    visits: Vec<Visit>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct Visit {
+    name: String,
+    timestamp: u64,
+}
+
+#[derive(Serialize)]
+pub struct Greeting {
+    message: String,
+    visit_count: usize,
+    timestamp: u64,
+}
+
+#[vudo_spirit::main]
+pub fn hello(name: Option<String>) -> Result<Greeting, vudo_spirit::Error> {
+    let name = name.unwrap_or_else(|| "World".to_string());
+    let timestamp = time::now()?;
+
+    // Load existing visits
+    let mut visitor_log: VisitorLog = storage::read("visitor-log")?
+        .and_then(|data| serde_json::from_slice(&data).ok())
+        .unwrap_or_default();
+
+    // Record this visit
+    visitor_log.visits.push(Visit {
+        name: name.clone(),
+        timestamp,
+    });
+
+    // Count visits from this name
+    let visit_count = visitor_log.visits
+        .iter()
+        .filter(|v| v.name == name)
+        .count();
+
+    // Save updated log
+    let data = serde_json::to_vec(&visitor_log)?;
+    storage::write("visitor-log", &data)?;
+
+    log::info!("Visit #{} from {}", visit_count, name);
+
+    Ok(Greeting {
+        message: format!("Hello, {}! This is your visit #{}.", name, visit_count),
+        visit_count,
+        timestamp,
+    })
+}
+```
+
+## Step 6: Debug Your Spirit
+
+VUDO provides debugging tools for development.
+
+### Verbose Logging
+
+Enable verbose output to see host function calls:
+
+<Terminal>
+```bash
+$ vudo run hello-spirit --verbose
+[DEBUG] Loading spirit: hello-spirit
+[DEBUG] Capabilities requested: logging, time.now, storage.read, storage.write
+[DEBUG] Memory allocated: 16 pages
+[DEBUG] Executing: hello
+[TRACE] Host call: time::now() -> 1703520000
+[TRACE] Host call: storage::read("visitor-log") -> Some(...)
+[TRACE] Host call: storage::write("visitor-log", 245 bytes)
+[INFO ] Visit #1 from Developer
+{
+  "message": "Hello, Developer! This is your visit #1.",
+  "visit_count": 1,
+  "timestamp": 1703520000
+}
+[DEBUG] Execution complete: 3.2ms
+```
+</Terminal>
+
+### Resource Monitoring
+
+Track resource usage during execution:
+
+<Terminal>
+```bash
+$ vudo run hello-spirit --stats
+{
+  "message": "Hello, Developer! This is your visit #1.",
+  "visit_count": 1,
+  "timestamp": 1703520000
+}
+
+--- Execution Statistics ---
+  Duration: 3.2 ms
+  Memory used: 2 pages (128 KB)
+  Storage read: 1 operation (0 bytes)
+  Storage write: 1 operation (245 bytes)
+  Host calls: 3
+  Credits consumed: 0.001
+```
+</Terminal>
+
+## Common Patterns
+
+### Error Handling
+
+Spirits should handle errors gracefully:
+
+```rust
+use vudo_spirit::{Error, ErrorKind};
+
+#[vudo_spirit::main]
+pub fn process(input: Input) -> Result<Output, Error> {
+    // Validate input
+    if input.value.is_empty() {
+        return Err(Error::new(
+            ErrorKind::InvalidInput,
+            "Value cannot be empty"
+        ));
+    }
+
+    // Handle capability errors
+    let data = storage::read("key").map_err(|e| {
+        log::error!("Storage read failed: {}", e);
+        e
+    })?;
+
+    // Process...
+    Ok(output)
+}
+```
+
+### Initialization
+
+Use `#[vudo_spirit::init]` for one-time setup:
+
+```rust
+static mut CONFIG: Option<Config> = None;
+
+#[vudo_spirit::init]
+fn initialize() {
+    // Load configuration from storage
+    let config = storage::read("config")
+        .ok()
+        .flatten()
+        .and_then(|data| serde_json::from_slice(&data).ok())
+        .unwrap_or_default();
+
+    unsafe { CONFIG = Some(config) };
+
+    log::info!("Spirit initialized with config");
+}
+
+#[vudo_spirit::main]
+pub fn run(input: Input) -> Output {
+    let config = unsafe { CONFIG.as_ref().unwrap() };
+    // Use config...
+}
+```
+
+### Multiple Entry Points
+
+Spirits can export multiple functions:
+
+```rust
+#[vudo_spirit::export]
+pub fn create(item: Item) -> Result<Id, Error> {
+    // Create logic...
+}
+
+#[vudo_spirit::export]
+pub fn read(id: Id) -> Result<Item, Error> {
+    // Read logic...
+}
+
+#[vudo_spirit::export]
+pub fn update(id: Id, item: Item) -> Result<(), Error> {
+    // Update logic...
+}
+
+#[vudo_spirit::export]
+pub fn delete(id: Id) -> Result<(), Error> {
+    // Delete logic...
+}
+```
+
+Call specific functions:
+
+```bash
+vudo run my-spirit --function create --input '{"name": "test"}'
+vudo run my-spirit --function read --input '{"id": "abc123"}'
+```
+
+## Mini-Project: Counter Spirit
+
+Let's build a complete counter Spirit as practice:
+
+### manifest.json
+
+```json
+{
+  "$schema": "https://vudo.dev/schemas/manifest-v1.json",
+  "name": "counter-spirit",
+  "version": "0.1.0",
+  "description": "A persistent counter Spirit",
+
+  "spirit": {
+    "entry": "increment",
+    "format": "wasm32-component"
+  },
+
+  "capabilities": {
+    "logging": true,
+    "storage": {
+      "read": true,
+      "write": true,
+      "namespace": "counter"
+    }
+  },
+
+  "limits": {
+    "memory_pages": 4,
+    "execution_time_ms": 100,
+    "storage_bytes": 1024
+  }
+}
+```
+
+### src/lib.rs
+
+```rust
+use vudo_spirit::{log, storage};
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Default)]
+struct Counter {
+    value: i64,
+}
+
+#[derive(Serialize)]
+struct CounterResponse {
+    previous: i64,
+    current: i64,
+}
+
+#[vudo_spirit::export]
+pub fn increment(amount: Option<i64>) -> Result<CounterResponse, vudo_spirit::Error> {
+    let amount = amount.unwrap_or(1);
+    modify_counter(amount)
+}
+
+#[vudo_spirit::export]
+pub fn decrement(amount: Option<i64>) -> Result<CounterResponse, vudo_spirit::Error> {
+    let amount = amount.unwrap_or(1);
+    modify_counter(-amount)
+}
+
+#[vudo_spirit::export]
+pub fn get() -> Result<i64, vudo_spirit::Error> {
+    let counter = load_counter()?;
+    Ok(counter.value)
+}
+
+#[vudo_spirit::export]
+pub fn reset() -> Result<CounterResponse, vudo_spirit::Error> {
+    let counter = load_counter()?;
+    let previous = counter.value;
+
+    save_counter(&Counter { value: 0 })?;
+    log::info!("Counter reset from {} to 0", previous);
+
+    Ok(CounterResponse { previous, current: 0 })
+}
+
+fn load_counter() -> Result<Counter, vudo_spirit::Error> {
+    storage::read("value")?
+        .and_then(|data| serde_json::from_slice(&data).ok())
+        .map(Ok)
+        .unwrap_or(Ok(Counter::default()))
+}
+
+fn save_counter(counter: &Counter) -> Result<(), vudo_spirit::Error> {
+    let data = serde_json::to_vec(counter)?;
+    storage::write("value", &data)
+}
+
+fn modify_counter(delta: i64) -> Result<CounterResponse, vudo_spirit::Error> {
+    let counter = load_counter()?;
+    let previous = counter.value;
+    let current = previous + delta;
+
+    save_counter(&Counter { value: current })?;
+    log::info!("Counter: {} -> {} (delta: {})", previous, current, delta);
+
+    Ok(CounterResponse { previous, current })
+}
+```
+
+### Test It
+
+<Terminal>
+```bash
+$ vudo build
+$ vudo run counter-spirit --function get
+0
+$ vudo run counter-spirit --function increment
+{"previous": 0, "current": 1}
+$ vudo run counter-spirit --function increment --input '{"amount": 5}'
+{"previous": 1, "current": 6}
+$ vudo run counter-spirit --function decrement
+{"previous": 6, "current": 5}
+$ vudo run counter-spirit --function reset
+{"previous": 5, "current": 0}
+```
+</Terminal>
+
+## Key Takeaways
+
+1. **`vudo new`** scaffolds a complete Spirit project with manifest, Cargo.toml, and entry point
+
+2. **manifest.json** defines your Spirit's identity, capabilities, and resource limits
+
+3. **Entry points** are marked with `#[vudo_spirit::main]` or `#[vudo_spirit::export]`
+
+4. **`vudo build`** compiles Rust to WebAssembly and packages into a `.spirit` file
+
+5. **`vudo run`** executes Spirits locally with optional input and debugging
+
+## What's Next?
+
+Now that you can create and run Spirits, let's explore the host functions available to you. In the next tutorial, you'll learn to use:
+
+- Time functions for timestamps and delays
+- Logging for debugging and monitoring
+- Random numbers for non-deterministic operations
+
+Continue to [Using Host Functions](/tutorials/spirits/003-host-functions).
+
+## Additional Resources
+
+- [VUDO CLI Reference](/dol/reference/vudo-cli)
+- [Manifest Schema Documentation](/dol/reference/manifest)
+- [Spirit Examples Repository](https://github.com/univrs/spirit-examples)

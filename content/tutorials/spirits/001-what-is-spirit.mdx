@@ -1,0 +1,435 @@
+---
+title: "What is a Spirit?"
+description: "Understand Spirit architecture, sandbox security model, and capability-based access control"
+track: "spirits"
+tutorial: 1
+duration: "25 min"
+level: "intermediate"
+prerequisites:
+  - "DOL Fundamentals track"
+concepts:
+  - "Spirit architecture"
+  - "WebAssembly sandbox"
+  - "Capability-based security"
+  - "Host functions"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+import { Diagram } from '@/components/ui/Diagram'
+
+# What is a Spirit?
+
+A **Spirit** is a secure, sandboxed WebAssembly program that runs in the VUDO runtime. Spirits represent a new paradigm for building composable software with explicit capabilities and controlled resource access.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Understand the Spirit execution model
+- Learn how WebAssembly sandboxing provides security
+- Grasp capability-based security principles
+- Know how host functions bridge Spirits to system resources
+
+## The Spirit Architecture
+
+Spirits solve a fundamental problem in software: **how do you run untrusted code safely?**
+
+Traditional approaches have limitations:
+- **Containers**: Heavy isolation, complex configuration
+- **VMs**: Massive overhead, slow startup
+- **Language sandboxes**: Incomplete, language-specific
+
+Spirits use WebAssembly to achieve:
+- **Lightweight isolation**: Millisecond startup, minimal memory
+- **Language-agnostic**: Compile from Rust, C, Go, or any WASM-targeting language
+- **Deterministic**: Same inputs produce same outputs
+- **Portable**: Run anywhere VUDO runs
+
+### Architecture Overview
+
+```
++------------------------------------------------------------------+
+|                         Your Application                          |
++------------------------------------------------------------------+
+                                |
+                                v
++------------------------------------------------------------------+
+|                         VUDO Runtime                              |
+|                                                                   |
+|  +---------------------------+    +---------------------------+   |
+|  |         Spirit A          |    |         Spirit B          |   |
+|  |                           |    |                           |   |
+|  |  +---------------------+  |    |  +---------------------+  |   |
+|  |  |   WebAssembly       |  |    |  |   WebAssembly       |  |   |
+|  |  |   Module            |  |    |  |   Module            |  |   |
+|  |  |                     |  |    |  |                     |  |   |
+|  |  |  - Linear memory    |  |    |  |  - Linear memory    |  |   |
+|  |  |  - Function table   |  |    |  |  - Function table   |  |   |
+|  |  |  - Globals          |  |    |  |  - Globals          |  |   |
+|  |  +---------------------+  |    |  +---------------------+  |   |
+|  |                           |    |                           |   |
+|  |  Declared Capabilities:   |    |  Declared Capabilities:   |   |
+|  |  - storage.read           |    |  - network.http           |   |
+|  |  - storage.write          |    |  - time.now               |   |
+|  |  - time.now               |    |  - logging                |   |
+|  +-------------+-------------+    +-------------+-------------+   |
+|                |                                |                 |
+|                v                                v                 |
+|  +----------------------------------------------------------+    |
+|  |                    Host Functions                          |    |
+|  |  (Provided by VUDO, gated by capability checks)           |    |
+|  +----------------------------------------------------------+    |
++------------------------------------------------------------------+
+                                |
+                                v
++------------------------------------------------------------------+
+|                    System Resources                               |
+|  (Filesystem, Network, Clock, Random, etc.)                      |
++------------------------------------------------------------------+
+```
+
+## The Sandbox Security Model
+
+WebAssembly provides strong security guarantees by design:
+
+### Memory Isolation
+
+Each Spirit gets its own linear memory space. Spirits cannot:
+- Access memory outside their allocated region
+- Read or write other Spirits' memory
+- Access host memory directly
+
+```rust
+// Inside a Spirit - this memory is completely isolated
+let mut buffer = vec![0u8; 1024];
+buffer[0] = 42; // Only affects this Spirit's memory
+
+// IMPOSSIBLE: Access another Spirit's memory
+// IMPOSSIBLE: Access host system memory
+// IMPOSSIBLE: Execute shellcode or escape sandbox
+```
+
+### Control Flow Integrity
+
+WebAssembly validates all code before execution:
+- No arbitrary jumps to unmapped addresses
+- No ROP/JOP attacks possible
+- Type-safe function calls only
+
+### No System Calls
+
+Spirits have **zero** direct access to:
+- Filesystem
+- Network
+- System clock
+- Random number generator
+- Environment variables
+- Process execution
+
+Every resource access must go through **host functions** provided by VUDO.
+
+<Callout type="security" title="Defense in Depth">
+Even if a Spirit has a bug or is malicious, it cannot escape its sandbox. The worst it can do is consume its allocated resources or return incorrect results.
+</Callout>
+
+## Capability-Based Security
+
+Spirits declare what they need in their **manifest**. The VUDO runtime enforces these declarations.
+
+### The Principle of Least Privilege
+
+Spirits should only request capabilities they actually need:
+
+```json
+{
+  "name": "note-keeper",
+  "version": "1.0.0",
+  "capabilities": {
+    "storage": {
+      "read": true,
+      "write": true,
+      "namespace": "notes"
+    },
+    "time": {
+      "now": true
+    }
+  }
+}
+```
+
+This manifest declares:
+- Storage access, limited to the "notes" namespace
+- Read current time
+- **Implicitly denied**: Network access, logging, random numbers, etc.
+
+### Capability Verification
+
+When a Spirit is loaded, VUDO verifies:
+
+1. **Manifest Integrity**: The manifest hasn't been tampered with
+2. **Capability Bounds**: Requested capabilities are within policy limits
+3. **User Consent**: The user approved these capabilities (for sensitive ones)
+
+```
++------------------+     +------------------+     +------------------+
+|  Spirit Package  | --> | Manifest Check   | --> | Load Spirit      |
+|  (.spirit file)  |     |                  |     | (if approved)    |
++------------------+     +------------------+     +------------------+
+                               |
+                               v
+                         +------------------+
+                         | Denied           |
+                         | (if excessive    |
+                         |  capabilities)   |
+                         +------------------+
+```
+
+### Runtime Enforcement
+
+Even after loading, every host function call is verified:
+
+```rust
+// Inside the VUDO runtime (simplified)
+fn handle_storage_write(spirit_id: SpiritId, key: &str, data: &[u8]) -> Result<()> {
+    let manifest = get_manifest(spirit_id);
+
+    // Check capability
+    if !manifest.capabilities.storage.write {
+        return Err(CapabilityDenied("storage.write"));
+    }
+
+    // Check namespace
+    if !key.starts_with(&manifest.capabilities.storage.namespace) {
+        return Err(NamespaceViolation(key));
+    }
+
+    // Perform the write
+    storage.write(spirit_id, key, data)
+}
+```
+
+## Host Functions
+
+Host functions are the bridge between Spirits and system resources. They are provided by the VUDO runtime and accessed through a defined interface.
+
+### Available Host Functions
+
+VUDO provides these host function categories:
+
+| Category | Functions | Capability Required |
+|----------|-----------|---------------------|
+| **Time** | `time::now()`, `time::sleep()` | `time.now`, `time.sleep` |
+| **Logging** | `log::info()`, `log::error()` | `logging` |
+| **Random** | `random::bytes()`, `random::u64()` | `random` |
+| **Storage** | `storage::read()`, `storage::write()`, `storage::delete()` | `storage.read`, `storage.write` |
+| **Network** | `network::request()` | `network.http` |
+| **Credits** | `credits::balance()`, `credits::transfer()` | `credits.read`, `credits.transfer` |
+
+### How Host Functions Work
+
+When a Spirit calls a host function:
+
+1. **Trap to Runtime**: Execution transfers from WASM to VUDO
+2. **Capability Check**: VUDO verifies the Spirit has permission
+3. **Execute**: VUDO performs the actual system operation
+4. **Return**: Results are serialized back to Spirit memory
+
+```
+Spirit Code                     VUDO Runtime
+     |                               |
+     | storage::read("key")          |
+     |------------------------------>|
+     |                               | 1. Verify capability
+     |                               | 2. Read from storage
+     |                               | 3. Serialize result
+     |<------------------------------|
+     | Result<Vec<u8>>               |
+     |                               |
+```
+
+### Using Host Functions in Rust
+
+The `vudo-spirit` crate provides idiomatic Rust bindings:
+
+```rust
+use vudo_spirit::{storage, time, log};
+
+#[vudo_spirit::main]
+fn run() -> Result<(), Error> {
+    // Get current timestamp
+    let now = time::now()?;
+    log::info!("Starting at {}", now);
+
+    // Read from storage
+    let data = storage::read("my-key")?;
+
+    // Process data...
+    let result = process(data);
+
+    // Write back to storage
+    storage::write("my-key", &result)?;
+
+    Ok(())
+}
+```
+
+## Spirit Lifecycle
+
+Understanding the Spirit lifecycle helps you write efficient code:
+
+### 1. Instantiation
+
+```
++------------------+     +------------------+     +------------------+
+| Load .spirit     | --> | Compile WASM     | --> | Allocate Memory  |
+| file             |     | (cached)         |     | (per manifest)   |
++------------------+     +------------------+     +------------------+
+```
+
+### 2. Initialization
+
+```rust
+// Called once when Spirit is first loaded
+#[vudo_spirit::init]
+fn initialize() {
+    // Set up initial state
+    // Load cached data
+    // Prepare resources
+}
+```
+
+### 3. Execution
+
+The main entry point is called for each invocation:
+
+```rust
+#[vudo_spirit::main]
+fn run(input: Input) -> Output {
+    // Process input
+    // Perform work
+    // Return result
+}
+```
+
+### 4. Cleanup
+
+When the Spirit is unloaded (optional):
+
+```rust
+#[vudo_spirit::cleanup]
+fn cleanup() {
+    // Flush buffers
+    // Save state
+    // Release resources
+}
+```
+
+## Practical Example: Understanding a Spirit
+
+Let's examine a complete Spirit to see these concepts in action:
+
+```rust
+// greeting-spirit/src/lib.rs
+
+use vudo_spirit::{time, storage, log};
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+struct Greeting {
+    name: String,
+    count: u32,
+    last_seen: u64,
+}
+
+/// Initialize the Spirit
+#[vudo_spirit::init]
+fn init() {
+    log::info!("Greeting Spirit initialized");
+}
+
+/// Main entry point
+#[vudo_spirit::main]
+fn greet(name: String) -> Result<String, vudo_spirit::Error> {
+    // Read existing data (requires storage.read capability)
+    let key = format!("greetings/{}", name);
+    let mut greeting: Greeting = storage::read(&key)?
+        .map(|data| serde_json::from_slice(&data).unwrap())
+        .unwrap_or(Greeting {
+            name: name.clone(),
+            count: 0,
+            last_seen: 0,
+        });
+
+    // Update greeting (requires time.now capability)
+    greeting.count += 1;
+    greeting.last_seen = time::now()?;
+
+    // Save updated data (requires storage.write capability)
+    let data = serde_json::to_vec(&greeting)?;
+    storage::write(&key, &data)?;
+
+    // Log the interaction (requires logging capability)
+    log::info!("Greeted {} (visit #{})", name, greeting.count);
+
+    // Return personalized greeting
+    Ok(format!(
+        "Hello, {}! This is visit #{} since we first met.",
+        name, greeting.count
+    ))
+}
+```
+
+The manifest for this Spirit:
+
+```json
+{
+  "name": "greeting-spirit",
+  "version": "1.0.0",
+  "description": "A Spirit that remembers and greets users",
+  "entry": "greet",
+  "capabilities": {
+    "storage": {
+      "read": true,
+      "write": true,
+      "namespace": "greetings"
+    },
+    "time": {
+      "now": true
+    },
+    "logging": true
+  }
+}
+```
+
+<Callout type="info" title="Minimal Capabilities">
+This Spirit only requests what it needs: storage for persistence, time for timestamps, and logging for debugging. It has no network access, random number generation, or credit management.
+</Callout>
+
+## Key Takeaways
+
+1. **Spirits are sandboxed WebAssembly modules** that cannot access system resources directly
+
+2. **Capability-based security** requires Spirits to declare all resource needs upfront
+
+3. **Host functions** provide controlled access to system resources through the VUDO runtime
+
+4. **The manifest** is the contract between a Spirit and the runtime, defining exactly what the Spirit can do
+
+5. **Defense in depth** means even buggy or malicious Spirits cannot escape their sandbox
+
+## What's Next?
+
+Now that you understand Spirit architecture, you're ready to create your first Spirit. In the next tutorial, you'll:
+
+- Use `vudo new` to scaffold a Spirit project
+- Understand the manifest structure in detail
+- Build and run your Spirit in the VUDO runtime
+
+Continue to [Your First Spirit](/tutorials/spirits/002-first-spirit).
+
+## Additional Resources
+
+- [WebAssembly Security Model](https://webassembly.org/docs/security/)
+- [Capability-Based Security](https://en.wikipedia.org/wiki/Capability-based_security)
+- [VUDO Runtime Reference](/dol/reference/vudo-runtime)

@@ -1,0 +1,716 @@
+---
+title: "Registry Operations"
+description: "Install, search, and publish DOL modules using the registry and Imaginarium"
+track: "cli"
+tutorial: 5
+duration: "20 min"
+objectives:
+  - "Understand the local registry structure"
+  - "Install modules with vudo install"
+  - "Search the registry effectively"
+  - "Discover the Imaginarium ecosystem"
+tags:
+  - "cli"
+  - "vudo"
+  - "registry"
+  - "packages"
+  - "imaginarium"
+  - "modules"
+---
+
+# Registry Operations
+
+In this tutorial, you will master the DOL registry system. You will learn to find, install, and manage DOL modules, and discover the Imaginarium - the community hub for sharing DOL creations.
+
+## Overview
+
+The DOL registry provides:
+
+- **Module distribution** - Install pre-built modules
+- **Dependency management** - Track and update dependencies
+- **The Imaginarium** - Community-contributed modules
+- **Private registries** - Enterprise module hosting
+
+## The Local Registry
+
+VUDO maintains a local registry at `~/.vudo/registry/`:
+
+<Terminal title="Registry structure">
+```
+$ ls -la ~/.vudo/registry/
+total 20
+drwxr-xr-x  5 user user 4096 Dec 26 10:00 .
+drwxr-xr-x  3 user user 4096 Dec 26 09:00 ..
+drwxr-xr-x  3 user user 4096 Dec 26 10:00 std
+drwxr-xr-x  5 user user 4096 Dec 26 10:00 contrib
+drwxr-xr-x  2 user user 4096 Dec 26 09:30 imaginarium
+-rw-r--r--  1 user user 1234 Dec 26 10:00 registry.lock
+
+$ tree ~/.vudo/registry/std/
+~/.vudo/registry/std/
++-- prelude/
+|   +-- 1.0.0/
+|       +-- mod.dol
+|       +-- types.dol
+|       +-- manifest.toml
++-- collections/
+|   +-- 1.0.0/
+|   +-- 1.1.0/
+|   +-- 1.2.0/
+|       +-- mod.dol
+|       +-- list.dol
+|       +-- map.dol
+|       +-- set.dol
+|       +-- manifest.toml
++-- validation/
+    +-- 1.0.0/
+    +-- 1.2.0/
+```
+</Terminal>
+
+### Registry Configuration
+
+<CodeBlock title="~/.vudo/config.toml" language="toml">
+```toml
+[registry]
+# Default source for installs
+default_source = "https://registry.dol.dev"
+
+# Additional registries
+[[registry.sources]]
+name = "imaginarium"
+url = "https://imaginarium.dol.dev"
+priority = 2
+
+[[registry.sources]]
+name = "company-internal"
+url = "https://dol.internal.company.com"
+priority = 1
+auth = "token"  # Uses VUDO_REGISTRY_TOKEN env var
+
+# Cache settings
+cache_dir = "~/.vudo/cache"
+cache_ttl = "24h"
+
+# Update behavior
+auto_update = false
+check_updates = true
+```
+</CodeBlock>
+
+## Installing Modules
+
+### Basic Installation
+
+<Terminal title="vudo install">
+```
+$ vudo install std/collections
+Installing std/collections...
+
+Resolving dependencies...
+  std/collections@1.2.0
+    +-- std/prelude@1.0.0 (already installed)
+
+Downloading std/collections@1.2.0...
+  [========================================] 100%
+
+Extracting to ~/.vudo/registry/std/collections/1.2.0/
+
+Installed successfully.
+
+Add to your project:
+  uses std/collections
+```
+</Terminal>
+
+### Version Specification
+
+```bash
+# Install latest version
+vudo install std/validation
+
+# Install specific version
+vudo install std/validation@1.2.0
+
+# Install with version constraint
+vudo install std/validation@^1.0.0   # Compatible with 1.x
+vudo install std/validation@~1.2.0   # Compatible with 1.2.x
+vudo install std/validation@>=1.0.0  # At least 1.0.0
+```
+
+<Terminal title="Version resolution">
+```
+$ vudo install std/validation@^1.0.0
+Resolving std/validation@^1.0.0...
+
+Available versions:
+  1.2.0 (latest)
+  1.1.1
+  1.1.0
+  1.0.2
+  1.0.1
+  1.0.0
+
+Selected: std/validation@1.2.0 (highest compatible)
+
+Installing...
+```
+</Terminal>
+
+### Installing from Different Sources
+
+<Terminal title="Source specification">
+```
+$ # From Imaginarium
+$ vudo install imaginarium/ai-patterns
+
+$ # From private registry
+$ vudo install company/internal-module --registry company-internal
+
+$ # From Git repository
+$ vudo install github:user/repo
+
+$ # From local path
+$ vudo install ./local-module
+```
+</Terminal>
+
+### Project Dependencies
+
+Add dependencies to your `project.dol`:
+
+<CodeBlock title="project.dol with dependencies" language="dol">
+```dol
+module my-app @ 1.0.0
+
+requires std/prelude @ ^1.0.0      // Standard prelude
+requires std/collections @ ^1.2.0  // Collections library
+requires std/validation @ ^1.0.0   // Validation patterns
+requires imaginarium/ai-patterns @ ^0.5.0  // AI patterns
+
+system MyApp {
+    uses collections.*
+    uses validation.*
+    uses ai-patterns.prompts.*
+
+    exegesis {
+        Main application system with external dependencies.
+    }
+}
+```
+</CodeBlock>
+
+<Terminal title="Installing project dependencies">
+```
+$ cd my-app
+$ vudo install
+Reading project.dol...
+
+Resolving dependencies...
+  std/prelude@1.0.0 (already installed)
+  std/collections@1.2.0 (already installed)
+  std/validation@1.2.0 (installing)
+  imaginarium/ai-patterns@0.5.2 (installing)
+    +-- std/text@1.0.0 (installing)
+
+Installing 3 modules...
+  [========================================] 100%
+
+All dependencies installed.
+```
+</Terminal>
+
+## Searching the Registry
+
+### Basic Search
+
+<Terminal title="vudo search">
+```
+$ vudo search validation
+Searching registry...
+
+RESULTS (5 matches):
+
+std/validation @1.2.0
+  Common validation patterns for DOL genes
+  Keywords: validation, constraints, predicates
+  Downloads: 12,456 | License: MIT
+  ★★★★★ (4.8)
+
+contrib/email-validator @0.3.1
+  Email and domain validation genes
+  Keywords: email, domain, validation
+  Downloads: 3,421 | License: Apache-2.0
+  ★★★★☆ (4.2)
+
+contrib/schema-validator @0.1.0
+  JSON Schema compatible validation
+  Keywords: json, schema, validation
+  Downloads: 892 | License: MIT
+  ★★★☆☆ (3.5)
+
+imaginarium/form-validator @1.0.0
+  Form validation patterns for web apps
+  Keywords: forms, validation, web
+  Downloads: 2,103 | License: MIT
+  ★★★★☆ (4.0)
+
+imaginarium/data-validator @0.2.0
+  Data pipeline validation genes
+  Keywords: data, validation, pipeline
+  Downloads: 567 | License: Apache-2.0
+  ★★★★☆ (4.1)
+```
+</Terminal>
+
+### Advanced Search
+
+<Terminal title="Search options">
+```
+$ # Search with filters
+$ vudo search validation --source imaginarium
+$ vudo search validation --min-rating 4.0
+$ vudo search validation --min-downloads 1000
+
+$ # Search by keyword
+$ vudo search --keyword state-machine
+
+$ # Search by author
+$ vudo search --author univrs
+
+$ # Show more details
+$ vudo search validation --detailed
+```
+</Terminal>
+
+### Module Information
+
+<Terminal title="vudo info">
+```
+$ vudo info std/collections
+std/collections
+===============
+
+Version:     1.2.0 (latest)
+Published:   2024-12-15
+License:     MIT
+Downloads:   45,678
+Rating:      ★★★★★ (4.9)
+
+Description:
+  Standard collection types for DOL.
+  Provides List, Map, Set, and more.
+
+Authors:
+  - Univrs Core Team <core@univrs.io>
+
+Repository:
+  https://github.com/univrs/dol-std
+
+Dependencies:
+  std/prelude @ ^1.0.0
+
+Keywords:
+  collections, list, map, set, data-structures
+
+All versions:
+  1.2.0 (2024-12-15) - latest
+  1.1.0 (2024-10-01)
+  1.0.0 (2024-06-15)
+```
+</Terminal>
+
+## The Imaginarium
+
+The Imaginarium is the community hub for DOL modules - a creative space where developers share patterns, utilities, and complete systems.
+
+### Browsing the Imaginarium
+
+<Terminal title="Imaginarium exploration">
+```
+$ vudo imaginarium browse
+Welcome to the Imaginarium!
+
+FEATURED
+  ai-patterns      AI/ML design patterns
+  web-essentials   Web development genes
+  game-entities    Game development patterns
+
+CATEGORIES
+  ai/              AI and Machine Learning
+  web/             Web Development
+  data/            Data Processing
+  game/            Game Development
+  iot/             Internet of Things
+  bio/             Biology and Science
+  art/             Generative Art
+
+TRENDING THIS WEEK
+  1. ai/agent-patterns     (+234 downloads)
+  2. web/auth-genes        (+189 downloads)
+  3. game/ecs-patterns     (+156 downloads)
+
+Use 'vudo imaginarium <category>' to explore.
+Use 'vudo install imaginarium/<name>' to install.
+```
+</Terminal>
+
+### Category Browsing
+
+<Terminal title="Browsing categories">
+```
+$ vudo imaginarium ai
+Category: ai/
+AI and Machine Learning patterns for DOL
+
+MODULES (12)
+
+ai/agent-patterns @1.0.0
+  Patterns for building AI agents
+  ★★★★★ (4.9) | 5,678 downloads
+
+ai/prompt-engineering @0.8.0
+  Prompt construction and optimization
+  ★★★★☆ (4.3) | 3,245 downloads
+
+ai/embeddings @0.5.0
+  Vector embedding utilities
+  ★★★★☆ (4.1) | 2,890 downloads
+
+ai/rag-patterns @0.3.0
+  Retrieval-Augmented Generation patterns
+  ★★★★☆ (4.0) | 1,567 downloads
+
+[... more results ...]
+```
+</Terminal>
+
+### Installing from Imaginarium
+
+<Terminal title="Imaginarium installation">
+```
+$ vudo install imaginarium/ai-patterns
+Installing imaginarium/ai-patterns@1.0.0...
+
+Note: This module is from the Imaginarium community registry.
+      Review the code before using in production.
+
+Resolving dependencies...
+  imaginarium/ai-patterns@1.0.0
+    +-- std/text@1.0.0 (already installed)
+    +-- std/collections@1.2.0 (already installed)
+
+Downloading...
+Installed successfully.
+
+$ vudo info imaginarium/ai-patterns --show-files
+Files in imaginarium/ai-patterns@1.0.0:
+
+  mod.dol           Main module (exports)
+  agents.dol        Agent patterns
+  prompts.dol       Prompt engineering
+  memory.dol        Context and memory
+  tools.dol         Tool definitions
+  examples/         Usage examples
+  README.md         Documentation
+```
+</Terminal>
+
+## Managing Dependencies
+
+### Listing Installed Modules
+
+<Terminal title="vudo list">
+```
+$ vudo list
+Installed modules:
+
+STANDARD LIBRARY (std/)
+  std/prelude      @1.0.0   (auto-installed)
+  std/collections  @1.2.0
+  std/validation   @1.2.0
+  std/text         @1.0.0
+
+COMMUNITY (contrib/)
+  contrib/email-validator @0.3.1
+
+IMAGINARIUM
+  imaginarium/ai-patterns @1.0.0
+
+PROJECT LOCAL
+  ./local-utils
+
+Total: 7 modules
+```
+</Terminal>
+
+### Updating Modules
+
+<Terminal title="vudo update">
+```
+$ vudo update
+Checking for updates...
+
+Updates available:
+  std/collections  1.2.0 -> 1.3.0 (minor)
+  contrib/email-validator  0.3.1 -> 0.4.0 (minor)
+
+Run 'vudo update --apply' to install updates.
+
+$ vudo update --apply
+Updating 2 modules...
+
+  std/collections: 1.2.0 -> 1.3.0
+    Changelog: Added Queue and Deque types
+    Breaking changes: None
+
+  contrib/email-validator: 0.3.1 -> 0.4.0
+    Changelog: Added international domain support
+    Breaking changes: None
+
+Updates applied successfully.
+```
+</Terminal>
+
+### Removing Modules
+
+<Terminal title="vudo remove">
+```
+$ vudo remove contrib/email-validator
+Removing contrib/email-validator@0.3.1...
+
+Checking dependencies...
+  No other modules depend on this.
+
+Removed: contrib/email-validator
+
+$ vudo remove std/collections
+Error: Cannot remove std/collections
+
+The following modules depend on it:
+  - imaginarium/ai-patterns (requires std/collections@^1.0.0)
+
+Use '--force' to remove anyway (may break other modules).
+```
+</Terminal>
+
+### Cleaning Cache
+
+<Terminal title="vudo cache">
+```
+$ vudo cache status
+Registry cache: ~/.vudo/cache/
+
+Cache size: 45.2 MB
+Cached packages: 23
+Last updated: 2024-12-26 09:00:00
+
+$ vudo cache clean
+Cleaning registry cache...
+
+Removed:
+  - Outdated package versions (12)
+  - Expired metadata (34 files)
+  - Temporary downloads (5)
+
+Freed: 28.4 MB
+
+$ vudo cache clean --all
+Removing entire cache...
+Done. All cached data removed.
+```
+</Terminal>
+
+## Lockfile Management
+
+VUDO maintains a lockfile for reproducible installs:
+
+<CodeBlock title="project.lock" language="toml">
+```toml
+# This file is auto-generated by VUDO
+# Do not edit manually
+
+[metadata]
+version = 1
+created = "2024-12-26T10:00:00Z"
+vudo_version = "0.2.3"
+
+[[packages]]
+name = "std/prelude"
+version = "1.0.0"
+checksum = "sha256:abc123..."
+source = "https://registry.dol.dev"
+
+[[packages]]
+name = "std/collections"
+version = "1.2.0"
+checksum = "sha256:def456..."
+source = "https://registry.dol.dev"
+dependencies = ["std/prelude@1.0.0"]
+
+[[packages]]
+name = "imaginarium/ai-patterns"
+version = "1.0.0"
+checksum = "sha256:789xyz..."
+source = "https://imaginarium.dol.dev"
+dependencies = ["std/text@1.0.0", "std/collections@1.2.0"]
+```
+</CodeBlock>
+
+<Terminal title="Lockfile commands">
+```
+$ # Install exact versions from lockfile
+$ vudo install --frozen
+
+$ # Update lockfile with current state
+$ vudo lock refresh
+
+$ # Verify lockfile matches installed
+$ vudo lock verify
+All installed packages match lockfile.
+```
+</Terminal>
+
+## Tips and Best Practices
+
+<Tip type="info">
+**Use version constraints**: Always specify version constraints in your `project.dol`. Use `^` for compatibility with future minor versions.
+</Tip>
+
+<Tip type="success">
+**Commit your lockfile**: The `project.lock` file ensures everyone uses the same versions. Commit it to version control.
+</Tip>
+
+<Tip type="warning">
+**Review Imaginarium modules**: Community modules are user-contributed. Review the code and check ratings before using in production.
+</Tip>
+
+## Common Issues
+
+### Version Conflicts
+
+<Terminal title="Resolving conflicts">
+```
+$ vudo install module-a
+Error: Version conflict
+
+  module-a requires std/collections@^2.0.0
+  Your project uses std/collections@1.2.0
+
+Options:
+  1. Update std/collections: vudo update std/collections@^2.0.0
+  2. Use older module-a: vudo install module-a@0.5.0
+  3. Force install (may break): vudo install module-a --force
+```
+</Terminal>
+
+### Network Issues
+
+<Terminal title="Offline mode">
+```
+$ vudo install std/validation
+Error: Network unavailable
+
+Cannot reach https://registry.dol.dev
+
+Options:
+  --offline    Use only cached packages
+  --retry      Retry with exponential backoff
+
+$ vudo install std/validation --offline
+Installing from cache...
+  std/validation@1.1.0 (cached version, not latest)
+
+Installed from cache. Run 'vudo update' when online.
+```
+</Terminal>
+
+### Authentication
+
+<Terminal title="Registry authentication">
+```
+$ vudo install company/internal-module
+Error: Authentication required
+
+Registry 'company-internal' requires authentication.
+
+$ vudo login company-internal
+Enter your API token: ********
+
+Authenticated successfully.
+Token saved to ~/.vudo/credentials
+
+$ vudo install company/internal-module
+Installing company/internal-module@1.0.0...
+```
+</Terminal>
+
+## Summary
+
+You have learned to:
+
+1. Understand the **local registry structure**
+2. Install modules with **vudo install**
+3. Search with **vudo search**
+4. Explore the **Imaginarium** community
+5. Manage dependencies with **update** and **remove**
+6. Use **lockfiles** for reproducible builds
+
+## Track Complete!
+
+Congratulations! You have completed the CLI Mastery track. You now have the skills to use VUDO efficiently for all DOL development tasks.
+
+<TrackComplete
+  track="CLI Mastery"
+  nextTrack={{
+    title: "Spirit Binding Track",
+    href: "/tutorials/spirits",
+    description: "Connect DOL to external AI services"
+  }}
+/>
+
+## Quick Reference
+
+```
+Registry Quick Reference
+========================
+
+INSTALL
+  vudo install <module>            Latest version
+  vudo install <module>@1.2.0      Specific version
+  vudo install <module>@^1.0.0     Version constraint
+  vudo install                     From project.dol
+  vudo install --frozen            From lockfile
+
+SEARCH
+  vudo search <query>              Search all registries
+  vudo search <query> --source X   Search specific source
+  vudo info <module>               Module details
+
+IMAGINARIUM
+  vudo imaginarium browse          Browse categories
+  vudo imaginarium <category>      List category
+  vudo install imaginarium/<name>  Install from Imaginarium
+
+MANAGE
+  vudo list                        List installed
+  vudo update                      Check for updates
+  vudo update --apply              Apply updates
+  vudo remove <module>             Uninstall
+
+CACHE
+  vudo cache status                Show cache info
+  vudo cache clean                 Clean old data
+  vudo cache clean --all           Remove all cache
+
+AUTH
+  vudo login <registry>            Authenticate
+  vudo logout <registry>           Remove credentials
+
+VERSION CONSTRAINTS
+  @1.2.0     Exact version
+  @^1.2.0    Compatible with 1.x (>=1.2.0 <2.0.0)
+  @~1.2.0    Compatible with 1.2.x (>=1.2.0 <1.3.0)
+  @>=1.0.0   At least 1.0.0
+  @*         Any version
+```

@@ -1,0 +1,679 @@
+---
+title: "Using Host Functions"
+description: "Access time, logging, random numbers, and other host-provided capabilities"
+track: "spirits"
+tutorial: 3
+duration: "35 min"
+level: "intermediate"
+prerequisites:
+  - "002-first-spirit"
+concepts:
+  - "Time functions"
+  - "Logging"
+  - "Random numbers"
+  - "Capability requirements"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+import { Terminal } from '@/components/ui/Terminal'
+import { Table } from '@/components/ui/Table'
+
+# Using Host Functions
+
+Host functions are the bridge between your Spirit and system resources. In this tutorial, you'll learn to use time, logging, and random number capabilities safely and effectively.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Use time functions for timestamps and scheduling
+- Implement structured logging for debugging
+- Generate random numbers securely
+- Understand capability requirements for each function
+
+## How Host Functions Work
+
+When your Spirit needs to interact with the outside world, it calls a host function. The VUDO runtime:
+
+1. **Traps** execution from WebAssembly
+2. **Verifies** the Spirit has the required capability
+3. **Executes** the operation on behalf of the Spirit
+4. **Returns** the result to the Spirit
+
+```
++----------------+                    +----------------+
+|    Spirit      |                    | VUDO Runtime   |
+|                |                    |                |
+|  time::now()   | -----------------> | Check: time.now|
+|                |                    | Execute: clock |
+|  <- 1703520000 | <----------------- | Return: unix ts|
+|                |                    |                |
++----------------+                    +----------------+
+```
+
+<Callout type="important" title="All Host Calls Are Auditable">
+Every host function call is logged and can be audited. This creates a complete trace of what a Spirit did during execution.
+</Callout>
+
+## Time Functions
+
+Time functions let your Spirit work with timestamps and delays.
+
+### Capability Declaration
+
+Add time capabilities to your manifest:
+
+```json
+{
+  "capabilities": {
+    "time": {
+      "now": true,
+      "sleep": true
+    }
+  }
+}
+```
+
+### time::now()
+
+Get the current Unix timestamp in seconds:
+
+```rust
+use vudo_spirit::time;
+
+#[vudo_spirit::main]
+pub fn timestamped_action() -> Result<Output, vudo_spirit::Error> {
+    // Get current timestamp
+    let now = time::now()?;
+
+    // now is seconds since Unix epoch (1970-01-01 00:00:00 UTC)
+    log::info!("Current time: {} seconds since epoch", now);
+
+    Ok(Output {
+        timestamp: now,
+        // ...
+    })
+}
+```
+
+### time::now_millis()
+
+For higher precision, get milliseconds:
+
+```rust
+use vudo_spirit::time;
+
+#[vudo_spirit::main]
+pub fn measure_performance() -> Result<Duration, vudo_spirit::Error> {
+    let start = time::now_millis()?;
+
+    // Do some work...
+    expensive_operation();
+
+    let end = time::now_millis()?;
+    let duration_ms = end - start;
+
+    log::info!("Operation took {}ms", duration_ms);
+
+    Ok(Duration { milliseconds: duration_ms })
+}
+```
+
+### time::sleep()
+
+Pause execution for a specified duration:
+
+```rust
+use vudo_spirit::time;
+use std::time::Duration;
+
+#[vudo_spirit::main]
+pub fn poll_with_backoff() -> Result<Data, vudo_spirit::Error> {
+    let mut attempts = 0;
+    let max_attempts = 5;
+
+    loop {
+        attempts += 1;
+
+        match try_fetch_data() {
+            Ok(data) => return Ok(data),
+            Err(e) if attempts < max_attempts => {
+                // Exponential backoff
+                let delay_ms = 100 * (1 << attempts);
+                log::warn!("Attempt {} failed, retrying in {}ms", attempts, delay_ms);
+                time::sleep(Duration::from_millis(delay_ms))?;
+            }
+            Err(e) => return Err(e),
+        }
+    }
+}
+```
+
+<Callout type="warning" title="Sleep and Execution Limits">
+Sleep time counts against your execution time limit. If your manifest sets `execution_time_ms: 1000`, a 500ms sleep leaves only 500ms for actual computation.
+</Callout>
+
+### Practical Example: Rate Limiter
+
+Build a rate limiter using time functions:
+
+```rust
+use vudo_spirit::{time, storage};
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Default)]
+struct RateLimit {
+    window_start: u64,
+    request_count: u32,
+}
+
+const WINDOW_SECONDS: u64 = 60;
+const MAX_REQUESTS: u32 = 10;
+
+pub fn check_rate_limit(key: &str) -> Result<bool, vudo_spirit::Error> {
+    let now = time::now()?;
+    let storage_key = format!("ratelimit:{}", key);
+
+    let mut rate_limit: RateLimit = storage::read(&storage_key)?
+        .and_then(|data| serde_json::from_slice(&data).ok())
+        .unwrap_or_default();
+
+    // Check if we're in a new window
+    if now - rate_limit.window_start >= WINDOW_SECONDS {
+        rate_limit = RateLimit {
+            window_start: now,
+            request_count: 0,
+        };
+    }
+
+    // Check if limit exceeded
+    if rate_limit.request_count >= MAX_REQUESTS {
+        log::warn!("Rate limit exceeded for {}", key);
+        return Ok(false);
+    }
+
+    // Increment counter
+    rate_limit.request_count += 1;
+
+    // Save updated state
+    let data = serde_json::to_vec(&rate_limit)?;
+    storage::write(&storage_key, &data)?;
+
+    Ok(true)
+}
+```
+
+## Logging Functions
+
+Logging helps you debug Spirits and monitor their behavior in production.
+
+### Capability Declaration
+
+```json
+{
+  "capabilities": {
+    "logging": true
+  }
+}
+```
+
+### Log Levels
+
+The logging module provides standard log levels:
+
+```rust
+use vudo_spirit::log;
+
+#[vudo_spirit::main]
+pub fn demonstrate_logging() -> Result<(), vudo_spirit::Error> {
+    // Trace - very detailed debugging
+    log::trace!("Entering function with state: {:?}", state);
+
+    // Debug - development debugging
+    log::debug!("Processing item: {}", item_id);
+
+    // Info - general information
+    log::info!("Request processed successfully");
+
+    // Warn - potential issues
+    log::warn!("Deprecated API called, consider upgrading");
+
+    // Error - recoverable errors
+    log::error!("Failed to connect, using fallback: {}", err);
+
+    Ok(())
+}
+```
+
+### Structured Logging
+
+Include structured data in your logs:
+
+```rust
+use vudo_spirit::log;
+use serde::Serialize;
+
+#[derive(Serialize)]
+struct RequestLog {
+    method: String,
+    path: String,
+    duration_ms: u64,
+    status: u16,
+}
+
+#[vudo_spirit::main]
+pub fn handle_request(req: Request) -> Result<Response, vudo_spirit::Error> {
+    let start = time::now_millis()?;
+
+    let response = process_request(&req)?;
+
+    let duration = time::now_millis()? - start;
+
+    // Structured log entry
+    log::info!(
+        request = RequestLog {
+            method: req.method.clone(),
+            path: req.path.clone(),
+            duration_ms: duration,
+            status: response.status,
+        };
+        "Request completed"
+    );
+
+    Ok(response)
+}
+```
+
+### Log Filtering
+
+Logs are filtered based on configuration in the runtime:
+
+```bash
+# Run with only errors
+VUDO_LOG=error vudo run my-spirit
+
+# Run with debug output
+VUDO_LOG=debug vudo run my-spirit
+
+# Filter by module
+VUDO_LOG=my_spirit::auth=trace,warn vudo run my-spirit
+```
+
+### Best Practices
+
+```rust
+use vudo_spirit::log;
+
+// DO: Include context in error logs
+log::error!(
+    spirit_id = %self.id,
+    operation = "storage_write",
+    key = %key,
+    error = %e;
+    "Failed to persist data"
+);
+
+// DO: Use appropriate levels
+log::debug!("Cache miss for key: {}", key);  // Not info
+log::info!("User {} logged in", user_id);    // Significant event
+log::warn!("Retry attempt {}/{}", n, max);   // Potential issue
+
+// DON'T: Log sensitive data
+// log::info!("Password: {}", password);  // NEVER DO THIS
+
+// DON'T: Log at wrong level
+// log::error!("Processing item {}", id);  // Should be debug/info
+```
+
+<Callout type="security" title="Log Sanitization">
+Never log passwords, API keys, or other sensitive data. The VUDO runtime may store logs for auditing.
+</Callout>
+
+## Random Functions
+
+Random number generation is essential for many applications, but must be handled carefully in a deterministic environment.
+
+### Capability Declaration
+
+```json
+{
+  "capabilities": {
+    "random": true
+  }
+}
+```
+
+### random::bytes()
+
+Generate cryptographically secure random bytes:
+
+```rust
+use vudo_spirit::random;
+
+#[vudo_spirit::main]
+pub fn generate_token() -> Result<String, vudo_spirit::Error> {
+    // Generate 32 random bytes
+    let bytes = random::bytes(32)?;
+
+    // Encode as hex string
+    let token = hex::encode(&bytes);
+
+    log::info!("Generated token of length {}", token.len());
+
+    Ok(token)
+}
+```
+
+### random::u64() and random::u32()
+
+Generate random integers:
+
+```rust
+use vudo_spirit::random;
+
+#[vudo_spirit::main]
+pub fn roll_dice(sides: u32) -> Result<u32, vudo_spirit::Error> {
+    // Generate a random number in range [1, sides]
+    let roll = (random::u32()? % sides) + 1;
+
+    log::debug!("Rolled d{}: {}", sides, roll);
+
+    Ok(roll)
+}
+```
+
+### random::range()
+
+Generate a random number within a specific range:
+
+```rust
+use vudo_spirit::random;
+
+#[vudo_spirit::main]
+pub fn generate_otp() -> Result<String, vudo_spirit::Error> {
+    // Generate 6-digit OTP
+    let otp = random::range(100000, 999999)?;
+
+    Ok(format!("{:06}", otp))
+}
+```
+
+### Practical Example: Shuffling
+
+Implement Fisher-Yates shuffle:
+
+```rust
+use vudo_spirit::random;
+
+pub fn shuffle<T>(items: &mut Vec<T>) -> Result<(), vudo_spirit::Error> {
+    let len = items.len();
+
+    for i in (1..len).rev() {
+        let j = (random::u64()? as usize) % (i + 1);
+        items.swap(i, j);
+    }
+
+    Ok(())
+}
+
+#[vudo_spirit::main]
+pub fn deal_cards(count: usize) -> Result<Vec<String>, vudo_spirit::Error> {
+    let mut deck: Vec<String> = Vec::with_capacity(52);
+
+    for suit in &["Hearts", "Diamonds", "Clubs", "Spades"] {
+        for rank in &["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"] {
+            deck.push(format!("{} of {}", rank, suit));
+        }
+    }
+
+    shuffle(&mut deck)?;
+
+    Ok(deck.into_iter().take(count).collect())
+}
+```
+
+<Callout type="info" title="Randomness and Reproducibility">
+Random numbers come from the VUDO runtime's secure random source. For testing, you can provide a seed to make execution deterministic.
+</Callout>
+
+## Combining Capabilities
+
+Real Spirits often combine multiple capabilities. Here's a complete example:
+
+### Session Manager Spirit
+
+```json
+{
+  "$schema": "https://vudo.dev/schemas/manifest-v1.json",
+  "name": "session-manager",
+  "version": "1.0.0",
+  "description": "Manage user sessions with expiration",
+
+  "spirit": {
+    "entry": "create_session",
+    "format": "wasm32-component"
+  },
+
+  "capabilities": {
+    "logging": true,
+    "time": {
+      "now": true
+    },
+    "random": true,
+    "storage": {
+      "read": true,
+      "write": true,
+      "delete": true,
+      "namespace": "sessions"
+    }
+  },
+
+  "limits": {
+    "memory_pages": 8,
+    "execution_time_ms": 500,
+    "storage_bytes": 102400
+  }
+}
+```
+
+```rust
+use vudo_spirit::{log, time, random, storage};
+use serde::{Deserialize, Serialize};
+
+const SESSION_DURATION_SECONDS: u64 = 3600; // 1 hour
+
+#[derive(Serialize, Deserialize)]
+struct Session {
+    id: String,
+    user_id: String,
+    created_at: u64,
+    expires_at: u64,
+    data: serde_json::Value,
+}
+
+#[derive(Serialize)]
+struct SessionResponse {
+    session_id: String,
+    expires_at: u64,
+}
+
+/// Create a new session for a user
+#[vudo_spirit::export]
+pub fn create_session(
+    user_id: String,
+    data: Option<serde_json::Value>
+) -> Result<SessionResponse, vudo_spirit::Error> {
+    // Generate unique session ID
+    let session_bytes = random::bytes(16)?;
+    let session_id = hex::encode(&session_bytes);
+
+    // Get current time
+    let now = time::now()?;
+    let expires_at = now + SESSION_DURATION_SECONDS;
+
+    // Create session object
+    let session = Session {
+        id: session_id.clone(),
+        user_id: user_id.clone(),
+        created_at: now,
+        expires_at,
+        data: data.unwrap_or(serde_json::Value::Null),
+    };
+
+    // Store session
+    let key = format!("session:{}", session_id);
+    let session_data = serde_json::to_vec(&session)?;
+    storage::write(&key, &session_data)?;
+
+    log::info!(
+        user_id = %user_id,
+        session_id = %session_id,
+        expires_at = %expires_at;
+        "Session created"
+    );
+
+    Ok(SessionResponse { session_id, expires_at })
+}
+
+/// Validate and retrieve a session
+#[vudo_spirit::export]
+pub fn get_session(session_id: String) -> Result<Option<Session>, vudo_spirit::Error> {
+    let key = format!("session:{}", session_id);
+
+    let session: Option<Session> = storage::read(&key)?
+        .and_then(|data| serde_json::from_slice(&data).ok());
+
+    match session {
+        Some(s) => {
+            let now = time::now()?;
+
+            if now > s.expires_at {
+                // Session expired, delete it
+                log::info!(session_id = %session_id; "Session expired, deleting");
+                storage::delete(&key)?;
+                Ok(None)
+            } else {
+                log::debug!(session_id = %session_id; "Session valid");
+                Ok(Some(s))
+            }
+        }
+        None => {
+            log::debug!(session_id = %session_id; "Session not found");
+            Ok(None)
+        }
+    }
+}
+
+/// Extend a session's expiration
+#[vudo_spirit::export]
+pub fn refresh_session(session_id: String) -> Result<SessionResponse, vudo_spirit::Error> {
+    let key = format!("session:{}", session_id);
+
+    let mut session: Session = storage::read(&key)?
+        .and_then(|data| serde_json::from_slice(&data).ok())
+        .ok_or_else(|| vudo_spirit::Error::not_found("Session not found"))?;
+
+    let now = time::now()?;
+
+    if now > session.expires_at {
+        storage::delete(&key)?;
+        return Err(vudo_spirit::Error::unauthorized("Session expired"));
+    }
+
+    // Extend expiration
+    session.expires_at = now + SESSION_DURATION_SECONDS;
+
+    let session_data = serde_json::to_vec(&session)?;
+    storage::write(&key, &session_data)?;
+
+    log::info!(
+        session_id = %session_id,
+        new_expiration = %session.expires_at;
+        "Session refreshed"
+    );
+
+    Ok(SessionResponse {
+        session_id,
+        expires_at: session.expires_at,
+    })
+}
+
+/// Delete a session (logout)
+#[vudo_spirit::export]
+pub fn delete_session(session_id: String) -> Result<(), vudo_spirit::Error> {
+    let key = format!("session:{}", session_id);
+    storage::delete(&key)?;
+
+    log::info!(session_id = %session_id; "Session deleted");
+
+    Ok(())
+}
+```
+
+### Testing the Session Manager
+
+<Terminal>
+```bash
+$ vudo build
+$ vudo run session-manager --function create_session \
+    --input '{"user_id": "user123", "data": {"role": "admin"}}'
+{
+  "session_id": "a1b2c3d4e5f6...",
+  "expires_at": 1703523600
+}
+
+$ vudo run session-manager --function get_session \
+    --input '{"session_id": "a1b2c3d4e5f6..."}'
+{
+  "id": "a1b2c3d4e5f6...",
+  "user_id": "user123",
+  "created_at": 1703520000,
+  "expires_at": 1703523600,
+  "data": {"role": "admin"}
+}
+
+$ vudo run session-manager --function delete_session \
+    --input '{"session_id": "a1b2c3d4e5f6..."}'
+null
+```
+</Terminal>
+
+## Capability Reference Table
+
+<Table>
+| Capability | Functions | Use Case |
+|------------|-----------|----------|
+| `time.now` | `time::now()`, `time::now_millis()` | Timestamps, expiration |
+| `time.sleep` | `time::sleep()` | Delays, backoff |
+| `logging` | `log::trace/debug/info/warn/error!()` | Debugging, monitoring |
+| `random` | `random::bytes()`, `random::u64()`, `random::range()` | Tokens, shuffling, sampling |
+</Table>
+
+## Key Takeaways
+
+1. **Host functions bridge Spirits to system resources** through controlled, auditable interfaces
+
+2. **Time functions** provide timestamps and delays; sleep counts against execution limits
+
+3. **Logging** supports multiple levels and structured data; never log sensitive information
+
+4. **Random functions** provide cryptographically secure randomness from the runtime
+
+5. **Combine capabilities** thoughtfully - request only what you need
+
+## What's Next?
+
+Now that you understand basic host functions, let's dive deeper into persistent storage. In the next tutorial, you'll learn to:
+
+- Read and write data across Spirit invocations
+- Organize data with namespaces
+- Handle serialization and versioning
+
+Continue to [Persistent Storage](/tutorials/spirits/004-storage).
+
+## Additional Resources
+
+- [Host Function Reference](/dol/reference/host-functions)
+- [Capability Specification](/dol/reference/capabilities)
+- [Logging Best Practices](/dol/guides/logging)

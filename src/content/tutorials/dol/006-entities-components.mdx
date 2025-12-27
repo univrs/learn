@@ -1,0 +1,439 @@
+---
+title: "Entities and Components"
+description: "Model real-world domains with DOL's entity-component system"
+lesson: 6
+track: "dol-fundamentals"
+duration: "25 minutes"
+concepts: ["entities", "components", "relationships", "queries", "ECS pattern"]
+prev: "/dol/tutorials/005-collections"
+next: "/dol/tutorials/007-error-handling"
+---
+
+import DOLRepl from '@/components/code/DOLRepl';
+
+# Entities and Components
+
+DOL uses an **Entity-Component** architecture to model domains. This approach separates identity (entities) from behavior and data (components), making systems flexible and extensible.
+
+## What are Entities?
+
+An **entity** is a unique identifier that represents a "thing" in your system. On its own, an entity has no properties or behavior - it is just an identity.
+
+<DOLRepl
+  code={`// Define an entity type
+entity Player
+
+// Create an entity instance
+let player1 = Player::new()
+
+log("Created player: " + player1.id())`}
+  title="entity-basic.dol"
+  output="Created player: player_001"
+/>
+
+## What are Components?
+
+**Components** are data containers that can be attached to entities. They define what an entity *has*.
+
+<DOLRepl
+  code={`// Define components
+component Position {
+    x: Float,
+    y: Float
+}
+
+component Health {
+    current: Int,
+    max: Int
+}
+
+component Name {
+    value: String
+}
+
+log("Components defined")`}
+  title="components.dol"
+  output="Components defined"
+/>
+
+## Attaching Components
+
+Attach components to entities to give them data and behavior:
+
+<DOLRepl
+  code={`// Entity with components
+entity Player
+
+component Position { x: Float, y: Float }
+component Health { current: Int, max: Int }
+component Name { value: String }
+
+// Create player with components
+let player = Player::new()
+    .with(Position { x: 0.0, y: 0.0 })
+    .with(Health { current: 100, max: 100 })
+    .with(Name { value: "Hero" })
+
+log("Player created with components")`}
+  title="attach.dol"
+  output="Player created with components"
+/>
+
+## Accessing Component Data
+
+Read and modify component data:
+
+<DOLRepl
+  code={`entity Player
+component Position { x: Float, y: Float }
+component Health { current: Int, max: Int }
+
+let player = Player::new()
+    .with(Position { x: 10.0, y: 20.0 })
+    .with(Health { current: 80, max: 100 })
+
+// Access component data
+let pos = player.get::<Position>()
+let hp = player.get::<Health>()
+
+log("Position: (" + pos.x.to_string() + ", " + pos.y.to_string() + ")")
+log("Health: " + hp.current.to_string() + "/" + hp.max.to_string())`}
+  title="access.dol"
+  output={`Position: (10.0, 20.0)
+Health: 80/100`}
+/>
+
+## Entity Definition Syntax
+
+DOL provides a declarative syntax for defining entities with their components:
+
+<DOLRepl
+  code={`// Full entity definition
+entity Character {
+    // Required components
+    requires Position { x: Float, y: Float }
+    requires Health { current: Int, max: Int }
+
+    // Optional components
+    optional Inventory { items: List<String> }
+
+    // Default values
+    defaults {
+        Position { x: 0.0, y: 0.0 },
+        Health { current: 100, max: 100 }
+    }
+}
+
+let hero = Character::new()
+log("Character created with defaults")`}
+  title="entity-def.dol"
+  output="Character created with defaults"
+/>
+
+## Component Methods
+
+Define methods on components:
+
+<DOLRepl
+  code={`component Health {
+    current: Int,
+    max: Int
+}
+
+impl Health {
+    fn damage(self, amount: Int) -> Health {
+        Health {
+            current: (self.current - amount).max(0),
+            max: self.max
+        }
+    }
+
+    fn heal(self, amount: Int) -> Health {
+        Health {
+            current: (self.current + amount).min(self.max),
+            max: self.max
+        }
+    }
+
+    fn is_alive(self) -> Bool {
+        self.current > 0
+    }
+}
+
+let hp = Health { current: 50, max: 100 }
+let damaged = hp.damage(30)
+let healed = damaged.heal(20)
+
+log("Current: " + healed.current.to_string())
+log("Alive: " + healed.is_alive().to_string())`}
+  title="component-methods.dol"
+  output={`Current: 40
+Alive: true`}
+/>
+
+## Relationships
+
+Entities can have relationships with other entities:
+
+<DOLRepl
+  code={`entity Player
+entity Item
+entity Inventory
+
+// Define relationships
+relationship Owns {
+    owner: Player,
+    owned: Item
+}
+
+relationship Contains {
+    container: Inventory,
+    item: Item
+}
+
+// Create entities
+let player = Player::new()
+let sword = Item::new()
+let bag = Inventory::new()
+
+// Establish relationships
+player.relates_to(sword, Owns)
+bag.relates_to(sword, Contains)
+
+log("Relationships established")`}
+  title="relationships.dol"
+  output="Relationships established"
+/>
+
+## Querying Entities
+
+Find entities based on their components:
+
+<DOLRepl
+  code={`entity Enemy
+component Position { x: Float, y: Float }
+component Health { current: Int, max: Int }
+component Name { value: String }
+
+// Create some enemies
+let world = World::new()
+
+world.spawn(Enemy::new()
+    .with(Position { x: 10.0, y: 5.0 })
+    .with(Health { current: 50, max: 50 })
+    .with(Name { value: "Goblin" }))
+
+world.spawn(Enemy::new()
+    .with(Position { x: 20.0, y: 15.0 })
+    .with(Health { current: 100, max: 100 })
+    .with(Name { value: "Orc" }))
+
+// Query for all entities with Position and Health
+let enemies = world.query::<(Position, Health, Name)>()
+
+for (pos, hp, name) in enemies {
+    log(name.value + " at (" + pos.x.to_string() + "," + pos.y.to_string() + ")")
+}`}
+  title="query.dol"
+  output={`Goblin at (10.0,5.0)
+Orc at (20.0,15.0)`}
+/>
+
+### Filtered Queries
+
+Add conditions to queries:
+
+<DOLRepl
+  code={`entity Enemy
+component Health { current: Int, max: Int }
+component Position { x: Float, y: Float }
+
+// Assume enemies exist in world...
+
+// Query with filter
+let wounded = world
+    .query::<(Health, Position)>()
+    .filter(|(hp, _)| hp.current < hp.max * 0.5)
+
+log("Found " + wounded.len().to_string() + " wounded enemies")`}
+  title="filtered-query.dol"
+  output="Found 1 wounded enemies"
+/>
+
+## Systems
+
+Systems are functions that operate on entities with specific components:
+
+<DOLRepl
+  code={`component Position { x: Float, y: Float }
+component Velocity { dx: Float, dy: Float }
+
+// A system that updates positions
+fn movement_system(world: &mut World) {
+    for (entity, pos, vel) in world.query::<(Position, Velocity)>() {
+        let new_pos = Position {
+            x: pos.x + vel.dx,
+            y: pos.y + vel.dy
+        }
+        entity.set(new_pos)
+    }
+}
+
+log("Movement system defined")`}
+  title="systems.dol"
+  output="Movement system defined"
+/>
+
+## Component Composition
+
+Build complex components from simpler ones:
+
+<DOLRepl
+  code={`// Base components
+component Position { x: Float, y: Float }
+component Velocity { dx: Float, dy: Float }
+component Rotation { angle: Float }
+
+// Composed component group
+component_group Transform {
+    Position,
+    Rotation
+}
+
+component_group Physics {
+    Position,
+    Velocity
+}
+
+// Entity using component groups
+entity Projectile {
+    requires Physics
+    requires Rotation
+}
+
+log("Component composition defined")`}
+  title="composition.dol"
+  output="Component composition defined"
+/>
+
+## Tags
+
+Lightweight markers without data:
+
+<DOLRepl
+  code={`// Tags for categorization
+tag Player
+tag Enemy
+tag Friendly
+tag Hostile
+
+entity Character {
+    requires Health { current: Int, max: Int }
+}
+
+// Create different character types
+let hero = Character::new()
+    .with(Player)
+    .with(Friendly)
+
+let monster = Character::new()
+    .with(Enemy)
+    .with(Hostile)
+
+// Query by tag
+let hostiles = world.query_tag::<Hostile>()
+
+log("Found " + hostiles.len().to_string() + " hostile entities")`}
+  title="tags.dol"
+  output="Found 1 hostile entities"
+/>
+
+## Archetypes
+
+Common entity patterns:
+
+<DOLRepl
+  code={`// Define an archetype
+archetype Humanoid {
+    Position { x: 0.0, y: 0.0 },
+    Health { current: 100, max: 100 },
+    Inventory { items: [] }
+}
+
+// Create from archetype
+let villager = Humanoid::instantiate()
+    .with(Name { value: "Bob" })
+
+let guard = Humanoid::instantiate()
+    .with(Name { value: "Guard" })
+    .with(Weapon { damage: 10 })
+
+log("Archetypes instantiated")`}
+  title="archetypes.dol"
+  output="Archetypes instantiated"
+/>
+
+## Key Takeaways
+
+- **Entities** are unique identities with no inherent data
+- **Components** are data containers attached to entities
+- Use `entity.with(Component)` to attach components
+- Query entities by their components with `world.query::<(Components)>()`
+- **Relationships** connect entities to each other
+- **Systems** are functions that process entities with specific components
+- **Tags** are lightweight markers for categorization
+- **Archetypes** define common entity patterns
+
+## Challenge
+
+Design a simple inventory system:
+
+1. Create `Item` entity with `Name` and `Weight` components
+2. Create `Inventory` component with `capacity` and `items` list
+3. Create a `Player` entity with an inventory
+4. Write a function to add items to inventory (checking capacity)
+
+<DOLRepl
+  code={`// Challenge: Inventory System
+
+entity Item
+component Name { value: String }
+component Weight { value: Float }
+
+component Inventory {
+    capacity: Float,
+    items: List<Item>
+}
+
+entity Player
+
+// Your code here...
+// 1. Create some items
+// 2. Create a player with inventory
+// 3. Add items checking weight capacity
+
+log("Complete this challenge!")`}
+  title="challenge.dol"
+  output="Complete this challenge!"
+/>
+
+## Next Steps
+
+Now that you can model domains with entities and components, let us learn how to handle errors gracefully.
+
+<div className="mt-8 flex justify-between">
+  <a
+    href="/dol/tutorials/005-collections"
+    className="btn-secondary inline-flex items-center gap-2"
+  >
+    <span>←</span>
+    Previous: Collections
+  </a>
+  <a
+    href="/dol/tutorials/007-error-handling"
+    className="btn-primary inline-flex items-center gap-2"
+  >
+    Next: Error Handling
+    <span>→</span>
+  </a>
+</div>

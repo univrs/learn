@@ -1,0 +1,326 @@
+// Lion & Swan - Capstone Project
+// A generative storytelling spirit that creates symbolic imagery and narratives
+//
+// Checkpoint 006: Credit integration
+// Now with credit management for resource-gated operations
+
+use std::host::{log, time}
+use crate::symbols::{Symbol, Allegiance, SymbolRegistry, lion_archetypes, swan_archetypes}
+use crate::image_gen::{ImageGenerator, ImaginatorClient, ImageConfig, GeneratedImage, generate_batch, ImageRequest}
+use crate::narrative::{
+  SceneType, Scene, Narrative, NarrativeGenerator, StoryWeaver,
+  SceneTemplates, generate_allegiance_story
+}
+use crate::gallery::{
+  Gallery, DisplayFormat, Displayable, ImageGalleryItem, NarrativeGalleryItem,
+  PersistentGallery, GalleryStorage, display_overview
+}
+use crate::credits::{
+  CreditManager, CreditCosts, CreditReservation, CreditError, CreditStats,
+  with_credits, display_credit_status
+}
+
+/// The Lion & Swan spirit entry point
+pub system LionSwan @ 0.1.0 {
+  state registry: SymbolRegistry
+  state image_client: ImaginatorClient
+  state story_weaver: StoryWeaver
+  state gallery: Gallery
+  state persistent_storage: PersistentGallery
+  state credit_manager: CreditManager
+
+  /// Spirit initialization
+  pub fun init() -> LionSwan {
+    log::info("Lion & Swan spirit initialized")
+    log::info("Version: 0.1.0")
+
+    // Initialize the symbol registry with archetypes
+    let mut registry = SymbolRegistry::new()
+
+    for symbol in lion_archetypes() {
+      registry = registry.add(symbol)
+      log::debug("Registered Lion symbol: {symbol.name}")
+    }
+
+    for symbol in swan_archetypes() {
+      registry = registry.add(symbol)
+      log::debug("Registered Swan symbol: {symbol.name}")
+    }
+
+    log::info("Loaded {registry.lion_count} Lion symbols")
+    log::info("Loaded {registry.swan_count} Swan symbols")
+
+    // Initialize clients
+    let image_client = ImaginatorClient {}
+    let story_weaver = StoryWeaver { templates: SceneTemplates {} }
+
+    if image_client.is_available() {
+      log::info("Imaginarium API is available")
+    } else {
+      log::warn("Imaginarium API is not available")
+    }
+
+    log::info("StoryWeaver initialized")
+
+    // Load or create gallery
+    let persistent_storage = PersistentGallery {}
+    let gallery = match persistent_storage.load() {
+      Ok(g) => g,
+      Err(_) => Gallery::new(),
+    }
+
+    log::info("Gallery loaded with {gallery.total_items()} items")
+
+    // Initialize credit manager
+    let credit_manager = CreditManager::new()
+    match credit_manager.balance() {
+      Ok(balance) => log::info("Credit balance: {balance}"),
+      Err(_) => log::warn("Could not retrieve credit balance"),
+    }
+
+    return LionSwan {
+      registry: registry,
+      image_client: image_client,
+      story_weaver: story_weaver,
+      gallery: gallery,
+      persistent_storage: persistent_storage,
+      credit_manager: credit_manager,
+    }
+  }
+
+  /// Main execution entry point
+  pub fun run(self) -> Result<(), Error> {
+    let start_time = time::now()
+
+    log::info("Lion & Swan beginning execution...")
+
+    // Display current symbol balance
+    match self.registry.dominant_allegiance() {
+      Some(Allegiance::Lion) => log::info("The Lion holds dominance"),
+      Some(Allegiance::Swan) => log::info("The Swan holds dominance"),
+      None => log::info("The allegiances are in balance"),
+    }
+
+    // Display gallery overview
+    log::info(display_overview(self.gallery))
+
+    // Display credit status
+    log::info(display_credit_status(self.credit_manager))
+
+    let elapsed = time::now() - start_time
+    log::info("Execution completed in {elapsed}ms")
+
+    return Ok(())
+  }
+
+  // ============= Credit Operations =============
+
+  /// Get current credit status
+  pub fun credit_status(self) -> String {
+    return display_credit_status(self.credit_manager)
+  }
+
+  /// Get credit statistics
+  pub fun credit_stats(self) -> CreditStats {
+    return self.credit_manager.stats()
+  }
+
+  /// Check if there are enough credits for an operation
+  pub fun can_afford_image(self) -> Bool {
+    match self.credit_manager.check_balance(self.credit_manager.costs.image_generation) {
+      Ok(can) => can,
+      Err(_) => false,
+    }
+  }
+
+  /// Check if there are enough credits for a narrative
+  pub fun can_afford_narrative(self, scene_count: UInt32) -> Bool {
+    let cost = self.credit_manager.costs.narrative_cost(scene_count)
+    match self.credit_manager.check_balance(cost) {
+      Ok(can) => can,
+      Err(_) => false,
+    }
+  }
+
+  // ============= Gallery Operations =============
+
+  /// Display the gallery overview
+  pub fun show_gallery(self) -> String {
+    return display_overview(self.gallery)
+  }
+
+  /// List all gallery items
+  pub fun list_gallery(self, format: DisplayFormat) -> String {
+    return self.gallery.list_all(format)
+  }
+
+  /// List gallery items by allegiance
+  pub fun list_by_allegiance(self, allegiance: Allegiance, format: DisplayFormat) -> String {
+    return self.gallery.list_by_allegiance(allegiance, format)
+  }
+
+  /// Save the gallery to persistent storage (costs credits)
+  pub fun save_gallery(self) -> Result<LionSwan, CreditError> {
+    let cost = self.credit_manager.costs.gallery_save
+    let (manager, reservation) = self.credit_manager.reserve(cost, "gallery_save")?
+
+    match self.persistent_storage.save(self.gallery) {
+      Ok(_) => {
+        let manager = manager.consume(reservation.id)?
+        return Ok(LionSwan { ...self, credit_manager: manager })
+      },
+      Err(e) => {
+        let manager = manager.release(reservation.id)?
+        log::error("Failed to save gallery: {e}")
+        return Ok(LionSwan { ...self, credit_manager: manager })
+      },
+    }
+  }
+
+  // ============= Narrative Generation =============
+
+  /// Generate a new narrative and add to gallery (costs credits)
+  pub fun generate_narrative(self, scene_count: UInt32) -> Result<LionSwan, CreditError> {
+    let cost = self.credit_manager.costs.narrative_cost(scene_count)
+    log::info("Narrative generation will cost {cost} credits")
+
+    let (manager, reservation) = self.credit_manager.reserve(cost, "narrative_generation")?
+
+    log::info("Generating narrative with {scene_count} scenes...")
+
+    let narrative = self.story_weaver.generate_narrative(self.registry, scene_count)
+    log::info("Generated narrative: \"{narrative.title}\"")
+
+    let (lion, swan) = narrative.allegiance_balance()
+    log::info("Allegiance balance - Lion: {lion}, Swan: {swan}")
+
+    // Add to gallery and consume credits
+    let updated_gallery = self.gallery.add_narrative(narrative)
+    let manager = manager.consume(reservation.id)?
+
+    return Ok(LionSwan {
+      ...self,
+      gallery: updated_gallery,
+      credit_manager: manager,
+    })
+  }
+
+  /// Generate a narrative focused on a specific allegiance (costs credits)
+  pub fun generate_allegiance_narrative(self, allegiance: Allegiance, scene_count: UInt32) -> Result<LionSwan, CreditError> {
+    let cost = self.credit_manager.costs.narrative_cost(scene_count)
+    log::info("Allegiance narrative generation will cost {cost} credits")
+
+    let (manager, reservation) = self.credit_manager.reserve(cost, "allegiance_narrative_generation")?
+
+    log::info("Generating {allegiance} narrative with {scene_count} scenes...")
+
+    let narrative = generate_allegiance_story(self.registry, allegiance, scene_count)
+    log::info("Generated narrative: \"{narrative.title}\"")
+
+    let updated_gallery = self.gallery.add_narrative(narrative)
+    let manager = manager.consume(reservation.id)?
+
+    return Ok(LionSwan {
+      ...self,
+      gallery: updated_gallery,
+      credit_manager: manager,
+    })
+  }
+
+  /// Get all narratives from gallery
+  pub fun all_narratives(self) -> List<NarrativeGalleryItem> {
+    return self.gallery.all_narratives()
+  }
+
+  // ============= Image Generation =============
+
+  /// Generate an image for a specific symbol (costs credits)
+  pub fun generate_image(self, symbol: Symbol) -> Result<LionSwan, CreditError> {
+    let cost = self.credit_manager.costs.image_generation
+    log::info("Image generation will cost {cost} credits")
+
+    let (manager, reservation) = self.credit_manager.reserve(cost, "image_generation")?
+
+    let request = ImageRequest::new(symbol)
+    match self.image_client.generate(request) {
+      Ok(image) => {
+        let updated_gallery = self.gallery.add_image(image, symbol)
+        let manager = manager.consume(reservation.id)?
+
+        return Ok(LionSwan {
+          ...self,
+          gallery: updated_gallery,
+          credit_manager: manager,
+        })
+      },
+      Err(e) => {
+        let manager = manager.release(reservation.id)?
+        log::error("Image generation failed: {e}")
+        return Ok(LionSwan { ...self, credit_manager: manager })
+      },
+    }
+  }
+
+  /// Generate images for all symbols of an allegiance (costs credits)
+  pub fun generate_allegiance_images(self, allegiance: Allegiance) -> Result<LionSwan, CreditError> {
+    let symbols = self.registry.by_allegiance(allegiance)
+    let count = symbols.len() as UInt32
+    let cost = self.credit_manager.costs.batch_image_cost(count)
+    log::info("Batch image generation will cost {cost} credits for {count} images")
+
+    let (manager, reservation) = self.credit_manager.reserve(cost, "batch_image_generation")?
+
+    let config = ImageConfig::for_allegiance(allegiance)
+    match generate_batch(self.image_client, symbols, Some(config)) {
+      Ok(images) => {
+        let mut updated_gallery = self.gallery
+        for (image, symbol) in images.iter().zip(symbols.iter()) {
+          updated_gallery = updated_gallery.add_image(image, symbol)
+        }
+        let manager = manager.consume(reservation.id)?
+
+        return Ok(LionSwan {
+          ...self,
+          gallery: updated_gallery,
+          credit_manager: manager,
+        })
+      },
+      Err(e) => {
+        let manager = manager.release(reservation.id)?
+        log::error("Batch image generation failed: {e}")
+        return Ok(LionSwan { ...self, credit_manager: manager })
+      },
+    }
+  }
+
+  /// Get all images from gallery
+  pub fun all_images(self) -> List<ImageGalleryItem> {
+    return self.gallery.all_images()
+  }
+
+  // ============= Symbol Management =============
+
+  /// Add a custom symbol to the registry (free operation)
+  pub fun add_symbol(self, name: String, allegiance: Allegiance, description: String) -> LionSwan {
+    let symbol = Symbol::new(name, allegiance, description)
+    log::info("Created new symbol: {name} ({allegiance})")
+    return LionSwan {
+      ...self,
+      registry: self.registry.add(symbol)
+    }
+  }
+
+  /// Get symbols by allegiance
+  pub fun symbols_of(self, allegiance: Allegiance) -> List<Symbol> {
+    return self.registry.by_allegiance(allegiance)
+  }
+
+  exegesis {
+    The Lion & Swan is a generative storytelling spirit that explores
+    the duality of symbols through two allegiances.
+
+    This checkpoint adds credit management for resource-intensive
+    operations. Image and narrative generation require credits,
+    encouraging efficient usage of generative resources.
+  }
+}

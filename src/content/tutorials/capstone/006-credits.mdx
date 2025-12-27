@@ -1,0 +1,492 @@
+---
+title: "Credit Integration"
+description: "Implement proper credit management for API operations"
+chapter: 6
+---
+
+import { Link } from 'react-router-dom';
+import { Coins, Shield, FileCode, Terminal, ChevronRight, CheckCircle, AlertTriangle } from 'lucide-react';
+
+# Chapter 6: Credit Integration
+
+<div className="flex items-center gap-2 text-sm mb-6" style={{ color: 'var(--soft-gray)' }}>
+  <Link to="/tutorials/capstone" className="hover:opacity-80 transition-opacity">
+    Capstone
+  </Link>
+  <ChevronRight className="w-4 h-4" />
+  <span style={{ color: 'var(--text-primary)' }}>Credit Integration</span>
+</div>
+
+Credit management is crucial for Spirits that consume external resources. In this
+chapter, you will implement the complete credit lifecycle: checking balance,
+reserving credits, consuming on success, and releasing on failure.
+
+## The Credit Lifecycle
+
+<div className="my-8">
+  <div className="flex flex-col items-center">
+    <div className="flex items-center gap-4 mb-8">
+      <div className="w-20 h-20 rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: 'var(--glow-cyan-dim)', color: 'var(--glow-cyan)', border: '2px solid var(--glow-cyan)' }}>
+        Check
+      </div>
+      <div style={{ color: 'var(--soft-gray)' }}>→</div>
+      <div className="w-20 h-20 rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: 'var(--glow-gold-dim)', color: 'var(--glow-gold)', border: '2px solid var(--glow-gold)' }}>
+        Reserve
+      </div>
+      <div style={{ color: 'var(--soft-gray)' }}>→</div>
+      <div className="w-20 h-20 rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: 'var(--spore-purple)', color: 'var(--void)', border: '2px solid var(--spore-purple)' }}>
+        Execute
+      </div>
+      <div style={{ color: 'var(--soft-gray)' }}>→</div>
+      <div className="w-20 h-20 rounded-full flex items-center justify-center text-sm font-bold" style={{ backgroundColor: 'var(--glow-cyan)', color: 'var(--void)', border: '2px solid var(--glow-cyan)' }}>
+        Consume
+      </div>
+    </div>
+    <p className="text-sm text-center" style={{ color: 'var(--text-secondary)' }}>
+      On failure after Reserve, the credits are Released back to the balance.
+    </p>
+  </div>
+</div>
+
+## Credit Helper Module
+
+Create a dedicated credit management module:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <FileCode className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>src/lib/credits.ts</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`import { Credits, Spirit } from '@vudo/runtime';
+
+export interface CreditReservation {
+  id: string;
+  amount: number;
+  purpose: string;
+  createdAt: Date;
+  expiresAt: Date;
+}
+
+export interface CreditOperation {
+  name: string;
+  cost: number;
+}
+
+export class CreditManager {
+  private spirit: typeof Spirit;
+  private operations: Record<string, number>;
+
+  constructor() {
+    this.spirit = Spirit.current();
+    this.operations = this.spirit.manifest.capabilities.credits.operations;
+  }
+
+  /**
+   * Get the current credit balance
+   */
+  async getBalance(): Promise<number> {
+    return Credits.getBalance();
+  }
+
+  /**
+   * Check if there are sufficient credits for an operation
+   */
+  async canAfford(operation: string): Promise<boolean> {
+    const cost = this.operations[operation];
+    if (!cost) {
+      throw new Error(\`Unknown operation: \${operation}\`);
+    }
+
+    const balance = await this.getBalance();
+    return balance >= cost;
+  }
+
+  /**
+   * Check if there are sufficient credits for multiple operations
+   */
+  async canAffordAll(operations: string[]): Promise<boolean> {
+    const totalCost = operations.reduce((sum, op) => {
+      const cost = this.operations[op];
+      if (!cost) throw new Error(\`Unknown operation: \${op}\`);
+      return sum + cost;
+    }, 0);
+
+    const balance = await this.getBalance();
+    return balance >= totalCost;
+  }
+
+  /**
+   * Get the cost of an operation
+   */
+  getCost(operation: string): number {
+    const cost = this.operations[operation];
+    if (!cost) {
+      throw new Error(\`Unknown operation: \${operation}\`);
+    }
+    return cost;
+  }
+
+  /**
+   * Reserve credits before an operation
+   * Throws if insufficient balance
+   */
+  async reserve(
+    operation: string,
+    options?: { ttlMinutes?: number }
+  ): Promise<CreditReservation> {
+    const cost = this.getCost(operation);
+    const balance = await this.getBalance();
+
+    if (balance < cost) {
+      throw new InsufficientCreditsError(operation, cost, balance);
+    }
+
+    const ttl = options?.ttlMinutes || 5;
+    const reservation = await Credits.reserve(cost, operation, { ttlMinutes: ttl });
+
+    return {
+      id: reservation.id,
+      amount: cost,
+      purpose: operation,
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + ttl * 60 * 1000)
+    };
+  }
+
+  /**
+   * Consume a reservation after successful operation
+   */
+  async consume(reservation: CreditReservation): Promise<void> {
+    await Credits.consume(reservation.id);
+
+    // Log the consumption
+    console.log(\`Credits consumed: \${reservation.amount} for \${reservation.purpose}\`);
+  }
+
+  /**
+   * Release a reservation after failed operation
+   */
+  async release(reservation: CreditReservation): Promise<void> {
+    await Credits.release(reservation.id);
+
+    // Log the release
+    console.log(\`Credits released: \${reservation.amount} for \${reservation.purpose}\`);
+  }
+
+  /**
+   * Execute an operation with automatic credit management
+   */
+  async withCredits<T>(
+    operation: string,
+    fn: () => Promise<T>
+  ): Promise<T> {
+    const reservation = await this.reserve(operation);
+
+    try {
+      const result = await fn();
+      await this.consume(reservation);
+      return result;
+    } catch (error) {
+      await this.release(reservation);
+      throw error;
+    }
+  }
+
+  /**
+   * Get a summary of all operations and their costs
+   */
+  getOperationSummary(): CreditOperation[] {
+    return Object.entries(this.operations).map(([name, cost]) => ({
+      name,
+      cost
+    }));
+  }
+}
+
+export class InsufficientCreditsError extends Error {
+  constructor(
+    public operation: string,
+    public required: number,
+    public available: number
+  ) {
+    super(\`Insufficient credits for \${operation}: need \${required}, have \${available}\`);
+    this.name = 'InsufficientCreditsError';
+  }
+}
+
+// Export singleton instance
+export const creditManager = new CreditManager();`}
+  </pre>
+</div>
+
+## Update Generate Handler
+
+Refactor the generate handler to use the credit manager:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <FileCode className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>src/handlers/generate.ts (updated)</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`import { creditManager, InsufficientCreditsError } from '../lib/credits';
+
+export async function generate(options: GenerateOptions): Promise<GenerationResult> {
+  // Pre-flight credit check
+  const operations = ['generate_image'];
+  if (options.includeNarrative) {
+    operations.push('generate_text');
+  }
+
+  const canAfford = await creditManager.canAffordAll(operations);
+  if (!canAfford) {
+    const balance = await creditManager.getBalance();
+    const totalCost = operations.reduce(
+      (sum, op) => sum + creditManager.getCost(op),
+      0
+    );
+
+    throw new InsufficientCreditsError(
+      operations.join(' + '),
+      totalCost,
+      balance
+    );
+  }
+
+  // Generate image with credit management
+  const imageResult = await creditManager.withCredits(
+    'generate_image',
+    async () => {
+      const prompt = buildPrompt(options);
+
+      const response = await Network.post('https://api.planetserve.io/v1/generate', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': \`Bearer \${Spirit.current().secrets.PLANETSERVE_API_KEY}\`
+        },
+        body: JSON.stringify({
+          prompt,
+          model: 'mythic-v2',
+          size: '1024x1024'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(\`API error: \${response.status}\`);
+      }
+
+      const data = await response.json();
+      const imageBytes = await Network.fetch(data.image_url);
+      const timestamp = Date.now();
+      const localPath = \`output/images/\${options.sceneType.toLowerCase()}_\${timestamp}.png\`;
+
+      await Storage.writeBytes(localPath, imageBytes);
+
+      return {
+        imageUrl: data.image_url,
+        localPath,
+        timestamp
+      };
+    }
+  );
+
+  // Generate narrative if requested
+  let narrativeResult = null;
+  if (options.includeNarrative) {
+    narrativeResult = await creditManager.withCredits(
+      'generate_text',
+      async () => generateNarrativeContent(options, imageResult)
+    );
+  }
+
+  return {
+    ...imageResult,
+    narrative: narrativeResult,
+    creditsUsed: operations.reduce(
+      (sum, op) => sum + creditManager.getCost(op),
+      0
+    )
+  };
+}`}
+  </pre>
+</div>
+
+## Credit Status Command
+
+Add a command to check credit status:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <FileCode className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>src/handlers/credits-status.ts</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`import { creditManager } from '../lib/credits';
+
+export async function main(): Promise<void> {
+  const balance = await creditManager.getBalance();
+  const operations = creditManager.getOperationSummary();
+
+  console.log('\\n=== Lion & Swan Credit Status ===\\n');
+  console.log(\`Current Balance: \${balance.toFixed(2)} credits\\n\`);
+
+  console.log('Operation Costs:');
+  console.log('----------------');
+
+  for (const op of operations) {
+    const canAfford = balance >= op.cost;
+    const status = canAfford ? '\\x1b[32m✓\\x1b[0m' : '\\x1b[31m✗\\x1b[0m';
+    console.log(\`  \${status} \${op.name}: \${op.cost} credits\`);
+  }
+
+  console.log('');
+
+  // Calculate what you can do
+  const imageCount = Math.floor(balance / creditManager.getCost('generate_image'));
+  const textCount = Math.floor(balance / creditManager.getCost('generate_text'));
+  const fullScenes = Math.floor(balance / (
+    creditManager.getCost('generate_image') +
+    creditManager.getCost('generate_text')
+  ));
+
+  console.log('You can generate:');
+  console.log(\`  • \${imageCount} images only\`);
+  console.log(\`  • \${textCount} narratives only\`);
+  console.log(\`  • \${fullScenes} complete scenes (image + narrative)\`);
+  console.log('');
+}`}
+  </pre>
+</div>
+
+## Update Manifest
+
+Add the credits-status command:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <FileCode className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>manifest.json (commands update)</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`"commands": {
+  "generate": {
+    "handler": "src/handlers/generate.ts",
+    "description": "Generate a new mythic scene"
+  },
+  "gallery": {
+    "handler": "src/handlers/serve-gallery.ts",
+    "description": "View generated content gallery"
+  },
+  "credits": {
+    "handler": "src/handlers/credits-status.ts",
+    "description": "Check credit balance and operation costs"
+  }
+}`}
+  </pre>
+</div>
+
+## Test Credit Status
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <Terminal className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>Terminal</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-secondary)' }}>
+{`$ vudo run credits
+
+=== Lion & Swan Credit Status ===
+
+Current Balance: 42.00 credits
+
+Operation Costs:
+----------------
+  `}<span style={{ color: 'var(--glow-cyan)' }}>✓</span>{` generate_image: 3 credits
+  `}<span style={{ color: 'var(--glow-cyan)' }}>✓</span>{` generate_text: 1 credits
+
+You can generate:
+  • 14 images only
+  • 42 narratives only
+  • 10 complete scenes (image + narrative)`}
+  </pre>
+</div>
+
+## Error Handling
+
+<div className="card my-6" style={{ borderColor: 'var(--glow-gold)', backgroundColor: 'rgba(255, 215, 0, 0.05)' }}>
+  <div className="flex items-center gap-2 mb-3">
+    <AlertTriangle className="w-5 h-5" style={{ color: 'var(--glow-gold)' }} />
+    <span className="font-normal" style={{ color: 'var(--glow-gold)' }}>Handling Insufficient Credits</span>
+  </div>
+  <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
+    When a user does not have enough credits, provide a clear error message:
+  </p>
+  <div className="rounded-lg p-4 text-sm font-mono" style={{ backgroundColor: 'var(--bg-card)' }}>
+    <span style={{ color: '#ff6b6b' }}>Error:</span>{' '}
+    <span style={{ color: 'var(--text-secondary)' }}>
+      Insufficient credits for generate_image: need 3, have 2
+    </span>
+  </div>
+</div>
+
+## Best Practices
+
+<div className="space-y-4 my-6">
+  <div className="card">
+    <Shield className="w-5 h-5 mb-3" style={{ color: 'var(--glow-cyan)' }} />
+    <h4 className="font-normal mb-2" style={{ color: 'var(--text-primary)' }}>Always Reserve Before Execute</h4>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      Reserve credits before making any API call. This prevents race conditions
+      where balance might change between check and execution.
+    </p>
+  </div>
+
+  <div className="card">
+    <Coins className="w-5 h-5 mb-3" style={{ color: 'var(--glow-cyan)' }} />
+    <h4 className="font-normal mb-2" style={{ color: 'var(--text-primary)' }}>Use withCredits Helper</h4>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      The <code>withCredits</code> helper automatically handles consume/release,
+      ensuring credits are never lost even on errors.
+    </p>
+  </div>
+
+  <div className="card">
+    <AlertTriangle className="w-5 h-5 mb-3" style={{ color: 'var(--glow-cyan)' }} />
+    <h4 className="font-normal mb-2" style={{ color: 'var(--text-primary)' }}>Pre-flight Checks</h4>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      Before starting multi-operation workflows, verify credits for all operations
+      upfront. Fail fast rather than partially completing.
+    </p>
+  </div>
+</div>
+
+## Chapter Complete
+
+<div className="card my-6" style={{ borderColor: 'var(--glow-cyan)', borderWidth: '1px' }}>
+  <div className="flex items-center gap-3 mb-4">
+    <CheckCircle className="w-6 h-6" style={{ color: 'var(--glow-cyan)' }} />
+    <span className="font-normal" style={{ color: 'var(--glow-cyan)' }}>Credit Integration Complete</span>
+  </div>
+  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+    You have implemented robust credit management for your Spirit. In the next
+    chapter, you will add tests to ensure everything works correctly.
+  </p>
+</div>
+
+## What You Learned
+
+- The credit lifecycle: check, reserve, execute, consume/release
+- Creating a reusable CreditManager class
+- Using the withCredits pattern for automatic management
+- Implementing pre-flight checks for multi-operation workflows
+- Providing clear error messages for credit issues
+
+<div className="flex gap-4 mt-8">
+  <Link to="/tutorials/capstone/007-testing" className="btn-primary">
+    Next: Testing
+  </Link>
+  <Link to="/tutorials/capstone/005-gallery" className="btn-secondary">
+    Previous: Content Gallery
+  </Link>
+</div>

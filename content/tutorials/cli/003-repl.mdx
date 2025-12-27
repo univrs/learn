@@ -1,0 +1,673 @@
+---
+title: "The DOL REPL"
+description: "Interactive development with expression evaluation, type inspection, and AST viewing"
+track: "cli"
+tutorial: 3
+duration: "25 min"
+objectives:
+  - "Navigate REPL commands efficiently"
+  - "Evaluate expressions and inspect types"
+  - "Load and save DOL files interactively"
+  - "View and understand AST representations"
+tags:
+  - "cli"
+  - "vudo"
+  - "repl"
+  - "interactive"
+  - "debugging"
+---
+
+# The DOL REPL
+
+In this tutorial, you will master the DOL REPL (Read-Eval-Print Loop) for interactive development. The REPL is your laboratory for experimenting with DOL expressions, testing ideas, and debugging issues.
+
+## Starting the REPL
+
+Launch the REPL with `vudo repl`:
+
+<Terminal title="Starting the REPL">
+```
+$ vudo repl
+DOL REPL v0.2.3
+Type :help for available commands, :quit to exit
+
+dol>
+```
+</Terminal>
+
+### REPL with a File
+
+Load a DOL file at startup:
+
+<Terminal title="Starting with a file">
+```
+$ vudo repl --load project.dol
+DOL REPL v0.2.3
+Loaded: project.dol (5 genes, 2 traits)
+Type :help for available commands, :quit to exit
+
+dol>
+```
+</Terminal>
+
+## REPL Commands
+
+All REPL commands start with `:` (colon). This distinguishes them from DOL expressions.
+
+### Getting Help
+
+<Terminal title=":help command">
+```
+dol> :help
+DOL REPL Commands
+=================
+
+FILE OPERATIONS
+  :load <file>      Load a DOL file
+  :reload           Reload the current file
+  :save <file>      Save session to file
+  :clear            Clear the session state
+
+INSPECTION
+  :type <expr>      Show the type of an expression
+  :ast <expr>       Show the AST representation
+  :info <name>      Show detailed info about a definition
+  :list             List all definitions in scope
+
+NAVIGATION
+  :scope            Show current scope/module
+  :use <module>     Import a module into scope
+  :cd <path>        Change working directory
+  :pwd              Show working directory
+
+SESSION
+  :history          Show command history
+  :undo             Undo last definition
+  :reset            Reset to initial state
+  :quit             Exit the REPL (also: :q, :exit)
+
+SETTINGS
+  :set <option>     Set a REPL option
+  :unset <option>   Unset a REPL option
+  :settings         Show current settings
+
+Type :help <command> for detailed help on a command.
+```
+</Terminal>
+
+## File Operations
+
+### Loading Files
+
+<Terminal title=":load command">
+```
+dol> :load src/domain.dol
+Loading src/domain.dol...
+Parsed successfully.
+
+Definitions loaded:
+  gene User
+  gene Product
+  gene Order
+  trait Lifecycle
+  trait Auditable
+
+dol> :list
+Genes (3):
+  User      - A registered user in the system
+  Product   - A product available for purchase
+  Order     - A customer order
+
+Traits (2):
+  Lifecycle - Standard lifecycle states
+  Auditable - Tracks creation and modification
+```
+</Terminal>
+
+### Reloading Files
+
+After editing a file externally, reload without restarting:
+
+<Terminal title=":reload command">
+```
+dol> :reload
+Reloading src/domain.dol...
+File changed, updating definitions.
+
+Changes:
+  Modified: User (added field: verified)
+  Added:    Review
+
+dol>
+```
+</Terminal>
+
+### Saving Sessions
+
+Save your REPL work to a file:
+
+<Terminal title=":save command">
+```
+dol> gene Counter {
+...>     has value: Int = 0
+...>     fn increment() -> Int { this.value + 1 }
+...>     exegesis { A simple counter. }
+...> }
+Defined: gene Counter
+
+dol> gene Timer {
+...>     has seconds: Int
+...>     uses Counter
+...>     exegesis { A timer using Counter. }
+...> }
+Defined: gene Timer
+
+dol> :save experiments.dol
+Saved 2 definitions to experiments.dol
+
+dol> :clear
+Session cleared.
+```
+</Terminal>
+
+## Expression Evaluation
+
+The REPL evaluates DOL expressions and shows results:
+
+<Terminal title="Expression evaluation">
+```
+dol> 1 + 2
+3
+
+dol> "hello" ++ " " ++ "world"
+"hello world"
+
+dol> [1, 2, 3].map(fn(x) { x * 2 })
+[2, 4, 6]
+
+dol> let x = 10
+x = 10
+
+dol> x * x
+100
+
+dol> if x > 5 then "big" else "small"
+"big"
+```
+</Terminal>
+
+### Multi-line Input
+
+The REPL automatically detects incomplete expressions:
+
+<Terminal title="Multi-line expressions">
+```
+dol> gene Point {
+...>     has x: Float
+...>     has y: Float
+...>
+...>     fn distance(other: Point) -> Float {
+...>         let dx = this.x - other.x
+...>         let dy = this.y - other.y
+...>         (dx * dx + dy * dy).sqrt()
+...>     }
+...>
+...>     exegesis {
+...>         A 2D point with distance calculation.
+...>     }
+...> }
+Defined: gene Point
+
+dol>
+```
+</Terminal>
+
+### Creating Instances
+
+<Terminal title="Working with instances">
+```
+dol> let p1 = Point { x: 0.0, y: 0.0 }
+p1 = Point { x: 0.0, y: 0.0 }
+
+dol> let p2 = Point { x: 3.0, y: 4.0 }
+p2 = Point { x: 3.0, y: 4.0 }
+
+dol> p1.distance(p2)
+5.0
+
+dol> p2.x
+3.0
+```
+</Terminal>
+
+## Type Inspection
+
+The `:type` command shows the type of any expression without evaluating it:
+
+<Terminal title=":type command">
+```
+dol> :type 42
+Int
+
+dol> :type "hello"
+String
+
+dol> :type [1, 2, 3]
+List<Int>
+
+dol> :type Point { x: 0.0, y: 0.0 }
+Point
+
+dol> :type fn(x: Int) { x * 2 }
+fn(Int) -> Int
+
+dol> :type Point.distance
+fn(Point, Point) -> Float
+```
+</Terminal>
+
+### Type Inspection with Generics
+
+<Terminal title="Generic type inspection">
+```
+dol> :type Some(42)
+Option<Int>
+
+dol> :type None
+Option<T> (unbound)
+
+dol> :type Ok("success")
+Result<String, E> (partial)
+
+dol> :type Err("failed")
+Result<T, String> (partial)
+
+dol> :type [].map(fn(x: Int) { x.to_string() })
+List<String>
+```
+</Terminal>
+
+## AST Viewing
+
+The `:ast` command shows the Abstract Syntax Tree of an expression:
+
+<Terminal title=":ast command">
+```
+dol> :ast 1 + 2 * 3
+BinaryExpr
++-- op: Add
++-- left: Literal(Int: 1)
++-- right: BinaryExpr
+    +-- op: Multiply
+    +-- left: Literal(Int: 2)
+    +-- right: Literal(Int: 3)
+
+dol> :ast if x > 0 then x else -x
+IfExpr
++-- condition: BinaryExpr
+|   +-- op: GreaterThan
+|   +-- left: Identifier("x")
+|   +-- right: Literal(Int: 0)
++-- then_branch: Identifier("x")
++-- else_branch: UnaryExpr
+    +-- op: Negate
+    +-- operand: Identifier("x")
+```
+</Terminal>
+
+### AST for Genes
+
+<Terminal title="Gene AST">
+```
+dol> :ast gene Foo { has bar: Int exegesis { A foo. } }
+GeneDecl
++-- name: "Foo"
++-- visibility: Private
++-- version: None
++-- body:
+|   +-- HasPredicate
+|   |   +-- name: "bar"
+|   |   +-- type: TypeRef("Int")
+|   |   +-- default: None
+|   +-- Exegesis
+|       +-- text: "A foo."
++-- derives: []
++-- constraints: []
+```
+</Terminal>
+
+### Detailed AST Mode
+
+<Terminal title="Verbose AST">
+```
+dol> :set ast_verbose true
+AST verbose mode enabled.
+
+dol> :ast x + 1
+BinaryExpr @ line 1, col 1-5
++-- op: Add @ line 1, col 3
++-- left: Identifier @ line 1, col 1
+|   +-- name: "x"
+|   +-- resolved: Some(LocalVar { id: 0, mutable: false })
++-- right: Literal @ line 1, col 5
+    +-- value: Int(1)
+    +-- inferred_type: Int
+```
+</Terminal>
+
+## Definition Information
+
+The `:info` command provides detailed information about definitions:
+
+<Terminal title=":info command">
+```
+dol> :load src/domain.dol
+
+dol> :info User
+gene User @ 1.0.0
+Location: src/domain.dol:5-25
+
+Properties:
+  id: UUID (required)
+  email: String (required)
+  name: String (required)
+  verified: Bool = false
+  created_at: Timestamp (required)
+
+Predicates:
+  is identifiable
+  is auditable
+  derives Serializable, Hashable
+
+Constraints:
+  email must match /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/
+
+Exegesis:
+  A registered user in the system. Users can place orders
+  and leave reviews. Email must be unique and verified.
+
+Used by:
+  Order.customer (as reference)
+  Review.author (as reference)
+```
+</Terminal>
+
+<Terminal title="Trait information">
+```
+dol> :info Lifecycle
+trait Lifecycle @ 1.0.0
+Location: src/domain.dol:45-60
+
+States:
+  Created, Active, Suspended, Archived, Deleted
+
+Required methods:
+  fn activate() -> Result<(), Error>
+  fn suspend(reason: String) -> Result<(), Error>
+  fn archive() -> Result<(), Error>
+  fn delete() -> Result<(), Error>
+
+State transitions:
+  Created -> Active (via activate)
+  Active -> Suspended (via suspend)
+  Active -> Archived (via archive)
+  Suspended -> Active (via activate)
+  * -> Deleted (via delete, terminal)
+
+Implemented by:
+  User, Product, Order
+
+Exegesis:
+  Standard lifecycle management for entities.
+  Provides state machine semantics with controlled transitions.
+```
+</Terminal>
+
+## Scope Management
+
+### Viewing Scope
+
+<Terminal title=":scope and :use commands">
+```
+dol> :scope
+Current scope: (root)
+
+Imported modules:
+  std/prelude (auto-imported)
+
+Local definitions:
+  (none)
+
+dol> :use std/collections
+Imported: std/collections
+
+dol> :scope
+Current scope: (root)
+
+Imported modules:
+  std/prelude (auto-imported)
+  std/collections
+
+Local definitions:
+  (none)
+
+dol> :list
+From std/collections:
+  gene List<T>
+  gene Map<K, V>
+  gene Set<T>
+  trait Iterable<T>
+  trait Collection<T>
+```
+</Terminal>
+
+## Session Management
+
+### Command History
+
+<Terminal title=":history command">
+```
+dol> :history
+  1: :load src/domain.dol
+  2: :info User
+  3: let u = User { id: uuid(), email: "test@example.com", name: "Test" }
+  4: u.verified
+  5: :type u
+
+dol> :history 3
+let u = User { id: uuid(), email: "test@example.com", name: "Test" }
+
+(press Enter to execute, or edit the line)
+```
+</Terminal>
+
+### Undo and Reset
+
+<Terminal title="Undo and reset">
+```
+dol> gene Temp { has x: Int exegesis { Temporary. } }
+Defined: gene Temp
+
+dol> :list
+Genes (1):
+  Temp - Temporary.
+
+dol> :undo
+Removed: gene Temp
+
+dol> :list
+Genes (0):
+  (none)
+
+dol> :reset
+Session reset to initial state.
+All definitions cleared.
+```
+</Terminal>
+
+## REPL Settings
+
+Configure REPL behavior with `:set`:
+
+<Terminal title=":set and :settings">
+```
+dol> :settings
+Current REPL Settings
+=====================
+auto_type: false        # Show type of each result
+ast_verbose: false      # Include source locations in AST
+history_size: 1000      # Commands to remember
+multiline: true         # Enable multi-line input
+color: true             # Colored output
+strict: false           # Enable strict type checking
+
+dol> :set auto_type true
+auto_type = true
+
+dol> 1 + 2
+3 : Int
+
+dol> "hello"
+"hello" : String
+
+dol> :unset auto_type
+auto_type = false
+```
+</Terminal>
+
+## Tips and Best Practices
+
+<Tip type="info">
+**Use tab completion**: The REPL supports tab completion for commands, identifiers, and file paths.
+```
+dol> :lo<TAB>
+:load
+
+dol> User.<TAB>
+.id    .email    .name    .verified    .created_at
+```
+</Tip>
+
+<Tip type="success">
+**Exploratory development**: Define genes incrementally in the REPL, test them, then `:save` to a file when satisfied.
+</Tip>
+
+<Tip type="warning">
+**Save your work**: REPL sessions are not persisted automatically. Use `:save` before quitting to preserve your definitions.
+</Tip>
+
+## Common Issues
+
+### Syntax Errors in Multi-line
+
+<Terminal title="Canceling multi-line input">
+```
+dol> gene Broken {
+...>     has x: Int
+...>     oops this is wrong
+Parse error at line 3: unexpected token 'oops'
+
+dol> gene Broken {
+...>     has x: Int
+...> ^C
+(input canceled)
+
+dol>
+```
+</Terminal>
+
+### Name Conflicts
+
+<Terminal title="Resolving conflicts">
+```
+dol> :use lib1/types
+Imported: lib1/types
+
+dol> :use lib2/types
+Warning: 'Config' is already defined by lib1/types.
+         Use lib2/types::Config to access the new definition.
+
+dol> let c1 = Config { ... }           # Uses lib1/types::Config
+dol> let c2 = lib2/types::Config { ... }  # Explicit qualification
+```
+</Terminal>
+
+### Performance with Large Files
+
+<Terminal title="Loading performance">
+```
+dol> :load huge-project.dol
+Loading huge-project.dol...
+[==========          ] 50% (parsing)
+
+Warning: This file contains 500+ definitions.
+         REPL performance may be affected.
+         Consider loading specific modules instead.
+
+Parsed successfully in 2.3s.
+```
+</Terminal>
+
+## Summary
+
+You have learned to:
+
+1. **Navigate REPL commands** with `:help`
+2. **Load and save files** with `:load`, `:reload`, `:save`
+3. **Evaluate expressions** interactively
+4. **Inspect types** with `:type`
+5. **View AST** with `:ast`
+6. **Get definition info** with `:info`
+7. **Manage scope** with `:use` and `:scope`
+8. **Configure settings** with `:set`
+
+## Next Steps
+
+<NextTutorial
+  title="Code Quality Tools"
+  href="/tutorials/cli/004-quality-tools"
+  description="Learn syntax checking, type validation, formatting, and documentation generation"
+/>
+
+## Quick Reference
+
+```
+REPL Quick Reference
+====================
+
+BASIC
+  :help              Show all commands
+  :quit, :q          Exit REPL
+
+FILES
+  :load <file>       Load DOL file
+  :reload            Reload current file
+  :save <file>       Save definitions
+  :clear             Clear session
+
+INSPECTION
+  :type <expr>       Show expression type
+  :ast <expr>        Show AST
+  :info <name>       Definition details
+  :list              List definitions
+
+SCOPE
+  :scope             Show current scope
+  :use <module>      Import module
+
+SESSION
+  :history           Command history
+  :undo              Undo last definition
+  :reset             Reset session
+
+SETTINGS
+  :set <opt> <val>   Set option
+  :unset <opt>       Unset option
+  :settings          Show settings
+
+KEYBOARD
+  Tab                Completion
+  Up/Down            History navigation
+  Ctrl+C             Cancel input
+  Ctrl+D             Exit (same as :quit)
+```

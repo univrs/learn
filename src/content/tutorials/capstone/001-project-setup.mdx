@@ -1,0 +1,234 @@
+---
+title: "Project Setup"
+description: "Initialize the Lion & Swan Creator Spirit with vudo new"
+chapter: 1
+---
+
+import { Link } from 'react-router-dom';
+import { Terminal, FolderTree, FileCode, ChevronRight, CheckCircle } from 'lucide-react';
+
+# Chapter 1: Project Setup
+
+<div className="flex items-center gap-2 text-sm mb-6" style={{ color: 'var(--soft-gray)' }}>
+  <Link to="/tutorials/capstone" className="hover:opacity-80 transition-opacity">
+    Capstone
+  </Link>
+  <ChevronRight className="w-4 h-4" />
+  <span style={{ color: 'var(--text-primary)' }}>Project Setup</span>
+</div>
+
+In this chapter, you will initialize a new Spirit project using the `vudo new`
+command with the `ai-image` template, which provides the foundation for AI-powered
+content generation.
+
+## Creating the Project
+
+Open your terminal and run the following command:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <Terminal className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>Terminal</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`vudo new lion-swan-creator --template ai-image`}
+  </pre>
+</div>
+
+This command creates a new Spirit project with:
+- AI image generation capabilities pre-configured
+- Network access for API calls
+- File storage for generated content
+- Credit management hooks
+
+## Project Structure
+
+After running the command, you will have the following project structure:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <FolderTree className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>Project Structure</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-secondary)' }}>
+{`lion-swan-creator/
+├── manifest.json          # Spirit configuration
+├── src/
+│   ├── ontology/          # DOL definitions
+│   │   └── main.dol       # Main ontology file
+│   ├── handlers/          # Event handlers
+│   │   └── generate.ts    # Generation logic
+│   ├── prompts/           # AI prompt templates
+│   │   └── image.txt      # Image generation prompts
+│   └── views/             # HTML views
+│       └── gallery.html   # Content gallery
+├── tests/                 # Test files
+│   └── ontology.test.ts   # Ontology tests
+├── assets/                # Static assets
+└── output/                # Generated content (gitignored)`}
+  </pre>
+</div>
+
+## Configure manifest.json
+
+Navigate to your project and open `manifest.json`. Update it with the following
+configuration:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <FileCode className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>manifest.json</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`{
+  "name": "lion-swan-creator",
+  "version": "1.0.0",
+  "description": "A Spirit that generates mythic Lion & Swan content",
+  "author": "Your Name <you@example.com>",
+
+  "spirit": {
+    "type": "generator",
+    "category": "art",
+    "tags": ["mythology", "ai-art", "narrative"]
+  },
+
+  "capabilities": {
+    "network": {
+      "allowed_hosts": ["api.planetserve.io"],
+      "max_requests_per_minute": 10
+    },
+    "storage": {
+      "max_size_mb": 100,
+      "allowed_types": ["image/png", "image/jpeg", "text/plain", "text/html"]
+    },
+    "credits": {
+      "required": true,
+      "min_balance": 5,
+      "operations": {
+        "generate_image": 3,
+        "generate_text": 1
+      }
+    }
+  },
+
+  "ontology": {
+    "entry": "src/ontology/main.dol",
+    "validate_on_build": true
+  },
+
+  "commands": {
+    "generate": {
+      "handler": "src/handlers/generate.ts",
+      "description": "Generate a new mythic scene"
+    },
+    "gallery": {
+      "handler": "src/views/gallery.html",
+      "description": "View generated content"
+    }
+  }
+}`}
+  </pre>
+</div>
+
+## Understanding the Configuration
+
+Let us break down the key sections:
+
+<div className="space-y-4 my-6">
+  <div className="card">
+    <h4 className="font-normal mb-2" style={{ color: 'var(--glow-cyan)' }}>spirit</h4>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      Defines the type and category of your Spirit. The <code>generator</code> type
+      indicates this Spirit creates new content, and <code>art</code> category places
+      it in the creative tools section.
+    </p>
+  </div>
+
+  <div className="card">
+    <h4 className="font-normal mb-2" style={{ color: 'var(--glow-cyan)' }}>capabilities.network</h4>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      Restricts network access to only <code>api.planetserve.io</code>, limiting potential
+      security risks. The rate limit prevents accidental credit exhaustion.
+    </p>
+  </div>
+
+  <div className="card">
+    <h4 className="font-normal mb-2" style={{ color: 'var(--glow-cyan)' }}>capabilities.credits</h4>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      Specifies credit costs: 3 credits for image generation, 1 credit for text.
+      The Spirit will check for <code>min_balance</code> before starting operations.
+    </p>
+  </div>
+
+  <div className="card">
+    <h4 className="font-normal mb-2" style={{ color: 'var(--glow-cyan)' }}>ontology</h4>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      Points to your main DOL file. When <code>validate_on_build</code> is true,
+      the ontology is validated during the build process.
+    </p>
+  </div>
+</div>
+
+## Verify the Setup
+
+Run the following commands to ensure everything is configured correctly:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <Terminal className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>Terminal</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-secondary)' }}>
+{`# Navigate to project
+cd lion-swan-creator
+
+# Validate manifest
+vudo validate
+
+# Check credit balance
+vudo credits balance`}
+  </pre>
+</div>
+
+You should see output similar to:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-secondary)' }}>
+<span style={{ color: 'var(--glow-cyan)' }}>&#10003;</span> manifest.json is valid
+<span style={{ color: 'var(--glow-cyan)' }}>&#10003;</span> Spirit type: generator
+<span style={{ color: 'var(--glow-cyan)' }}>&#10003;</span> Capabilities configured: network, storage, credits
+<span style={{ color: 'var(--glow-cyan)' }}>&#10003;</span> Commands registered: generate, gallery
+{'\n'}
+<span style={{ color: 'var(--glow-gold)' }}>Credits Balance:</span> 50.00
+<span style={{ color: 'var(--soft-gray)' }}>Required minimum:</span> 5.00
+  </pre>
+</div>
+
+## Chapter Complete
+
+<div className="card my-6" style={{ borderColor: 'var(--glow-cyan)', borderWidth: '1px' }}>
+  <div className="flex items-center gap-3 mb-4">
+    <CheckCircle className="w-6 h-6" style={{ color: 'var(--glow-cyan)' }} />
+    <span className="font-normal" style={{ color: 'var(--glow-cyan)' }}>Setup Complete</span>
+  </div>
+  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+    You have successfully created and configured the Lion & Swan Creator project.
+    In the next chapter, you will define the mythological symbol system using DOL.
+  </p>
+</div>
+
+## What You Learned
+
+- How to create a new Spirit with the `ai-image` template
+- The structure of a VUDO Spirit project
+- How to configure manifest.json for AI capabilities
+- Setting up credit costs for operations
+
+<div className="flex gap-4 mt-8">
+  <Link to="/tutorials/capstone/002-symbol-system" className="btn-primary">
+    Next: Symbol System
+  </Link>
+  <Link to="/tutorials/capstone/000-overview" className="btn-secondary">
+    Previous: Overview
+  </Link>
+</div>

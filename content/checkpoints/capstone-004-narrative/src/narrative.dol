@@ -1,0 +1,380 @@
+// Lion & Swan - Narrative Generation Module
+// Checkpoint 004: Narrative generation with scene types and story composition
+//
+// This module handles generating symbolic narratives from symbols
+
+use std::host::{log, random, time}
+use crate::symbols::{Symbol, Allegiance, SymbolRegistry}
+
+/// Types of scenes that can be generated
+pub enum SceneType {
+  /// The beginning - establishing the world
+  Opening,
+  /// Rising action - building tension
+  Rising,
+  /// The peak moment - maximum drama
+  Climax,
+  /// Decreasing tension - consequences unfold
+  Falling,
+  /// The end - resolution and meaning
+  Resolution,
+  /// A moment of conflict between allegiances
+  Confrontation,
+  /// A moment of harmony between allegiances
+  Harmony,
+  /// A transformation or revelation
+  Transformation,
+}
+
+impl SceneType {
+  /// Get the narrative weight of this scene type (affects story pacing)
+  pub fun weight(self) -> Float64 {
+    match self {
+      SceneType::Opening => 1.0,
+      SceneType::Rising => 1.5,
+      SceneType::Climax => 2.5,
+      SceneType::Falling => 1.5,
+      SceneType::Resolution => 1.0,
+      SceneType::Confrontation => 2.0,
+      SceneType::Harmony => 1.8,
+      SceneType::Transformation => 2.2,
+    }
+  }
+
+  /// Get appropriate transition types from this scene
+  pub fun valid_transitions(self) -> List<SceneType> {
+    match self {
+      SceneType::Opening => [SceneType::Rising, SceneType::Transformation],
+      SceneType::Rising => [SceneType::Rising, SceneType::Climax, SceneType::Confrontation],
+      SceneType::Climax => [SceneType::Falling, SceneType::Transformation],
+      SceneType::Falling => [SceneType::Falling, SceneType::Resolution, SceneType::Harmony],
+      SceneType::Resolution => [],
+      SceneType::Confrontation => [SceneType::Climax, SceneType::Transformation],
+      SceneType::Harmony => [SceneType::Resolution, SceneType::Rising],
+      SceneType::Transformation => [SceneType::Rising, SceneType::Falling, SceneType::Climax],
+    }
+  }
+
+  exegesis {
+    Scene types follow classical narrative structure while allowing
+    for symbolic moments (Confrontation, Harmony, Transformation)
+    that emerge from the allegiance dynamics.
+  }
+}
+
+/// A single scene in a narrative
+pub gene Scene {
+  has id: UInt64
+  has scene_type: SceneType
+  has primary_symbol: Symbol
+  has secondary_symbol: Option<Symbol>
+  has text: String
+  has created_at: UInt64
+
+  constraint has_text {
+    this.text.len() > 0
+  }
+
+  /// Check if this scene involves both allegiances
+  pub fun is_dual_allegiance(self) -> Bool {
+    match self.secondary_symbol {
+      Some(secondary) => self.primary_symbol.allegiance != secondary.allegiance,
+      None => false,
+    }
+  }
+
+  /// Get the dominant allegiance of this scene
+  pub fun dominant_allegiance(self) -> Allegiance {
+    return self.primary_symbol.allegiance
+  }
+
+  exegesis {
+    A Scene represents a single narrative moment featuring one or two
+    symbols. Dual-allegiance scenes create natural tension or harmony
+    depending on the scene type.
+  }
+}
+
+/// A complete narrative composed of scenes
+pub gene Narrative {
+  has id: UInt64
+  has title: String
+  has scenes: List<Scene>
+  has created_at: UInt64
+
+  constraint has_title {
+    this.title.len() > 0
+  }
+
+  constraint has_scenes {
+    this.scenes.len() > 0
+  }
+
+  /// Get the total narrative weight (sum of scene weights)
+  pub fun total_weight(self) -> Float64 {
+    return self.scenes
+      .map(|s| s.scene_type.weight())
+      .sum()
+  }
+
+  /// Get the balance of allegiances in this narrative
+  pub fun allegiance_balance(self) -> (UInt32, UInt32) {
+    let mut lion = 0
+    let mut swan = 0
+
+    for scene in self.scenes {
+      match scene.primary_symbol.allegiance {
+        Allegiance::Lion => lion += 1,
+        Allegiance::Swan => swan += 1,
+      }
+      match scene.secondary_symbol {
+        Some(symbol) => match symbol.allegiance {
+          Allegiance::Lion => lion += 1,
+          Allegiance::Swan => swan += 1,
+        },
+        None => {},
+      }
+    }
+
+    return (lion, swan)
+  }
+
+  /// Get all scenes of a particular type
+  pub fun scenes_of_type(self, scene_type: SceneType) -> List<Scene> {
+    return self.scenes
+      .filter(|s| s.scene_type == scene_type)
+      .collect()
+  }
+
+  /// Get the full narrative text
+  pub fun full_text(self) -> String {
+    return self.scenes
+      .map(|s| s.text)
+      .join("\n\n")
+  }
+
+  exegesis {
+    A Narrative is a complete story composed of scenes. It tracks the
+    overall allegiance balance and provides methods for analyzing
+    narrative structure.
+  }
+}
+
+/// Templates for generating scene text
+gene SceneTemplates {
+  /// Opening templates keyed by allegiance
+  pub fun opening(symbol: Symbol) -> String {
+    let templates = match symbol.allegiance {
+      Allegiance::Lion => [
+        "As the golden dawn breaks, {symbol.name} awakens.",
+        "In the realm of eternal sunlight, {symbol.name} stands proud.",
+        "The fires of creation birth {symbol.name} anew.",
+      ],
+      Allegiance::Swan => [
+        "In the silver twilight, {symbol.name} emerges from shadow.",
+        "The moon's reflection reveals {symbol.name} upon still waters.",
+        "From the mist of dreams, {symbol.name} takes form.",
+      ],
+    }
+    return templates[random::range(0, templates.len())]
+  }
+
+  /// Confrontation templates for dual-allegiance scenes
+  pub fun confrontation(lion_symbol: Symbol, swan_symbol: Symbol) -> String {
+    let templates = [
+      "{lion_symbol.name} faces {swan_symbol.name} across the threshold of twilight.",
+      "Fire meets water as {lion_symbol.name} confronts {swan_symbol.name}.",
+      "The golden roar of {lion_symbol.name} echoes against the silver silence of {swan_symbol.name}.",
+    ]
+    return templates[random::range(0, templates.len())]
+  }
+
+  /// Harmony templates for dual-allegiance scenes
+  pub fun harmony(lion_symbol: Symbol, swan_symbol: Symbol) -> String {
+    let templates = [
+      "{lion_symbol.name} and {swan_symbol.name} find balance at the horizon's edge.",
+      "In the moment between day and night, {lion_symbol.name} embraces {swan_symbol.name}.",
+      "The duality resolves: {lion_symbol.name} and {swan_symbol.name} become one.",
+    ]
+    return templates[random::range(0, templates.len())]
+  }
+
+  /// Transformation templates
+  pub fun transformation(symbol: Symbol) -> String {
+    let templates = match symbol.allegiance {
+      Allegiance::Lion => [
+        "{symbol.name} burns away the old and rises renewed.",
+        "Through the crucible of courage, {symbol.name} transforms.",
+        "The sun sets on what was, and {symbol.name} becomes what must be.",
+      ],
+      Allegiance::Swan => [
+        "{symbol.name} sheds its former nature like old feathers.",
+        "The waters of change flow through {symbol.name}.",
+        "In the darkness of the lake, {symbol.name} discovers its true reflection.",
+      ],
+    }
+    return templates[random::range(0, templates.len())]
+  }
+
+  /// Resolution templates
+  pub fun resolution(symbol: Symbol) -> String {
+    let templates = match symbol.allegiance {
+      Allegiance::Lion => [
+        "And so {symbol.name} claims its rightful place in the eternal sun.",
+        "{symbol.name} roars its truth across all lands.",
+        "The story of {symbol.name} becomes legend, written in golden light.",
+      ],
+      Allegiance::Swan => [
+        "And {symbol.name} glides into the forever night, complete.",
+        "{symbol.name} sings its final note, and the universe remembers.",
+        "The story of {symbol.name} becomes myth, reflected in silver waters.",
+      ],
+    }
+    return templates[random::range(0, templates.len())]
+  }
+
+  exegesis {
+    SceneTemplates provides text templates for different scene types
+    and allegiance combinations. Templates use symbol interpolation
+    to create personalized narrative moments.
+  }
+}
+
+/// The narrative generator
+pub trait NarrativeGenerator {
+  /// Generate a complete narrative from a symbol registry
+  is generate_narrative(registry: SymbolRegistry, scene_count: UInt32) -> Narrative
+
+  /// Generate a single scene
+  is generate_scene(scene_type: SceneType, primary: Symbol, secondary: Option<Symbol>) -> Scene
+}
+
+/// Default narrative generator implementation
+pub gene StoryWeaver {
+  has templates: SceneTemplates
+
+  impl NarrativeGenerator {
+    /// Generate a complete narrative
+    pub fun generate_narrative(registry: SymbolRegistry, scene_count: UInt32) -> Narrative {
+      log::info("Generating narrative with {scene_count} scenes")
+
+      let lion_symbols = registry.by_allegiance(Allegiance::Lion)
+      let swan_symbols = registry.by_allegiance(Allegiance::Swan)
+
+      let mut scenes = []
+      let mut current_type = SceneType::Opening
+
+      for i in 0..scene_count {
+        // Determine primary and secondary symbols
+        let primary = if random::bool() && lion_symbols.len() > 0 {
+          lion_symbols[random::range(0, lion_symbols.len())]
+        } else if swan_symbols.len() > 0 {
+          swan_symbols[random::range(0, swan_symbols.len())]
+        } else {
+          continue
+        }
+
+        let secondary = if current_type == SceneType::Confrontation || current_type == SceneType::Harmony {
+          // Dual-allegiance scenes need symbols from both sides
+          let opposite_list = match primary.allegiance {
+            Allegiance::Lion => swan_symbols,
+            Allegiance::Swan => lion_symbols,
+          }
+          if opposite_list.len() > 0 {
+            Some(opposite_list[random::range(0, opposite_list.len())])
+          } else {
+            None
+          }
+        } else {
+          None
+        }
+
+        let scene = this.generate_scene(current_type, primary, secondary)
+        scenes.push(scene)
+
+        // Determine next scene type
+        let transitions = current_type.valid_transitions()
+        if transitions.len() > 0 {
+          current_type = transitions[random::range(0, transitions.len())]
+        }
+      }
+
+      // Generate title based on dominant allegiance
+      let (lion_count, swan_count) = scenes
+        .iter()
+        .fold((0, 0), |(l, s), scene| match scene.dominant_allegiance() {
+          Allegiance::Lion => (l + 1, s),
+          Allegiance::Swan => (l, s + 1),
+        })
+
+      let title = if lion_count > swan_count {
+        "The Lion's Tale"
+      } else if swan_count > lion_count {
+        "The Swan's Song"
+      } else {
+        "The Dance of Lion and Swan"
+      }
+
+      return Narrative {
+        id: random::u64(),
+        title: title,
+        scenes: scenes,
+        created_at: time::now(),
+      }
+    }
+
+    /// Generate a single scene
+    pub fun generate_scene(scene_type: SceneType, primary: Symbol, secondary: Option<Symbol>) -> Scene {
+      let text = match (scene_type, secondary) {
+        (SceneType::Opening, _) => this.templates.opening(primary),
+        (SceneType::Confrontation, Some(sec)) => {
+          match primary.allegiance {
+            Allegiance::Lion => this.templates.confrontation(primary, sec),
+            Allegiance::Swan => this.templates.confrontation(sec, primary),
+          }
+        },
+        (SceneType::Harmony, Some(sec)) => {
+          match primary.allegiance {
+            Allegiance::Lion => this.templates.harmony(primary, sec),
+            Allegiance::Swan => this.templates.harmony(sec, primary),
+          }
+        },
+        (SceneType::Transformation, _) => this.templates.transformation(primary),
+        (SceneType::Resolution, _) => this.templates.resolution(primary),
+        _ => "{primary.name}: {primary.description}",
+      }
+
+      return Scene {
+        id: random::u64(),
+        scene_type: scene_type,
+        primary_symbol: primary,
+        secondary_symbol: secondary,
+        text: text,
+        created_at: time::now(),
+      }
+    }
+  }
+
+  exegesis {
+    StoryWeaver implements NarrativeGenerator to create symbolic
+    narratives. It uses templates and symbol registries to generate
+    coherent stories with proper pacing and allegiance balance.
+  }
+}
+
+/// Generate a narrative for a specific allegiance focus
+pub fun generate_allegiance_story(
+  registry: SymbolRegistry,
+  allegiance: Allegiance,
+  scene_count: UInt32
+) -> Narrative {
+  let weaver = StoryWeaver { templates: SceneTemplates {} }
+  let narrative = weaver.generate_narrative(registry, scene_count)
+
+  let title = match allegiance {
+    Allegiance::Lion => "The Lion Ascendant",
+    Allegiance::Swan => "The Swan's Reflection",
+  }
+
+  return Narrative { ...narrative, title: title }
+}

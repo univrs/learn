@@ -1,0 +1,734 @@
+---
+title: "Credits and Economics"
+description: "Understand credit balances, reservations, transfers, and economic incentives"
+track: "spirits"
+tutorial: 6
+duration: "30 min"
+level: "intermediate"
+prerequisites:
+  - "005-networking"
+concepts:
+  - "Credit balance"
+  - "Reservations"
+  - "Transfers"
+  - "Economic incentives"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+import { Terminal } from '@/components/ui/Terminal'
+import { Diagram } from '@/components/ui/Diagram'
+
+# Credits and Economics
+
+The VUDO ecosystem uses a credit system to manage resource allocation and enable economic interactions between Spirits. Credits incentivize efficient resource usage, enable micropayments, and create a marketplace for Spirit services.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Understand the credit model and its purpose
+- Check balances and track credit usage
+- Make and receive credit reservations
+- Transfer credits between accounts
+- Design Spirits with economic incentives
+
+## The Credit Model
+
+Credits serve multiple purposes in the VUDO ecosystem:
+
+```
++------------------------------------------------------------------+
+|                      VUDO Credit System                           |
+|                                                                   |
+|  +------------------+     +------------------+     +------------+ |
+|  |  Resource Usage  | --> |  Credit Costs    | --> |  Balance   | |
+|  |  - Computation   |     |  - Per operation |     |  Tracking  | |
+|  |  - Storage       |     |  - Per byte      |     |            | |
+|  |  - Network       |     |  - Per request   |     |            | |
+|  +------------------+     +------------------+     +------------+ |
+|                                                                   |
+|  +------------------+     +------------------+     +------------+ |
+|  |  Spirit Services | --> |  Payments        | --> |  Revenue   | |
+|  |  - API calls     |     |  - Per call      |     |  Sharing   | |
+|  |  - Compute jobs  |     |  - Per result    |     |            | |
+|  +------------------+     +------------------+     +------------+ |
++------------------------------------------------------------------+
+```
+
+### Why Credits?
+
+1. **Resource Accounting**: Track and limit resource consumption
+2. **Fair Allocation**: Prevent abuse and ensure fair access
+3. **Micropayments**: Enable sub-cent transactions for services
+4. **Incentive Alignment**: Reward efficient code and useful services
+5. **Marketplace**: Create an economy around Spirit services
+
+### Credit Units
+
+```
+1 credit = 1,000,000 microcredits
+
+Typical costs:
+- 1 computation unit:     1 microcredit
+- 1 KB storage (monthly): 10 microcredits
+- 1 network request:      100 microcredits
+- 1 MB transfer:          1,000 microcredits
+```
+
+## Capability Declaration
+
+Declare credit capabilities in your manifest:
+
+```json
+{
+  "capabilities": {
+    "credits": {
+      "read": true,
+      "reserve": true,
+      "transfer": true
+    }
+  }
+}
+```
+
+| Capability | Allows |
+|------------|--------|
+| `credits.read` | Check own balance and history |
+| `credits.reserve` | Reserve credits for operations |
+| `credits.transfer` | Send credits to other accounts |
+
+## Checking Balances
+
+### Your Spirit's Balance
+
+```rust
+use vudo_spirit::credits;
+
+#[vudo_spirit::main]
+pub fn check_balance() -> Result<BalanceInfo, vudo_spirit::Error> {
+    let balance = credits::balance()?;
+
+    log::info!(
+        available = balance.available,
+        reserved = balance.reserved,
+        total = balance.total;
+        "Current balance"
+    );
+
+    Ok(BalanceInfo {
+        available: balance.available,
+        reserved: balance.reserved,
+        total: balance.total,
+    })
+}
+```
+
+### Balance Breakdown
+
+```rust
+use vudo_spirit::credits::{self, Balance};
+
+#[derive(Serialize)]
+pub struct DetailedBalance {
+    pub available: u64,
+    pub reserved: u64,
+    pub total: u64,
+    pub usage_today: u64,
+    pub projected_monthly: u64,
+}
+
+#[vudo_spirit::main]
+pub fn detailed_balance() -> Result<DetailedBalance, vudo_spirit::Error> {
+    let balance = credits::balance()?;
+    let usage = credits::usage_stats()?;
+
+    Ok(DetailedBalance {
+        available: balance.available,
+        reserved: balance.reserved,
+        total: balance.total,
+        usage_today: usage.today,
+        projected_monthly: usage.projected_monthly,
+    })
+}
+```
+
+### Credit History
+
+```rust
+use vudo_spirit::credits::{self, Transaction};
+
+#[vudo_spirit::main]
+pub fn transaction_history(
+    limit: Option<u32>,
+) -> Result<Vec<Transaction>, vudo_spirit::Error> {
+    let limit = limit.unwrap_or(50);
+    let transactions = credits::history(limit)?;
+
+    for tx in &transactions {
+        log::debug!(
+            id = %tx.id,
+            amount = tx.amount,
+            tx_type = %tx.transaction_type,
+            timestamp = tx.timestamp;
+            "Transaction"
+        );
+    }
+
+    Ok(transactions)
+}
+```
+
+## Reservations
+
+Reservations let you pre-allocate credits for operations, ensuring they'll complete even if credits are spent elsewhere.
+
+### Making a Reservation
+
+```rust
+use vudo_spirit::credits::{self, Reservation};
+
+pub fn expensive_operation(data: &Data) -> Result<Output, vudo_spirit::Error> {
+    // Estimate cost
+    let estimated_cost = estimate_cost(data);
+
+    // Reserve credits
+    let reservation = credits::reserve(
+        estimated_cost,
+        "expensive-operation"
+    )?;
+
+    log::info!(
+        reservation_id = %reservation.id,
+        amount = estimated_cost;
+        "Credits reserved"
+    );
+
+    // Perform operation (credits are guaranteed)
+    let result = perform_operation(data)?;
+
+    // Finalize reservation (consume actual cost, refund excess)
+    let actual_cost = calculate_actual_cost(&result);
+    credits::finalize(reservation.id, actual_cost)?;
+
+    log::info!(
+        estimated = estimated_cost,
+        actual = actual_cost,
+        refunded = estimated_cost.saturating_sub(actual_cost);
+        "Operation complete"
+    );
+
+    Ok(result)
+}
+```
+
+### Reservation Lifecycle
+
+```
++-------------+     +-------------+     +-------------+
+|   Reserve   | --> |   Active    | --> |  Finalized  |
+| (requested) |     | (locked)    |     | (consumed)  |
++-------------+     +-------------+     +-------------+
+                          |
+                          v
+                    +-------------+
+                    |   Expired   |
+                    | (refunded)  |
+                    +-------------+
+```
+
+### Handling Insufficient Funds
+
+```rust
+use vudo_spirit::credits::{self, CreditError};
+
+pub fn safe_reserve(amount: u64, reason: &str) -> Result<Reservation, vudo_spirit::Error> {
+    match credits::reserve(amount, reason) {
+        Ok(reservation) => Ok(reservation),
+        Err(CreditError::InsufficientFunds { available, requested }) => {
+            log::warn!(
+                available = available,
+                requested = requested;
+                "Insufficient credits"
+            );
+            Err(vudo_spirit::Error::new(
+                vudo_spirit::ErrorKind::InsufficientCredits,
+                format!(
+                    "Need {} credits but only {} available",
+                    requested, available
+                )
+            ))
+        }
+        Err(e) => Err(e.into()),
+    }
+}
+```
+
+### Reservation Timeouts
+
+Reservations expire if not finalized:
+
+```rust
+use vudo_spirit::credits;
+use std::time::Duration;
+
+// Reserve with custom timeout (default is 5 minutes)
+let reservation = credits::reserve_with_timeout(
+    amount,
+    "long-operation",
+    Duration::from_secs(600), // 10 minutes
+)?;
+
+// If you don't finalize, credits are automatically refunded
+// after the timeout expires
+```
+
+## Transfers
+
+Spirits can transfer credits to enable payments and tipping.
+
+### Sending Credits
+
+```rust
+use vudo_spirit::credits;
+
+#[vudo_spirit::main]
+pub fn send_payment(
+    recipient: String,
+    amount: u64,
+    memo: Option<String>,
+) -> Result<TransferReceipt, vudo_spirit::Error> {
+    // Validate recipient
+    if !credits::is_valid_account(&recipient)? {
+        return Err(vudo_spirit::Error::invalid_input("Invalid recipient"));
+    }
+
+    // Check balance
+    let balance = credits::balance()?;
+    if balance.available < amount {
+        return Err(vudo_spirit::Error::insufficient_credits(
+            amount,
+            balance.available
+        ));
+    }
+
+    // Execute transfer
+    let receipt = credits::transfer(
+        &recipient,
+        amount,
+        memo.as_deref(),
+    )?;
+
+    log::info!(
+        recipient = %recipient,
+        amount = amount,
+        tx_id = %receipt.transaction_id;
+        "Payment sent"
+    );
+
+    Ok(receipt)
+}
+```
+
+### Receiving Credits
+
+Credits received are automatically added to your balance:
+
+```rust
+use vudo_spirit::credits::{self, Transaction};
+
+#[vudo_spirit::main]
+pub fn check_incoming() -> Result<Vec<Transaction>, vudo_spirit::Error> {
+    // Get incoming transfers
+    let incoming = credits::history_incoming(100)?;
+
+    let total_received: u64 = incoming.iter().map(|tx| tx.amount).sum();
+
+    log::info!(
+        count = incoming.len(),
+        total = total_received;
+        "Incoming transfers"
+    );
+
+    Ok(incoming)
+}
+```
+
+### Escrow Pattern
+
+For more complex transactions, use an escrow pattern:
+
+```rust
+use vudo_spirit::credits::{self, Escrow};
+
+#[derive(Serialize)]
+pub struct ServiceRequest {
+    pub request_id: String,
+    pub service: String,
+    pub amount: u64,
+}
+
+#[derive(Serialize)]
+pub struct ServiceResult {
+    pub request_id: String,
+    pub success: bool,
+    pub output: Option<serde_json::Value>,
+}
+
+/// Request a service with escrowed payment
+#[vudo_spirit::export]
+pub fn request_service(
+    service_spirit: String,
+    request: serde_json::Value,
+    payment: u64,
+) -> Result<ServiceRequest, vudo_spirit::Error> {
+    // Create escrow (holds payment until service completes or times out)
+    let escrow = credits::create_escrow(
+        &service_spirit,
+        payment,
+        Duration::from_secs(300), // 5 minute timeout
+    )?;
+
+    let request_id = escrow.id.clone();
+
+    // Store request details
+    storage::write(
+        &format!("escrow:{}", request_id),
+        &serde_json::to_vec(&EscrowData {
+            service_spirit,
+            request,
+            payment,
+            created_at: time::now()?,
+        })?,
+    )?;
+
+    log::info!(
+        escrow_id = %request_id,
+        payment = payment;
+        "Service request created"
+    );
+
+    Ok(ServiceRequest {
+        request_id,
+        service: escrow.recipient,
+        amount: payment,
+    })
+}
+
+/// Complete a service and release escrow
+#[vudo_spirit::export]
+pub fn complete_service(
+    request_id: String,
+    success: bool,
+    output: Option<serde_json::Value>,
+) -> Result<ServiceResult, vudo_spirit::Error> {
+    if success {
+        // Release payment to service provider
+        credits::release_escrow(&request_id)?;
+        log::info!(request_id = %request_id; "Escrow released");
+    } else {
+        // Refund payment to requester
+        credits::cancel_escrow(&request_id)?;
+        log::info!(request_id = %request_id; "Escrow cancelled");
+    }
+
+    // Clean up
+    storage::delete(&format!("escrow:{}", request_id))?;
+
+    Ok(ServiceResult {
+        request_id,
+        success,
+        output,
+    })
+}
+```
+
+## Economic Patterns
+
+### Pay-Per-Use Service
+
+```rust
+use vudo_spirit::credits;
+
+const COST_PER_CALL: u64 = 100; // microcredits
+
+#[vudo_spirit::main]
+pub fn premium_service(
+    caller: String,
+    request: ServiceRequest,
+) -> Result<ServiceResponse, vudo_spirit::Error> {
+    // Verify payment was received
+    let payment = credits::receive_payment(&caller, COST_PER_CALL)?;
+
+    if payment.is_none() {
+        return Err(vudo_spirit::Error::payment_required(
+            "This service costs {} microcredits",
+            COST_PER_CALL
+        ));
+    }
+
+    // Provide the service
+    let result = process_request(&request)?;
+
+    log::info!(
+        caller = %caller,
+        payment = COST_PER_CALL;
+        "Service provided"
+    );
+
+    Ok(result)
+}
+```
+
+### Usage-Based Pricing
+
+```rust
+use vudo_spirit::credits;
+
+const COST_PER_KB: u64 = 1; // microcredit per KB
+
+#[vudo_spirit::main]
+pub fn data_processing(
+    data: Vec<u8>,
+) -> Result<ProcessedData, vudo_spirit::Error> {
+    // Calculate cost based on input size
+    let size_kb = (data.len() + 1023) / 1024;
+    let cost = (size_kb as u64) * COST_PER_KB;
+
+    // Reserve credits for the operation
+    let reservation = credits::reserve(cost, "data-processing")?;
+
+    // Process the data
+    let result = process_data(&data)?;
+
+    // Finalize with actual cost
+    credits::finalize(reservation.id, cost)?;
+
+    Ok(result)
+}
+```
+
+### Tipping / Donations
+
+```rust
+use vudo_spirit::credits;
+
+#[derive(Deserialize)]
+pub struct TipRequest {
+    pub recipient_spirit: String,
+    pub amount: u64,
+    pub message: Option<String>,
+}
+
+#[vudo_spirit::main]
+pub fn send_tip(tip: TipRequest) -> Result<TipReceipt, vudo_spirit::Error> {
+    // Minimum tip
+    if tip.amount < 1000 {
+        return Err(vudo_spirit::Error::invalid_input(
+            "Minimum tip is 1000 microcredits"
+        ));
+    }
+
+    // Send the tip
+    let receipt = credits::transfer(
+        &tip.recipient_spirit,
+        tip.amount,
+        tip.message.as_deref(),
+    )?;
+
+    log::info!(
+        recipient = %tip.recipient_spirit,
+        amount = tip.amount;
+        "Tip sent"
+    );
+
+    Ok(TipReceipt {
+        transaction_id: receipt.transaction_id,
+        amount: tip.amount,
+        timestamp: receipt.timestamp,
+    })
+}
+```
+
+### Subscription Model
+
+```rust
+use vudo_spirit::{credits, storage, time};
+
+const SUBSCRIPTION_COST: u64 = 10_000; // microcredits per day
+
+#[derive(Serialize, Deserialize)]
+struct Subscription {
+    subscriber: String,
+    started_at: u64,
+    expires_at: u64,
+    tier: String,
+}
+
+#[vudo_spirit::export]
+pub fn subscribe(
+    subscriber: String,
+    days: u32,
+) -> Result<Subscription, vudo_spirit::Error> {
+    let now = time::now()?;
+    let cost = SUBSCRIPTION_COST * (days as u64);
+
+    // Receive payment
+    credits::receive_payment(&subscriber, cost)?
+        .ok_or_else(|| vudo_spirit::Error::payment_required(
+            "Subscription requires payment"
+        ))?;
+
+    // Create subscription
+    let subscription = Subscription {
+        subscriber: subscriber.clone(),
+        started_at: now,
+        expires_at: now + (days as u64 * 86400),
+        tier: "premium".to_string(),
+    };
+
+    // Store subscription
+    let key = format!("sub:{}", subscriber);
+    storage::write(&key, &serde_json::to_vec(&subscription)?)?;
+
+    log::info!(
+        subscriber = %subscriber,
+        days = days,
+        expires = subscription.expires_at;
+        "Subscription created"
+    );
+
+    Ok(subscription)
+}
+
+#[vudo_spirit::export]
+pub fn check_subscription(subscriber: String) -> Result<Option<Subscription>, vudo_spirit::Error> {
+    let key = format!("sub:{}", subscriber);
+    let sub: Option<Subscription> = storage::read(&key)?
+        .and_then(|data| serde_json::from_slice(&data).ok());
+
+    // Check if expired
+    if let Some(ref subscription) = sub {
+        let now = time::now()?;
+        if now > subscription.expires_at {
+            storage::delete(&key)?;
+            return Ok(None);
+        }
+    }
+
+    Ok(sub)
+}
+```
+
+## Monitoring and Reporting
+
+### Usage Dashboard
+
+```rust
+use vudo_spirit::credits;
+
+#[derive(Serialize)]
+pub struct UsageReport {
+    pub period: String,
+    pub credits_earned: u64,
+    pub credits_spent: u64,
+    pub net_change: i64,
+    pub top_expenses: Vec<ExpenseCategory>,
+    pub top_income: Vec<IncomeSource>,
+}
+
+#[vudo_spirit::main]
+pub fn usage_report(period_days: Option<u32>) -> Result<UsageReport, vudo_spirit::Error> {
+    let days = period_days.unwrap_or(30);
+    let stats = credits::usage_stats_detailed(days)?;
+
+    let net_change = (stats.earned as i64) - (stats.spent as i64);
+
+    log::info!(
+        earned = stats.earned,
+        spent = stats.spent,
+        net = net_change;
+        "Usage report generated"
+    );
+
+    Ok(UsageReport {
+        period: format!("last {} days", days),
+        credits_earned: stats.earned,
+        credits_spent: stats.spent,
+        net_change,
+        top_expenses: stats.top_expenses,
+        top_income: stats.top_income,
+    })
+}
+```
+
+### Budget Alerts
+
+```rust
+use vudo_spirit::{credits, storage};
+
+#[derive(Serialize, Deserialize)]
+struct BudgetConfig {
+    daily_limit: u64,
+    alert_threshold: f64, // 0.8 = alert at 80%
+}
+
+pub fn check_budget() -> Result<BudgetStatus, vudo_spirit::Error> {
+    let config: BudgetConfig = storage::read("budget_config")?
+        .and_then(|data| serde_json::from_slice(&data).ok())
+        .unwrap_or(BudgetConfig {
+            daily_limit: 100_000,
+            alert_threshold: 0.8,
+        });
+
+    let usage = credits::usage_stats()?;
+    let percentage = (usage.today as f64) / (config.daily_limit as f64);
+
+    let status = if percentage >= 1.0 {
+        BudgetStatus::Exceeded
+    } else if percentage >= config.alert_threshold {
+        BudgetStatus::Warning
+    } else {
+        BudgetStatus::Ok
+    };
+
+    if matches!(status, BudgetStatus::Warning | BudgetStatus::Exceeded) {
+        log::warn!(
+            used = usage.today,
+            limit = config.daily_limit,
+            percentage = format!("{:.1}%", percentage * 100.0);
+            "Budget alert"
+        );
+    }
+
+    Ok(status)
+}
+```
+
+## Key Takeaways
+
+1. **Credits enable resource accounting** and prevent abuse through economic incentives
+
+2. **Reservations guarantee resources** for operations before they start
+
+3. **Transfers enable payments** between Spirits for services and tips
+
+4. **Escrow protects both parties** in service transactions
+
+5. **Monitor usage** to stay within budgets and optimize costs
+
+## What's Next?
+
+Now that you understand the economic model, let's ensure your Spirits work correctly. In the next tutorial, you'll learn:
+
+- Writing test functions for Spirits
+- Using assertions effectively
+- Mocking host functions for testing
+
+Continue to [Testing Spirits](/tutorials/spirits/007-testing).
+
+## Additional Resources
+
+- [Credits API Reference](/dol/reference/credits)
+- [Economic Model Documentation](/dol/guides/economics)
+- [Pricing Strategies](/dol/guides/pricing)

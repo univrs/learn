@@ -1,0 +1,457 @@
+---
+title: "Narrative Generation"
+description: "Generate mythic text passages for Lion & Swan scenes"
+chapter: 4
+---
+
+import { Link } from 'react-router-dom';
+import { BookOpen, FileCode, Terminal, ChevronRight, CheckCircle, Feather } from 'lucide-react';
+
+# Chapter 4: Narrative Generation
+
+<div className="flex items-center gap-2 text-sm mb-6" style={{ color: 'var(--soft-gray)' }}>
+  <Link to="/tutorials/capstone" className="hover:opacity-80 transition-opacity">
+    Capstone
+  </Link>
+  <ChevronRight className="w-4 h-4" />
+  <span style={{ color: 'var(--text-primary)' }}>Narrative Generation</span>
+</div>
+
+Every mythic image deserves an accompanying passage. In this chapter, you will
+implement narrative text generation that creates prose passages inspired by
+TheBook, the corrupted text of Revivalism.
+
+## Extend the Ontology
+
+Add narrative-related definitions to your DOL file:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <FileCode className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>src/ontology/main.dol (additions)</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`/// NarrativeStyle defines the voice of the generated text
+pub enum NarrativeStyle {
+    Prophetic,    // "And lo, the Lion spoke..."
+    Scholarly,    // "According to the third chapter..."
+    Poetic,       // Free verse mythic poetry
+    Dialogic      // Direct speech between entities
+}
+
+/// Passage represents a generated text segment
+pub gene Passage {
+    has content: String
+    has style: NarrativeStyle
+    has word_count: Int
+    has source_scene: Scene
+    has book_reference: String?  // e.g., "TheBook, Chapter 7, Verse 12"
+    has generated_at: Timestamp
+
+    is content
+    is textual
+
+    /// Validate word count is reasonable
+    invariant reasonable_length {
+        this.word_count >= 10 && this.word_count <= 500
+    }
+
+    /// Format as a TheBook excerpt
+    fun as_book_excerpt() -> String {
+        let ref = this.book_reference.unwrap_or("TheBook, Fragments");
+        return format!("\"{}\"\\n  — {}", this.content, ref)
+    }
+
+    exegesis {
+        A Passage is a mythic text segment generated to accompany visual
+        content. Passages draw from the style and symbolism of TheBook,
+        providing narrative context and deeper meaning to scenes.
+    }
+}`}
+  </pre>
+</div>
+
+## Create Narrative Prompts
+
+Create the narrative prompt templates:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <Feather className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>src/prompts/narrative.txt</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`# Narrative Generation Prompts for TheBook
+# Variables: {scene_type}, {primary}, {secondary}, {setting}, {mood}, {style}
+
+[base]
+You are channeling passages from TheBook, an ancient corrupted text of Revivalism.
+Write in {style} style. The tone is mythic, profound, and slightly cryptic.
+Never break character. Do not use modern idioms.
+
+[prophetic]
+And lo, it came to pass in {setting}, where {mood} hung heavy upon the air.
+{primary}, Keeper of the eternal flame, did {action_verb} toward {secondary}.
+Speak ye now of what was witnessed, in the voice of the prophets of old.
+
+[scholarly]
+The following excerpt from TheBook, Chapter {chapter}, concerns the encounter
+between {primary} and {secondary} in {setting}. Scholars have long debated
+the meaning of this {scene_type}, but the text remains...
+
+[poetic]
+Write a free verse poem capturing the essence of {scene_type}.
+{primary} and {secondary} in {setting}.
+Mood: {mood}
+Use imagery of light, shadow, transformation, and cosmic truth.
+
+[dialogic]
+{primary} speaks: [Generate 2-3 lines of mythic dialogue]
+{secondary} responds: [Generate 2-3 lines in return]
+The dialogue concerns {scene_type} and takes place in {setting}.
+
+[scene_confrontation]
+Two cosmic forces meet in opposition. The Keeper and the Transformer
+face one another across the threshold of eternity. What words pass
+between obsidian and pearl when the universe holds its breath?
+
+[scene_interrogation]
+Truth is demanded. One who guards, one who changes. The questions
+cut deeper than mortal understanding. What is light without shadow?
+What is transformation without preservation?
+
+[scene_transformation]
+The metamorphosis begins. Boundaries dissolve. What was solid becomes
+fluid, what was certain becomes possible. The Swan spreads its wings
+and reality shifts around the movement.
+
+[scene_revelation]
+The veil parts. That which was hidden stands naked before cosmic
+witness. The Lion roars and the universe remembers what it had
+forgotten. Truth, terrible and beautiful, is unveiled.`}
+  </pre>
+</div>
+
+## Implement the Narrative Handler
+
+Create a new handler for text generation:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <FileCode className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>src/handlers/narrative.ts</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`import { Spirit, Network, Storage, Credits } from '@vudo/runtime';
+import {
+  Scene,
+  SceneType,
+  NarrativeStyle,
+  Passage,
+  BlackLion,
+  WhiteSwan
+} from '../ontology/main.dol';
+
+interface NarrativeOptions {
+  scene: Scene;
+  style: NarrativeStyle;
+  maxWords: number;
+}
+
+interface NarrativeResult {
+  passage: Passage;
+  creditsUsed: number;
+}
+
+const narrativeTemplates = await Storage.readText('src/prompts/narrative.txt');
+
+function generateBookReference(sceneType: SceneType): string {
+  const chapter = Math.floor(Math.random() * 12) + 1;
+  const verse = Math.floor(Math.random() * 30) + 1;
+
+  const bookNames: Record<SceneType, string> = {
+    [SceneType.Confrontation]: 'The Book of Oppositions',
+    [SceneType.Interrogation]: 'The Book of Questions',
+    [SceneType.Transformation]: 'The Book of Becomings',
+    [SceneType.Revelation]: 'The Book of Unveilings'
+  };
+
+  return \`\${bookNames[sceneType]}, Chapter \${chapter}, Verse \${verse}\`;
+}
+
+function buildNarrativePrompt(options: NarrativeOptions): string {
+  const { scene, style } = options;
+
+  // Parse template sections
+  const sections: Record<string, string> = {};
+  let currentSection = '';
+  for (const line of narrativeTemplates.split('\\n')) {
+    if (line.startsWith('[') && line.endsWith(']')) {
+      currentSection = line.slice(1, -1);
+      sections[currentSection] = '';
+    } else if (currentSection && !line.startsWith('#')) {
+      sections[currentSection] += line + '\\n';
+    }
+  }
+
+  // Build system prompt
+  const styleKey = style.toString().toLowerCase();
+  const sceneKey = \`scene_\${scene.scene_type.toString().toLowerCase()}\`;
+
+  let prompt = sections['base']
+    .replace('{style}', styleKey)
+    .replace('{scene_type}', scene.scene_type.toString());
+
+  // Add style-specific instructions
+  if (sections[styleKey]) {
+    prompt += '\\n\\n' + sections[styleKey]
+      .replace('{primary}', scene.primary_symbol.describe())
+      .replace('{secondary}', scene.secondary_symbol?.describe() || 'the void')
+      .replace('{setting}', scene.setting)
+      .replace('{mood}', scene.mood)
+      .replace('{scene_type}', scene.scene_type.toString())
+      .replace('{chapter}', String(Math.floor(Math.random() * 12) + 1));
+  }
+
+  // Add scene-specific context
+  if (sections[sceneKey]) {
+    prompt += '\\n\\n' + sections[sceneKey];
+  }
+
+  prompt += \`\\n\\nGenerate approximately \${options.maxWords} words.\`;
+
+  return prompt.trim();
+}
+
+export async function generateNarrative(
+  options: NarrativeOptions
+): Promise<NarrativeResult> {
+  const spirit = Spirit.current();
+
+  // Check and reserve credits
+  const balance = await Credits.getBalance();
+  const textCost = spirit.manifest.capabilities.credits.operations.generate_text;
+
+  if (balance < textCost) {
+    throw new Error(\`Insufficient credits. Need \${textCost}, have \${balance}\`);
+  }
+
+  const reservation = await Credits.reserve(textCost, 'text_generation');
+
+  try {
+    const prompt = buildNarrativePrompt(options);
+
+    // Call text generation API
+    const response = await Network.post('https://api.planetserve.io/v1/text', {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': \`Bearer \${spirit.secrets.PLANETSERVE_API_KEY}\`
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        model: 'mythic-text-v1',
+        max_tokens: options.maxWords * 2,
+        temperature: 0.8
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(\`API error: \${response.status}\`);
+    }
+
+    const data = await response.json();
+    const generatedText = data.text.trim();
+
+    // Consume credits
+    await Credits.consume(reservation);
+
+    // Create passage
+    const passage: Passage = {
+      content: generatedText,
+      style: options.style,
+      word_count: generatedText.split(/\\s+/).length,
+      source_scene: options.scene,
+      book_reference: generateBookReference(options.scene.scene_type),
+      generated_at: new Date()
+    };
+
+    // Store the passage
+    const timestamp = Date.now();
+    await Storage.writeJson(\`output/passages/\${timestamp}.json\`, {
+      passage,
+      prompt
+    });
+
+    await Storage.writeText(
+      \`output/passages/\${timestamp}.txt\`,
+      passage.as_book_excerpt()
+    );
+
+    return {
+      passage,
+      creditsUsed: textCost
+    };
+
+  } catch (error) {
+    await Credits.release(reservation);
+    throw error;
+  }
+}
+
+// Generate narrative for existing scene
+export async function narrateScene(sceneId: string): Promise<NarrativeResult> {
+  const metadata = await Storage.readJson(\`output/metadata/\${sceneId}.json\`);
+
+  return generateNarrative({
+    scene: metadata.scene,
+    style: NarrativeStyle.Prophetic,
+    maxWords: 150
+  });
+}`}
+  </pre>
+</div>
+
+## Combine Image and Narrative
+
+Update the main generate handler to create both:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <FileCode className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>src/handlers/generate.ts (updated main)</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`import { generateNarrative } from './narrative';
+
+// Update the main function
+export async function main(args: string[]): Promise<void> {
+  const sceneType = args[0] as SceneType || SceneType.Confrontation;
+  const setting = args[1] || 'a cosmic void between stars';
+  const mood = args[2] || 'mysterious and tense';
+  const includeSecondary = args[3] !== 'solo';
+  const includeNarrative = args[4] !== 'image-only';
+
+  console.log(\`Generating \${sceneType} scene...\`);
+
+  // Generate image
+  const imageResult = await generate({
+    sceneType,
+    setting,
+    mood,
+    includeSecondary
+  });
+
+  console.log(\`Image saved to: \${imageResult.localPath}\`);
+
+  let totalCredits = imageResult.creditsUsed;
+
+  // Generate narrative if requested
+  if (includeNarrative) {
+    console.log('Generating narrative passage...');
+
+    const narrativeResult = await generateNarrative({
+      scene: imageResult.scene,
+      style: NarrativeStyle.Prophetic,
+      maxWords: 150
+    });
+
+    console.log('\\n--- Generated Passage ---');
+    console.log(narrativeResult.passage.as_book_excerpt());
+    console.log('--- End Passage ---\\n');
+
+    totalCredits += narrativeResult.creditsUsed;
+  }
+
+  console.log(\`Total credits used: \${totalCredits}\`);
+}`}
+  </pre>
+</div>
+
+## Example Outputs
+
+Here are examples of generated narrative passages for each scene type:
+
+<div className="space-y-4 my-6">
+  <div className="card" style={{ borderLeft: '4px solid var(--glow-gold)' }}>
+    <h4 className="font-normal mb-3" style={{ color: 'var(--glow-gold)' }}>Confrontation</h4>
+    <blockquote className="text-sm italic" style={{ color: 'var(--text-secondary)' }}>
+      "And when the Keeper of Light did stand before the Spirit of Transformation,
+      the void itself held breath. Obsidian met pearl across the threshold of
+      eternity, and in that meeting was the echo of the first word ever spoken.
+      'What dost thou guard?' asked the Swan. 'What thou wouldst change,' replied
+      the Lion, 'and more.'"
+    </blockquote>
+    <p className="text-xs mt-3" style={{ color: 'var(--soft-gray)' }}>
+      -- The Book of Oppositions, Chapter 7, Verse 14
+    </p>
+  </div>
+
+  <div className="card" style={{ borderLeft: '4px solid var(--spore-purple)' }}>
+    <h4 className="font-normal mb-3" style={{ color: 'var(--spore-purple)' }}>Revelation</h4>
+    <blockquote className="text-sm italic" style={{ color: 'var(--text-secondary)' }}>
+      "The veil parted not with violence but with the gentleness of morning
+      mist yielding to sun. The Lion's roar became visible, golden script
+      written upon darkness, and the Swan read aloud the forgotten names of
+      stars. Truth, terrible and beautiful, stood naked before them both."
+    </blockquote>
+    <p className="text-xs mt-3" style={{ color: 'var(--soft-gray)' }}>
+      -- The Book of Unveilings, Chapter 3, Verse 22
+    </p>
+  </div>
+</div>
+
+## Test Narrative Generation
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <Terminal className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>Terminal</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-secondary)' }}>
+{`$ vudo run generate Revelation "the heart of a dying star" "transcendent"
+
+`}<span style={{ color: 'var(--glow-cyan)' }}>Generating Revelation scene...</span>{`
+Image saved to: output/images/revelation_1703445789012.png
+Generating narrative passage...
+
+--- Generated Passage ---
+"In the heart of the dying star, where light goes to remember
+itself, the Lion stood as witness to the Swan's final dance.
+And the star, in its last breath, spoke: 'I have held this truth
+for ten billion years. Take it now, for I can hold no more.'"
+  — The Book of Unveilings, Chapter 11, Verse 3
+--- End Passage ---
+
+Total credits used: 4`}
+  </pre>
+</div>
+
+## Chapter Complete
+
+<div className="card my-6" style={{ borderColor: 'var(--glow-cyan)', borderWidth: '1px' }}>
+  <div className="flex items-center gap-3 mb-4">
+    <CheckCircle className="w-6 h-6" style={{ color: 'var(--glow-cyan)' }} />
+    <span className="font-normal" style={{ color: 'var(--glow-cyan)' }}>Narrative Generation Complete</span>
+  </div>
+  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+    You have implemented mythic narrative generation that creates TheBook-style
+    passages. In the next chapter, you will build a gallery to view all generated content.
+  </p>
+</div>
+
+## What You Learned
+
+- Extending the DOL ontology with narrative types
+- Creating style-specific prompt templates
+- Generating pseudo-scriptural text with AI
+- Combining image and text generation workflows
+- Storing and formatting passage outputs
+
+<div className="flex gap-4 mt-8">
+  <Link to="/tutorials/capstone/005-gallery" className="btn-primary">
+    Next: Content Gallery
+  </Link>
+  <Link to="/tutorials/capstone/003-image-generation" className="btn-secondary">
+    Previous: Image Generation
+  </Link>
+</div>

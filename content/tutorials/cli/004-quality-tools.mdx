@@ -1,0 +1,741 @@
+---
+title: "Code Quality Tools"
+description: "Master syntax checking, type validation, auto-formatting, and documentation generation"
+track: "cli"
+tutorial: 4
+duration: "20 min"
+objectives:
+  - "Validate syntax with vudo check"
+  - "Perform strict type checking"
+  - "Auto-format code with vudo fmt"
+  - "Generate documentation with vudo doc"
+tags:
+  - "cli"
+  - "vudo"
+  - "linting"
+  - "formatting"
+  - "documentation"
+  - "type-checking"
+---
+
+# Code Quality Tools
+
+In this tutorial, you will master VUDO's code quality tools. These tools help you catch errors early, maintain consistent formatting, and generate professional documentation.
+
+## Overview
+
+VUDO provides four quality tools:
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `vudo check` | Syntax validation | After writing code |
+| `vudo check --strict` | Type checking | Before committing |
+| `vudo fmt` | Auto-formatting | Continuously |
+| `vudo doc` | Documentation | Before release |
+
+## Syntax Checking with vudo check
+
+The `vudo check` command validates DOL syntax without full type checking:
+
+<Terminal title="Basic syntax checking">
+```
+$ vudo check src/domain.dol
+Checking src/domain.dol...
+
+src/domain.dol ... OK
+
+$ vudo check src/
+Checking 5 files...
+
+src/domain.dol ... OK
+src/traits.dol ... OK
+src/system.dol ... OK
+src/events.dol ... OK
+src/lib.dol    ... OK
+
+All files passed syntax validation.
+```
+</Terminal>
+
+### Catching Syntax Errors
+
+<Terminal title="Syntax error detection">
+```
+$ vudo check src/broken.dol
+Checking src/broken.dol...
+
+Error: src/broken.dol:12:5
+   |
+12 |     has name String  // missing colon
+   |              ^^^^^^
+   |
+   = Expected ':' after property name
+
+Error: src/broken.dol:18:1
+   |
+18 | }
+19 |
+20 | gene Another {
+   | ^^^^
+   |
+   = Missing 'exegesis' block in gene 'Broken'
+
+Found 2 errors in src/broken.dol
+```
+</Terminal>
+
+### Check Options
+
+```bash
+# Check specific files
+vudo check file1.dol file2.dol
+
+# Check all .dol files in directory
+vudo check src/
+
+# Check with verbose output
+vudo check --verbose src/
+
+# Output as JSON (for CI/tooling)
+vudo check --format json src/
+```
+
+<Terminal title="JSON output for CI">
+```
+$ vudo check --format json src/broken.dol
+{
+  "file": "src/broken.dol",
+  "status": "error",
+  "errors": [
+    {
+      "line": 12,
+      "column": 5,
+      "message": "Expected ':' after property name",
+      "severity": "error",
+      "code": "E001"
+    },
+    {
+      "line": 18,
+      "column": 1,
+      "message": "Missing 'exegesis' block in gene 'Broken'",
+      "severity": "error",
+      "code": "E042"
+    }
+  ],
+  "warnings": []
+}
+```
+</Terminal>
+
+## Strict Type Checking
+
+The `--strict` flag enables full type checking:
+
+<Terminal title="Strict type checking">
+```
+$ vudo check --strict src/
+Checking 5 files (strict mode)...
+
+src/domain.dol ... OK (12 genes, 0 warnings)
+src/traits.dol ... OK (5 traits, 0 warnings)
+src/system.dol ... OK (2 systems, 0 warnings)
+src/events.dol ... OK (8 events, 0 warnings)
+src/lib.dol    ... OK (exports validated)
+
+Type checking passed.
+Summary: 27 definitions, 0 errors, 0 warnings
+```
+</Terminal>
+
+### Type Errors
+
+<Terminal title="Type error detection">
+```
+$ vudo check --strict src/broken.dol
+Checking src/broken.dol (strict mode)...
+
+Error: src/broken.dol:15:20
+   |
+15 |     has count: String = 0
+   |                         ^
+   |
+   = Type mismatch: expected String, found Int
+
+Error: src/broken.dol:22:12
+   |
+22 |     fn process(x: Unknown) -> Bool
+   |                   ^^^^^^^
+   |
+   = Unknown type 'Unknown'
+
+Error: src/broken.dol:30:5
+   |
+30 |     uses NonExistent
+   |          ^^^^^^^^^^^
+   |
+   = Trait 'NonExistent' not found in scope
+
+Found 3 type errors in src/broken.dol
+```
+</Terminal>
+
+### Warning Levels
+
+<Terminal title="Warnings">
+```
+$ vudo check --strict --warn-all src/
+Checking src/ (strict mode, all warnings)...
+
+Warning: src/domain.dol:8:5
+   |
+ 8 |     has unused_field: Int
+   |         ^^^^^^^^^^^^
+   |
+   = Field 'unused_field' is never accessed
+
+Warning: src/traits.dol:20:1
+   |
+20 | pub gene Internal {
+   | ^^^
+   |
+   = Gene 'Internal' is public but not exported in lib.dol
+
+src/domain.dol ... OK (2 warnings)
+src/traits.dol ... OK (1 warning)
+...
+
+Type checking passed with 3 warnings.
+```
+</Terminal>
+
+### Treating Warnings as Errors
+
+<Terminal title="Strict warnings">
+```
+$ vudo check --strict --warnings-as-errors src/
+Checking src/ (strict mode, warnings as errors)...
+
+Error: src/domain.dol:8:5
+   |
+ 8 |     has unused_field: Int
+   |         ^^^^^^^^^^^^
+   |
+   = Field 'unused_field' is never accessed [warning promoted to error]
+
+Failed: 1 error (promoted from warning)
+```
+</Terminal>
+
+## Auto-Formatting with vudo fmt
+
+The `vudo fmt` command automatically formats DOL code according to style guidelines:
+
+<Terminal title="Formatting files">
+```
+$ vudo fmt src/domain.dol
+Formatted: src/domain.dol
+
+$ vudo fmt src/
+Formatted 5 files:
+  src/domain.dol
+  src/traits.dol
+  src/system.dol
+  src/events.dol
+  src/lib.dol
+```
+</Terminal>
+
+### Before and After
+
+<CodeBlock title="Before formatting" language="dol">
+```dol
+gene User{has id:UUID
+has email:String has name:String
+  is identifiable
+   exegesis{A user.}}
+```
+</CodeBlock>
+
+<CodeBlock title="After formatting" language="dol">
+```dol
+gene User {
+    has id: UUID
+    has email: String
+    has name: String
+
+    is identifiable
+
+    exegesis {
+        A user.
+    }
+}
+```
+</CodeBlock>
+
+### Check Mode
+
+Use `--check` to verify formatting without modifying files:
+
+<Terminal title="Checking format">
+```
+$ vudo fmt --check src/
+Checking format of 5 files...
+
+src/domain.dol ... OK
+src/traits.dol ... needs formatting
+src/system.dol ... OK
+src/events.dol ... needs formatting
+src/lib.dol    ... OK
+
+2 files need formatting.
+Run 'vudo fmt src/' to fix.
+
+$ echo $?
+1  # Non-zero exit for CI
+```
+</Terminal>
+
+### Diff Mode
+
+See what would change without modifying:
+
+<Terminal title="Format diff">
+```
+$ vudo fmt --diff src/traits.dol
+--- src/traits.dol
++++ src/traits.dol (formatted)
+@@ -5,8 +5,9 @@
+ trait Lifecycle {
+-    state Created,Active,Suspended
++    state Created
++    state Active
++    state Suspended
+
+     fn activate() -> Result<(), Error>
+-fn suspend(reason:String)->Result<(),Error>
++    fn suspend(reason: String) -> Result<(), Error>
+```
+</Terminal>
+
+### Format Configuration
+
+Configure formatting in `.dolrc`:
+
+<CodeBlock title=".dolrc formatting options" language="toml">
+```toml
+[fmt]
+# Indentation
+indent_size = 4           # Spaces per indent level
+indent_style = "spaces"   # "spaces" or "tabs"
+
+# Line length
+max_line_length = 100
+wrap_comments = true
+
+# Spacing
+space_after_colon = true
+space_around_operators = true
+
+# Braces
+brace_style = "same_line"  # "same_line" or "next_line"
+
+# Alignment
+align_properties = false
+align_comments = true
+
+# Blank lines
+blank_lines_between_genes = 1
+blank_lines_between_sections = 1
+
+# Imports
+sort_imports = true
+group_imports = true       # Group by source (std, external, local)
+```
+</CodeBlock>
+
+### Ignoring Files
+
+<Terminal title="Ignoring files">
+```
+$ # Ignore specific files
+$ vudo fmt src/ --ignore generated/
+
+$ # Use .dolignore file
+$ cat .dolignore
+# Generated files
+generated/
+*.gen.dol
+
+# Vendor files
+vendor/
+
+$ vudo fmt src/
+Formatted 3 files (skipped 2 ignored).
+```
+</Terminal>
+
+## Documentation Generation with vudo doc
+
+The `vudo doc` command generates documentation from your DOL files:
+
+<Terminal title="Generating documentation">
+```
+$ vudo doc src/ -o docs/
+Generating documentation...
+
+Processing src/domain.dol...
+  - User (gene)
+  - Product (gene)
+  - Order (gene)
+
+Processing src/traits.dol...
+  - Lifecycle (trait)
+  - Auditable (trait)
+
+Processing src/system.dol...
+  - EcommerceSystem (system)
+
+Writing documentation...
+  docs/index.html
+  docs/genes/index.html
+  docs/genes/user.html
+  docs/genes/product.html
+  docs/genes/order.html
+  docs/traits/index.html
+  docs/traits/lifecycle.html
+  docs/traits/auditable.html
+  docs/systems/index.html
+  docs/systems/ecommerce.html
+
+Documentation generated: docs/
+  6 genes documented
+  2 traits documented
+  1 system documented
+
+Serve locally: vudo doc --serve
+```
+</Terminal>
+
+### Serving Documentation
+
+<Terminal title="Local documentation server">
+```
+$ vudo doc --serve
+Generating documentation...
+Documentation ready.
+
+Serving at http://localhost:3000
+Press Ctrl+C to stop.
+
+[INFO] Watching for changes in src/
+[INFO] Browser will auto-reload on changes.
+```
+</Terminal>
+
+### Output Formats
+
+<Terminal title="Format options">
+```
+$ # HTML (default) - full website
+$ vudo doc src/ -o docs/ --format html
+
+$ # Markdown - for GitHub, wikis
+$ vudo doc src/ -o docs/ --format markdown
+
+$ # JSON - for custom tooling
+$ vudo doc src/ -o docs/api.json --format json
+```
+</Terminal>
+
+### Documentation from Exegesis
+
+VUDO generates documentation from `exegesis` blocks:
+
+<CodeBlock title="Well-documented gene" language="dol">
+```dol
+gene User @ 1.0.0 {
+    has id: UUID
+    has email: String
+    has name: String
+    has verified: Bool = false
+
+    is identifiable
+    is auditable
+
+    fn verify_email(token: String) -> Result<(), Error>
+    fn update_profile(name: String, email: String) -> Result<(), Error>
+
+    exegesis {
+        A registered user in the system.
+
+        Users are created during the registration process and must
+        verify their email before gaining full access. The `verified`
+        field tracks this status.
+
+        ## Properties
+
+        - `id` - Unique identifier, assigned at creation
+        - `email` - Must be unique across all users
+        - `name` - Display name, can be changed
+        - `verified` - True after email verification
+
+        ## Methods
+
+        ### verify_email(token)
+
+        Verifies the user's email address using the provided token.
+        The token must match the one sent during registration.
+
+        Returns `Ok(())` on success, `Err(InvalidToken)` if the
+        token is invalid or expired.
+
+        ### update_profile(name, email)
+
+        Updates the user's profile information. If email is changed,
+        the user must re-verify.
+
+        ## Examples
+
+        ```dol
+        let user = User {
+            id: uuid(),
+            email: "user@example.com",
+            name: "John Doe"
+        }
+        ```
+    }
+}
+```
+</CodeBlock>
+
+### Documentation Configuration
+
+<CodeBlock title=".dolrc documentation options" language="toml">
+```toml
+[doc]
+# Output
+output_dir = "docs"
+format = "html"
+
+# Theme
+theme = "default"        # "default", "dark", "minimal"
+logo = "assets/logo.svg"
+favicon = "assets/favicon.ico"
+
+# Content
+include_private = false  # Document private definitions
+include_source = true    # Link to source files
+include_examples = true  # Include example code
+
+# Navigation
+sidebar_depth = 3        # Nesting level in sidebar
+search = true            # Enable search
+toc = true               # Table of contents per page
+
+# External
+source_url = "https://github.com/user/project"
+edit_url_template = "https://github.com/user/project/edit/main/{path}"
+```
+</CodeBlock>
+
+## Integrating Quality Tools
+
+### Pre-commit Hook
+
+<CodeBlock title=".git/hooks/pre-commit" language="bash">
+```bash
+#!/bin/sh
+# DOL quality checks before commit
+
+echo "Running DOL quality checks..."
+
+# Check formatting
+if ! vudo fmt --check src/; then
+    echo ""
+    echo "Formatting errors found. Run 'vudo fmt src/' to fix."
+    exit 1
+fi
+
+# Run strict type checking
+if ! vudo check --strict src/; then
+    echo ""
+    echo "Type errors found. Fix them before committing."
+    exit 1
+fi
+
+echo "All checks passed!"
+exit 0
+```
+</CodeBlock>
+
+### CI Pipeline
+
+<CodeBlock title=".github/workflows/ci.yml" language="yaml">
+```yaml
+name: DOL Quality Checks
+
+on: [push, pull_request]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install VUDO
+        run: cargo install vudo
+
+      - name: Check Formatting
+        run: vudo fmt --check src/
+
+      - name: Syntax Check
+        run: vudo check src/
+
+      - name: Type Check
+        run: vudo check --strict src/
+
+      - name: Generate Docs
+        run: vudo doc src/ -o docs/
+
+      - name: Upload Docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: docs/
+```
+</CodeBlock>
+
+### Editor Integration
+
+Most editors can run VUDO tools on save:
+
+<CodeBlock title="VS Code settings.json" language="json">
+```json
+{
+  "[dol]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "univrs.vudo"
+  },
+  "vudo.checkOnSave": true,
+  "vudo.strictMode": true
+}
+```
+</CodeBlock>
+
+## Tips and Best Practices
+
+<Tip type="info">
+**Format early, format often**: Run `vudo fmt` before every commit. Better yet, enable format-on-save in your editor.
+</Tip>
+
+<Tip type="success">
+**Use strict mode in CI**: Always run `vudo check --strict` in your CI pipeline. Catch type errors before they reach production.
+</Tip>
+
+<Tip type="warning">
+**Write good exegesis**: Documentation is only as good as your exegesis blocks. Include examples, edge cases, and usage notes.
+</Tip>
+
+## Common Issues
+
+### Format Conflicts
+
+<Terminal title="Resolving format conflicts">
+```
+$ vudo fmt src/
+Error: Conflicting format rules in .dolrc
+
+  indent_style = "tabs"
+  indent_size = 4  # Only applies to spaces
+
+Remove 'indent_size' when using tabs, or switch to 'indent_style = "spaces"'.
+```
+</Terminal>
+
+### Missing Exegesis
+
+<Terminal title="Exegesis warnings">
+```
+$ vudo doc src/
+Warning: src/domain.dol:45
+   |
+45 | pub gene Config {
+   |          ^^^^^^
+   |
+   = Public gene 'Config' has minimal exegesis.
+     Consider adding more documentation.
+
+Generated with 1 warning.
+```
+</Terminal>
+
+### Check Performance
+
+For large codebases:
+
+```bash
+# Check only changed files
+vudo check $(git diff --name-only '*.dol')
+
+# Parallel checking
+vudo check --parallel src/
+```
+
+## Summary
+
+You have learned to:
+
+1. **Validate syntax** with `vudo check`
+2. **Perform type checking** with `vudo check --strict`
+3. **Auto-format code** with `vudo fmt`
+4. **Generate documentation** with `vudo doc`
+5. **Integrate tools** into pre-commit hooks and CI
+
+## Next Steps
+
+<NextTutorial
+  title="Registry Operations"
+  href="/tutorials/cli/005-registry"
+  description="Install, search, and publish DOL modules"
+/>
+
+## Quick Reference
+
+```
+Quality Tools Quick Reference
+=============================
+
+SYNTAX CHECK
+  vudo check <files>           Validate syntax
+  vudo check src/              Check all in directory
+  vudo check --format json     JSON output for CI
+
+TYPE CHECK (STRICT)
+  vudo check --strict <files>  Full type checking
+  vudo check --strict --warn-all   Show all warnings
+  vudo check --strict --warnings-as-errors
+
+FORMAT
+  vudo fmt <files>             Auto-format files
+  vudo fmt --check <files>     Check without modifying
+  vudo fmt --diff <files>      Show what would change
+  vudo fmt --ignore <pattern>  Skip files
+
+DOCUMENTATION
+  vudo doc src/ -o docs/       Generate HTML docs
+  vudo doc --serve             Serve locally
+  vudo doc --format markdown   Generate Markdown
+  vudo doc --format json       Generate JSON
+
+CONFIGURATION (.dolrc)
+  [check]
+  strict = true
+
+  [fmt]
+  indent_size = 4
+  max_line_length = 100
+
+  [doc]
+  output_dir = "docs"
+  theme = "default"
+```

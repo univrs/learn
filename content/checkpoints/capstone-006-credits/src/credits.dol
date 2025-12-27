@@ -1,0 +1,375 @@
+// Lion & Swan - Credit Management Module
+// Checkpoint 006: Credit integration with balance check, reserve, consume
+//
+// This module handles the economic layer for resource-intensive operations
+
+use std::host::{log, credits as host_credits, storage}
+
+/// Credit costs for different operations
+pub gene CreditCosts {
+  /// Cost to generate one image
+  has image_generation: UInt64 = 100
+
+  /// Cost to generate one narrative
+  has narrative_generation: UInt64 = 50
+
+  /// Cost to save gallery to storage
+  has gallery_save: UInt64 = 10
+
+  /// Cost per scene in a narrative
+  has per_scene_cost: UInt64 = 10
+
+  /// Create default costs
+  pub fun default() -> CreditCosts {
+    return CreditCosts {
+      image_generation: 100,
+      narrative_generation: 50,
+      gallery_save: 10,
+      per_scene_cost: 10,
+    }
+  }
+
+  /// Calculate narrative cost based on scene count
+  pub fun narrative_cost(self, scene_count: UInt32) -> UInt64 {
+    return self.narrative_generation + (scene_count as UInt64 * self.per_scene_cost)
+  }
+
+  /// Calculate batch image generation cost
+  pub fun batch_image_cost(self, count: UInt32) -> UInt64 {
+    return self.image_generation * count as UInt64
+  }
+
+  exegesis {
+    CreditCosts defines the economic model for the Lion & Swan spirit.
+    Different operations have different costs to encourage efficient
+    usage of generative resources.
+  }
+}
+
+/// A reservation for credits before an operation
+pub gene CreditReservation {
+  has id: UInt64
+  has amount: UInt64
+  has operation: String
+  has created_at: UInt64
+  has expires_at: UInt64
+  has consumed: Bool = false
+
+  constraint positive_amount {
+    this.amount > 0
+  }
+
+  constraint valid_expiry {
+    this.expires_at > this.created_at
+  }
+
+  /// Check if this reservation is expired
+  pub fun is_expired(self, current_time: UInt64) -> Bool {
+    return current_time >= self.expires_at
+  }
+
+  /// Check if this reservation can be consumed
+  pub fun can_consume(self, current_time: UInt64) -> Bool {
+    return !self.consumed && !self.is_expired(current_time)
+  }
+
+  exegesis {
+    CreditReservation represents a hold on credits for a planned
+    operation. Reservations expire if not consumed within the
+    timeout period, returning credits to the available balance.
+  }
+}
+
+/// Error types for credit operations
+pub enum CreditError {
+  /// Not enough credits available
+  InsufficientBalance { required: UInt64, available: UInt64 },
+  /// Reservation not found
+  ReservationNotFound { id: UInt64 },
+  /// Reservation expired
+  ReservationExpired { id: UInt64 },
+  /// Reservation already consumed
+  ReservationAlreadyConsumed { id: UInt64 },
+  /// Host credit system error
+  HostError { message: String },
+}
+
+impl CreditError {
+  /// Get a human-readable error message
+  pub fun message(self) -> String {
+    match self {
+      CreditError::InsufficientBalance { required, available } =>
+        "Insufficient credits: need {required}, have {available}",
+      CreditError::ReservationNotFound { id } =>
+        "Reservation {id} not found",
+      CreditError::ReservationExpired { id } =>
+        "Reservation {id} has expired",
+      CreditError::ReservationAlreadyConsumed { id } =>
+        "Reservation {id} was already consumed",
+      CreditError::HostError { message } =>
+        "Credit system error: {message}",
+    }
+  }
+}
+
+/// The credit manager for handling all credit operations
+pub gene CreditManager {
+  has costs: CreditCosts
+  has reservations: Map<UInt64, CreditReservation>
+  has reservation_timeout_ms: UInt64 = 300000  // 5 minutes
+  has total_spent: UInt64 = 0
+  has total_reserved: UInt64 = 0
+
+  /// Create a new credit manager with default costs
+  pub fun new() -> CreditManager {
+    return CreditManager {
+      costs: CreditCosts::default(),
+      reservations: Map::new(),
+      reservation_timeout_ms: 300000,
+      total_spent: 0,
+      total_reserved: 0,
+    }
+  }
+
+  /// Create with custom costs
+  pub fun with_costs(costs: CreditCosts) -> CreditManager {
+    return CreditManager {
+      costs: costs,
+      reservations: Map::new(),
+      reservation_timeout_ms: 300000,
+      total_spent: 0,
+      total_reserved: 0,
+    }
+  }
+
+  /// Get current available balance from host
+  pub fun balance(self) -> Result<UInt64, CreditError> {
+    match host_credits::balance() {
+      Ok(balance) => Ok(balance),
+      Err(e) => Err(CreditError::HostError { message: e.to_string() }),
+    }
+  }
+
+  /// Get effective available balance (minus reservations)
+  pub fun available_balance(self) -> Result<UInt64, CreditError> {
+    let balance = self.balance()?
+    if balance >= self.total_reserved {
+      return Ok(balance - self.total_reserved)
+    }
+    return Ok(0)
+  }
+
+  /// Check if there are sufficient credits for an amount
+  pub fun check_balance(self, required: UInt64) -> Result<Bool, CreditError> {
+    let available = self.available_balance()?
+    return Ok(available >= required)
+  }
+
+  /// Reserve credits for an upcoming operation
+  pub fun reserve(self, amount: UInt64, operation: String) -> Result<(CreditManager, CreditReservation), CreditError> {
+    let available = self.available_balance()?
+
+    if available < amount {
+      return Err(CreditError::InsufficientBalance {
+        required: amount,
+        available: available,
+      })
+    }
+
+    let now = time::now()
+    let reservation = CreditReservation {
+      id: random::u64(),
+      amount: amount,
+      operation: operation,
+      created_at: now,
+      expires_at: now + self.reservation_timeout_ms,
+      consumed: false,
+    }
+
+    log::info("Reserved {amount} credits for {operation} (reservation {reservation.id})")
+
+    let new_reservations = self.reservations.insert(reservation.id, reservation)
+    let new_manager = CreditManager {
+      ...self,
+      reservations: new_reservations,
+      total_reserved: self.total_reserved + amount,
+    }
+
+    return Ok((new_manager, reservation))
+  }
+
+  /// Consume a reservation (actually spend the credits)
+  pub fun consume(self, reservation_id: UInt64) -> Result<CreditManager, CreditError> {
+    let reservation = match self.reservations.get(reservation_id) {
+      Some(r) => r,
+      None => return Err(CreditError::ReservationNotFound { id: reservation_id }),
+    }
+
+    if reservation.consumed {
+      return Err(CreditError::ReservationAlreadyConsumed { id: reservation_id })
+    }
+
+    if reservation.is_expired(time::now()) {
+      return Err(CreditError::ReservationExpired { id: reservation_id })
+    }
+
+    // Actually spend the credits via host
+    match host_credits::spend(reservation.amount) {
+      Ok(_) => {},
+      Err(e) => return Err(CreditError::HostError { message: e.to_string() }),
+    }
+
+    log::info("Consumed {reservation.amount} credits for {reservation.operation}")
+
+    let updated_reservation = CreditReservation {
+      ...reservation,
+      consumed: true,
+    }
+
+    let new_reservations = self.reservations.insert(reservation_id, updated_reservation)
+    let new_manager = CreditManager {
+      ...self,
+      reservations: new_reservations,
+      total_reserved: self.total_reserved - reservation.amount,
+      total_spent: self.total_spent + reservation.amount,
+    }
+
+    return Ok(new_manager)
+  }
+
+  /// Release a reservation without consuming (refund)
+  pub fun release(self, reservation_id: UInt64) -> Result<CreditManager, CreditError> {
+    let reservation = match self.reservations.get(reservation_id) {
+      Some(r) => r,
+      None => return Err(CreditError::ReservationNotFound { id: reservation_id }),
+    }
+
+    if reservation.consumed {
+      return Err(CreditError::ReservationAlreadyConsumed { id: reservation_id })
+    }
+
+    log::info("Released reservation {reservation_id} for {reservation.amount} credits")
+
+    let new_reservations = self.reservations.remove(reservation_id)
+    let new_manager = CreditManager {
+      ...self,
+      reservations: new_reservations,
+      total_reserved: self.total_reserved - reservation.amount,
+    }
+
+    return Ok(new_manager)
+  }
+
+  /// Clean up expired reservations
+  pub fun cleanup_expired(self) -> CreditManager {
+    let now = time::now()
+    let mut cleaned_reservations = Map::new()
+    let mut released_amount = 0 as UInt64
+
+    for (id, reservation) in self.reservations.iter() {
+      if !reservation.is_expired(now) && !reservation.consumed {
+        cleaned_reservations = cleaned_reservations.insert(id, reservation)
+      } else if !reservation.consumed {
+        released_amount += reservation.amount
+        log::debug("Cleaned up expired reservation {id}")
+      }
+    }
+
+    return CreditManager {
+      ...self,
+      reservations: cleaned_reservations,
+      total_reserved: self.total_reserved - released_amount,
+    }
+  }
+
+  /// Get spending statistics
+  pub fun stats(self) -> CreditStats {
+    return CreditStats {
+      total_spent: self.total_spent,
+      total_reserved: self.total_reserved,
+      active_reservations: self.reservations.len() as UInt32,
+    }
+  }
+
+  exegesis {
+    CreditManager handles all credit operations for the spirit.
+    It implements a reservation system where credits are held
+    before an operation and then consumed upon completion.
+    This prevents race conditions and ensures atomic spending.
+  }
+}
+
+/// Statistics about credit usage
+pub gene CreditStats {
+  has total_spent: UInt64
+  has total_reserved: UInt64
+  has active_reservations: UInt32
+
+  /// Display as a formatted string
+  pub fun display(self) -> String {
+    return """
+      Credit Statistics:
+        Total Spent: {self.total_spent}
+        Currently Reserved: {self.total_reserved}
+        Active Reservations: {self.active_reservations}
+    """
+  }
+}
+
+/// Helper function to perform a credit-gated operation
+pub fun with_credits<T>(
+  manager: CreditManager,
+  cost: UInt64,
+  operation: String,
+  action: fn() -> Result<T, Error>
+) -> Result<(CreditManager, T), CreditError> {
+  // Reserve credits
+  let (manager, reservation) = manager.reserve(cost, operation)?
+
+  // Perform the action
+  match action() {
+    Ok(result) => {
+      // Consume the reservation on success
+      let manager = manager.consume(reservation.id)?
+      return Ok((manager, result))
+    },
+    Err(e) => {
+      // Release the reservation on failure
+      let manager = manager.release(reservation.id)?
+      log::warn("Operation {operation} failed, credits released")
+      return Err(CreditError::HostError { message: e.to_string() })
+    },
+  }
+}
+
+/// Display current credit status
+pub fun display_credit_status(manager: CreditManager) -> String {
+  let balance = match manager.balance() {
+    Ok(b) => b.to_string(),
+    Err(_) => "unknown",
+  }
+
+  let available = match manager.available_balance() {
+    Ok(b) => b.to_string(),
+    Err(_) => "unknown",
+  }
+
+  let stats = manager.stats()
+
+  return """
+    =====================================
+           Credit Status
+    =====================================
+    Balance: {balance}
+    Available (minus reserves): {available}
+    Total Spent: {stats.total_spent}
+    Currently Reserved: {stats.total_reserved}
+    Active Reservations: {stats.active_reservations}
+
+    --- Operation Costs ---
+    Image Generation: {manager.costs.image_generation}
+    Narrative Generation: {manager.costs.narrative_generation}
+    Gallery Save: {manager.costs.gallery_save}
+    =====================================
+  """
+}

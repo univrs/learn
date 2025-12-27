@@ -1,0 +1,190 @@
+---
+title: "Spirit Development"
+description: "Learn to build secure, composable WebAssembly programs for the VUDO ecosystem"
+track: "spirits"
+duration: "4-6 hours"
+level: "intermediate"
+prerequisites:
+  - "DOL Fundamentals track"
+  - "Basic Rust knowledge"
+  - "VUDO CLI installed"
+concepts:
+  - "WebAssembly sandboxing"
+  - "Capability-based security"
+  - "Host function interfaces"
+  - "Persistent storage"
+  - "Credit economics"
+---
+
+import { Card, CardGrid } from '@/components/ui/Card'
+import { Prerequisites } from '@/components/docs/Prerequisites'
+import { LearningPath } from '@/components/docs/LearningPath'
+
+# Spirit Development Track
+
+Build secure, composable programs that run in the VUDO runtime. Spirits are WebAssembly modules with controlled access to system resources through a capability-based security model.
+
+<Prerequisites items={[
+  { text: "DOL Fundamentals track", link: "/tutorials/dol" },
+  { text: "Basic Rust knowledge", link: "https://doc.rust-lang.org/book/" },
+  { text: "VUDO CLI installed", link: "/dol/install" }
+]} />
+
+## What You'll Learn
+
+By the end of this track, you'll be able to:
+
+- Understand the Spirit architecture and security model
+- Create, build, and run Spirits using VUDO CLI
+- Use host functions for time, logging, and random numbers
+- Implement persistent storage for Spirit state
+- Make network requests from Spirits
+- Manage credits and economic incentives
+- Test Spirits with mocked host functions
+- Package and publish Spirits to the Imaginarium
+
+## Track Overview
+
+<CardGrid>
+  <Card
+    number={1}
+    title="What is a Spirit?"
+    description="Understand Spirit architecture, sandbox security, and capability-based access control."
+    duration="25 min"
+    link="/tutorials/spirits/001-what-is-spirit"
+  />
+
+  <Card
+    number={2}
+    title="Your First Spirit"
+    description="Create, build, and run your first Spirit using vudo new and the manifest system."
+    duration="30 min"
+    link="/tutorials/spirits/002-first-spirit"
+  />
+
+  <Card
+    number={3}
+    title="Using Host Functions"
+    description="Access time, logging, random numbers, and other host-provided capabilities."
+    duration="35 min"
+    link="/tutorials/spirits/003-host-functions"
+  />
+
+  <Card
+    number={4}
+    title="Persistent Storage"
+    description="Store and retrieve data across Spirit invocations with the storage API."
+    duration="40 min"
+    link="/tutorials/spirits/004-storage"
+  />
+
+  <Card
+    number={5}
+    title="Networking"
+    description="Make HTTP requests, handle responses, and work with rate limiting."
+    duration="40 min"
+    link="/tutorials/spirits/005-networking"
+  />
+
+  <Card
+    number={6}
+    title="Credits and Economics"
+    description="Understand credit balances, reservations, transfers, and economic incentives."
+    duration="30 min"
+    link="/tutorials/spirits/006-credits"
+  />
+
+  <Card
+    number={7}
+    title="Testing Spirits"
+    description="Write test functions, use assertions, and mock host functions for testing."
+    duration="35 min"
+    link="/tutorials/spirits/007-testing"
+  />
+
+  <Card
+    number={8}
+    title="Packaging and Distribution"
+    description="Pack, sign, and publish Spirits to the Imaginarium marketplace."
+    duration="25 min"
+    link="/tutorials/spirits/008-distribution"
+  />
+</CardGrid>
+
+## The Spirit Model
+
+Spirits represent a new paradigm for composable, secure software:
+
+```
++------------------------------------------------------------------+
+|                         VUDO Runtime                              |
+|                                                                   |
+|  +-----------------------+   +-----------------------+            |
+|  |      Spirit A         |   |      Spirit B         |            |
+|  |  +---------------+    |   |  +---------------+    |            |
+|  |  | WebAssembly   |    |   |  | WebAssembly   |    |            |
+|  |  | Sandbox       |    |   |  | Sandbox       |    |            |
+|  |  +-------+-------+    |   |  +-------+-------+    |            |
+|  |          |            |   |          |            |            |
+|  |  +-------v-------+    |   |  +-------v-------+    |            |
+|  |  | Capabilities  |    |   |  | Capabilities  |    |            |
+|  |  | - storage     |    |   |  | - network     |    |            |
+|  |  | - time        |    |   |  | - storage     |    |            |
+|  |  +---------------+    |   |  +---------------+    |            |
+|  +-----------+-----------+   +-----------+-----------+            |
+|              |                           |                        |
+|  +-----------v---------------------------v-----------+            |
+|  |                 Host Functions                     |            |
+|  |  time::now()  storage::read()  network::request() |            |
+|  +---------------------------------------------------+            |
++------------------------------------------------------------------+
+```
+
+### Key Principles
+
+1. **Sandboxed Execution**: Spirits run in isolated WebAssembly environments with no direct system access
+2. **Capability-Based Security**: Spirits must declare required capabilities in their manifest
+3. **Controlled Resources**: All system interactions go through auditable host functions
+4. **Economic Incentives**: Credit system encourages efficient resource usage
+5. **Composability**: Spirits can invoke other Spirits through controlled interfaces
+
+## Prerequisites Check
+
+Before starting this track, verify your environment:
+
+```bash
+# Check VUDO installation
+vudo --version
+
+# Verify Rust toolchain
+rustup show
+
+# Ensure wasm32 target is installed
+rustup target add wasm32-unknown-unknown
+
+# Check cargo-component (for Spirit builds)
+cargo component --version
+```
+
+If any commands fail, visit the [installation guide](/dol/install) to set up your environment.
+
+## Recommended Learning Path
+
+<LearningPath
+  prior={[
+    { title: "DOL Fundamentals", link: "/tutorials/dol", required: true },
+    { title: "CLI Mastery", link: "/tutorials/cli", required: false }
+  ]}
+  current="Spirit Development"
+  next={[
+    { title: "Capstone Project", link: "/tutorials/capstone" }
+  ]}
+/>
+
+## Getting Help
+
+- **Documentation**: [VUDO Reference](/dol/reference/vudo)
+- **Examples**: [Spirit Examples Repository](https://github.com/univrs/spirit-examples)
+- **Community**: [GitHub Discussions](https://github.com/univrs/dol/discussions)
+
+Ready to begin? Start with [What is a Spirit?](/tutorials/spirits/001-what-is-spirit)

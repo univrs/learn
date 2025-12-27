@@ -1,0 +1,158 @@
+---
+title: "Lion & Swan Capstone Project"
+description: "Build a mythic content generator Spirit from scratch"
+difficulty: "advanced"
+duration: "3-4 hours"
+prerequisites:
+  - "Completed DOL fundamentals"
+  - "Completed VUDO basics"
+  - "Understanding of the credit system"
+---
+
+import { Link } from 'react-router-dom';
+import { Trophy, BookOpen, Star, Sparkles, Crown } from 'lucide-react';
+
+# Lion & Swan Capstone Project
+
+<div className="card" style={{ borderColor: 'var(--glow-gold)', borderWidth: '2px' }}>
+  <div className="flex items-center gap-3 mb-4">
+    <Trophy className="w-8 h-8" style={{ color: 'var(--glow-gold)' }} />
+    <span className="text-xl font-light" style={{ color: 'var(--glow-gold)' }}>
+      Capstone Project
+    </span>
+  </div>
+  <p style={{ color: 'var(--text-secondary)' }}>
+    This is the culminating project of the DOL/VUDO learning path. You will build
+    a complete Spirit that generates mythic imagery and narrative content using
+    AI capabilities.
+  </p>
+</div>
+
+## What You Will Build
+
+The **Lion & Swan Creator** is a Spirit that:
+
+- Defines mythological entities using DOL ontologies
+- Generates AI-powered imagery via planetserve.io
+- Creates narrative text passages for mythic scenes
+- Manages credits for API consumption
+- Provides a gallery interface for viewing content
+
+## The Mythology
+
+<div className="grid md:grid-cols-2 gap-6 my-8">
+  <div className="card">
+    <div className="flex items-center gap-2 mb-4">
+      <Crown className="w-6 h-6" style={{ color: 'var(--glow-gold)' }} />
+      <h3 className="text-lg font-normal" style={{ color: 'var(--glow-gold)' }}>
+        Black Lion
+      </h3>
+    </div>
+    <ul className="text-sm space-y-2" style={{ color: 'var(--text-secondary)' }}>
+      <li>Keeper of Light</li>
+      <li>Guardian of Harmony</li>
+      <li>Essence: Obsidian</li>
+      <li>Power: 100</li>
+    </ul>
+  </div>
+
+  <div className="card">
+    <div className="flex items-center gap-2 mb-4">
+      <Sparkles className="w-6 h-6" style={{ color: 'var(--mycelium-white)' }} />
+      <h3 className="text-lg font-normal" style={{ color: 'var(--mycelium-white)' }}>
+        White Swan
+      </h3>
+    </div>
+    <ul className="text-sm space-y-2" style={{ color: 'var(--text-secondary)' }}>
+      <li>Spirit of Transformation</li>
+      <li>Weaver of Change</li>
+      <li>Essence: Pearl</li>
+      <li>Power: 85</li>
+    </ul>
+  </div>
+</div>
+
+## Tutorial Chapters
+
+<div className="space-y-4 my-8">
+  {[
+    { num: '000', title: 'Project Overview', desc: 'Understanding the mythology and project goals' },
+    { num: '001', title: 'Project Setup', desc: 'Initialize the Spirit with vudo new' },
+    { num: '002', title: 'Symbol System', desc: 'Define entities and allegiances in DOL' },
+    { num: '003', title: 'Image Generation', desc: 'Connect to planetserve.io for AI imagery' },
+    { num: '004', title: 'Narrative Generation', desc: 'Create mythic text passages' },
+    { num: '005', title: 'Content Gallery', desc: 'Build the viewing interface' },
+    { num: '006', title: 'Credit Integration', desc: 'Manage credits for API calls' },
+    { num: '007', title: 'Testing & Polish', desc: 'Ensure quality with tests' },
+    { num: '008', title: 'Publish Your Spirit', desc: 'Share with the world' },
+  ].map((chapter) => (
+    <div key={chapter.num} className="card group cursor-pointer">
+      <div className="flex items-start gap-4">
+        <div
+          className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center text-sm font-mono"
+          style={{ backgroundColor: 'var(--glow-cyan-dim)', color: 'var(--glow-cyan)' }}
+        >
+          {chapter.num}
+        </div>
+        <div>
+          <h4 className="font-normal mb-1" style={{ color: 'var(--text-primary)' }}>
+            {chapter.title}
+          </h4>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            {chapter.desc}
+          </p>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+
+## Prerequisites Checklist
+
+Before starting this capstone, ensure you have completed:
+
+<div className="card">
+  <ul className="space-y-3">
+    {[
+      'DOL Fundamentals: genes, traits, and systems',
+      'VUDO Basics: creating and running Spirits',
+      'Credit System: understanding balance and consumption',
+      'Terminal familiarity: command line operations',
+    ].map((item, i) => (
+      <li key={i} className="flex items-center gap-3">
+        <div
+          className="w-5 h-5 rounded border flex items-center justify-center"
+          style={{ borderColor: 'var(--glow-cyan)' }}
+        >
+          <span style={{ color: 'var(--glow-cyan)' }}>?</span>
+        </div>
+        <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          {item}
+        </span>
+      </li>
+    ))}
+  </ul>
+</div>
+
+## Time Estimate
+
+| Chapter | Duration |
+|---------|----------|
+| Overview & Setup | 20 min |
+| Symbol System | 30 min |
+| Image Generation | 45 min |
+| Narrative Generation | 30 min |
+| Gallery | 25 min |
+| Credit Integration | 20 min |
+| Testing | 30 min |
+| Publishing | 15 min |
+| **Total** | **~3.5 hours** |
+
+<div className="flex gap-4 mt-8">
+  <Link to="/tutorials/capstone/000-overview" className="btn-primary">
+    Begin the Journey
+  </Link>
+  <Link to="/dol/learn" className="btn-secondary">
+    Review Prerequisites
+  </Link>
+</div>

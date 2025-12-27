@@ -1,6 +1,6 @@
 import { Routes, Route, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { FileCode, BookOpen, Library, Code2, ArrowRight, Sparkles, Zap, Package, Github } from "lucide-react";
+import { FileCode, BookOpen, Library, Code2, ArrowRight, Sparkles, Zap, Package, Github, Terminal } from "lucide-react";
 
 const DOL_VERSION = "0.2.3";
 import DOLLearn from "./Learn";
@@ -11,8 +11,16 @@ import DOLMetaprogramming from "./Metaprogramming";
 import DOLSex from "./Sex";
 import DOLCheatsheet from "./Cheatsheet";
 import DOLQuickStart from "./QuickStart";
+import DOLPlayground from "./Playground";
 
 const sections = [
+    {
+        name: "Playground",
+        description: "Write and run DOL code in your browser",
+        href: "/dol/playground",
+        icon: Terminal,
+        isNew: true,
+    },
     {
         name: "Learn DOL",
         description: "Interactive tutorials from basics to advanced concepts",
@@ -315,6 +323,7 @@ export default function DOLIndex() {
     return (
         <Routes>
             <Route index element={<DOLOverview />} />
+            <Route path="playground" element={<DOLPlayground />} />
             <Route path="learn" element={<DOLLearn />} />
             <Route path="metaprogramming" element={<DOLMetaprogramming />} />
             <Route path="sex" element={<DOLSex />} />

@@ -1,0 +1,436 @@
+---
+title: "Error Handling"
+description: "Handle errors gracefully with Result, Option, and the ? operator"
+lesson: 7
+track: "dol-fundamentals"
+duration: "15 minutes"
+concepts: ["Result<T, E>", "Option<T>", "? operator", "error creation", "error propagation"]
+prev: "/dol/tutorials/006-entities-components"
+next: "/dol/tutorials/008-modules-imports"
+---
+
+import DOLRepl from '@/components/code/DOLRepl';
+
+# Error Handling
+
+DOL uses explicit error handling with `Result` and `Option` types. This approach makes errors visible in your code and impossible to ignore.
+
+## The Option Type
+
+`Option<T>` represents a value that may or may not exist:
+
+- `Some(value)` - The value exists
+- `None` - No value
+
+<DOLRepl
+  code={`// Option represents optional values
+let list = [1, 2, 3]
+
+let first = list.first()  // Some(1)
+let empty_first = [].first()  // None
+
+log(first)
+log(empty_first)`}
+  title="option-basic.dol"
+  output={`Some(1)
+None`}
+/>
+
+### Working with Option
+
+<DOLRepl
+  code={`// Check if value exists
+let maybe_value: Option<Int> = Some(42)
+
+if maybe_value.is_some() {
+    log("Value exists: " + maybe_value.unwrap().to_string())
+} else {
+    log("No value")
+}
+
+// Pattern matching with Option
+match maybe_value {
+    Some(x) => log("Got: " + x.to_string()),
+    None => log("Nothing")
+}`}
+  title="option-check.dol"
+  output={`Value exists: 42
+Got: 42`}
+/>
+
+### Option Methods
+
+<DOLRepl
+  code={`let some_value: Option<Int> = Some(10)
+let no_value: Option<Int> = None
+
+// unwrap_or provides a default
+log(some_value.unwrap_or(0))  // 10
+log(no_value.unwrap_or(0))    // 0
+
+// map transforms the inner value
+let doubled = some_value.map(|x| x * 2)
+log(doubled)  // Some(20)
+
+// and_then for chaining
+let result = some_value
+    .map(|x| x + 5)        // Some(15)
+    .and_then(|x| if x > 10 { Some(x) } else { None })
+log(result)`}
+  title="option-methods.dol"
+  output={`10
+0
+Some(20)
+Some(15)`}
+/>
+
+## The Result Type
+
+`Result<T, E>` represents an operation that may succeed or fail:
+
+- `Ok(value)` - Success with a value
+- `Err(error)` - Failure with an error
+
+<DOLRepl
+  code={`// Result represents success or failure
+fn divide(a: Int, b: Int) -> Result<Int, String> {
+    if b == 0 {
+        Err("Cannot divide by zero")
+    } else {
+        Ok(a / b)
+    }
+}
+
+log(divide(10, 2))  // Ok(5)
+log(divide(10, 0))  // Err("Cannot divide by zero")`}
+  title="result-basic.dol"
+  output={`Ok(5)
+Err("Cannot divide by zero")`}
+/>
+
+### Handling Results
+
+<DOLRepl
+  code={`fn parse_number(s: String) -> Result<Int, String> {
+    s.parse_int().map_err(|_| "Invalid number: " + s)
+}
+
+let good = parse_number("42")
+let bad = parse_number("hello")
+
+// Pattern matching
+match good {
+    Ok(n) => log("Parsed: " + n.to_string()),
+    Err(e) => log("Error: " + e)
+}
+
+// is_ok and is_err
+log("Good is ok: " + good.is_ok().to_string())
+log("Bad is err: " + bad.is_err().to_string())`}
+  title="result-handle.dol"
+  output={`Parsed: 42
+Good is ok: true
+Bad is err: true`}
+/>
+
+### Result Methods
+
+<DOLRepl
+  code={`fn risky() -> Result<Int, String> {
+    Ok(42)
+}
+
+let result = risky()
+
+// unwrap_or for default on error
+log(result.unwrap_or(0))
+
+// map transforms success value
+let doubled = result.map(|x| x * 2)
+log(doubled)
+
+// map_err transforms error
+let with_context = Err("file not found")
+    .map_err(|e| "Config error: " + e)
+log(with_context)`}
+  title="result-methods.dol"
+  output={`42
+Ok(84)
+Err("Config error: file not found")`}
+/>
+
+## The ? Operator
+
+The `?` operator makes error propagation clean and readable:
+
+<DOLRepl
+  code={`fn get_user_age(id: Int) -> Result<Int, String> {
+    if id == 1 { Ok(25) } else { Err("User not found") }
+}
+
+fn get_user_name(id: Int) -> Result<String, String> {
+    if id == 1 { Ok("Alice") } else { Err("User not found") }
+}
+
+// Without ? operator - verbose
+fn greet_user_verbose(id: Int) -> Result<String, String> {
+    let name = match get_user_name(id) {
+        Ok(n) => n,
+        Err(e) => return Err(e)
+    };
+    let age = match get_user_age(id) {
+        Ok(a) => a,
+        Err(e) => return Err(e)
+    };
+    Ok(name + " is " + age.to_string())
+}
+
+// With ? operator - clean!
+fn greet_user(id: Int) -> Result<String, String> {
+    let name = get_user_name(id)?
+    let age = get_user_age(id)?
+    Ok(name + " is " + age.to_string())
+}
+
+log(greet_user(1))
+log(greet_user(2))`}
+  title="question-op.dol"
+  output={`Ok("Alice is 25")
+Err("User not found")`}
+/>
+
+The `?` operator:
+1. Returns the inner value if `Ok`
+2. Propagates the error if `Err`
+
+## Custom Error Types
+
+Define your own error types for better error handling:
+
+<DOLRepl
+  code={`// Define custom error type
+enum AppError {
+    NotFound(String),
+    InvalidInput(String),
+    NetworkError { code: Int, message: String }
+}
+
+fn find_user(id: Int) -> Result<String, AppError> {
+    if id <= 0 {
+        Err(AppError::InvalidInput("ID must be positive"))
+    } else if id > 100 {
+        Err(AppError::NotFound("User " + id.to_string()))
+    } else {
+        Ok("User_" + id.to_string())
+    }
+}
+
+// Handle different error types
+match find_user(0) {
+    Ok(user) => log("Found: " + user),
+    Err(AppError::NotFound(msg)) => log("Not found: " + msg),
+    Err(AppError::InvalidInput(msg)) => log("Invalid: " + msg),
+    Err(AppError::NetworkError { code, message }) =>
+        log("Network error " + code.to_string() + ": " + message)
+}`}
+  title="custom-errors.dol"
+  output="Invalid: ID must be positive"
+/>
+
+## Error Chaining
+
+Chain operations that might fail:
+
+<DOLRepl
+  code={`fn parse_config(text: String) -> Result<Int, String> {
+    text.parse_int().map_err(|_| "Parse error")
+}
+
+fn validate(value: Int) -> Result<Int, String> {
+    if value > 0 && value <= 100 {
+        Ok(value)
+    } else {
+        Err("Value out of range")
+    }
+}
+
+fn process(value: Int) -> Result<String, String> {
+    Ok("Processed: " + value.to_string())
+}
+
+// Chain with and_then
+let result = parse_config("50")
+    .and_then(validate)
+    .and_then(process)
+
+log(result)
+
+// Chain with ?
+fn process_config(text: String) -> Result<String, String> {
+    let value = parse_config(text)?
+    let validated = validate(value)?
+    process(validated)
+}
+
+log(process_config("75"))`}
+  title="chaining.dol"
+  output={`Ok("Processed: 50")
+Ok("Processed: 75")`}
+/>
+
+## Combining Option and Result
+
+Convert between Option and Result:
+
+<DOLRepl
+  code={`// Option to Result
+let maybe: Option<Int> = Some(42)
+let result: Result<Int, String> = maybe.ok_or("No value")
+log(result)
+
+// Result to Option
+let res: Result<Int, String> = Ok(42)
+let opt: Option<Int> = res.ok()
+log(opt)
+
+// Transpose
+let nested: Option<Result<Int, String>> = Some(Ok(42))
+let transposed: Result<Option<Int>, String> = nested.transpose()
+log(transposed)`}
+  title="convert.dol"
+  output={`Ok(42)
+Some(42)
+Ok(Some(42))`}
+/>
+
+## Try Blocks (Experimental)
+
+Group fallible operations:
+
+<DOLRepl
+  code={`fn complex_operation() -> Result<Int, String> {
+    try {
+        let a = parse("10")?
+        let b = parse("20")?
+        let c = validate(a + b)?
+        Ok(c * 2)
+    }
+}
+
+log(complex_operation())`}
+  title="try-block.dol"
+  output="Ok(60)"
+/>
+
+## Best Practices
+
+### 1. Prefer Result over panics
+
+<DOLRepl
+  code={`// Bad: panic on error
+fn bad_divide(a: Int, b: Int) -> Int {
+    a / b  // Panics if b == 0!
+}
+
+// Good: return Result
+fn good_divide(a: Int, b: Int) -> Result<Int, String> {
+    if b == 0 {
+        Err("Division by zero")
+    } else {
+        Ok(a / b)
+    }
+}
+
+log(good_divide(10, 0))`}
+  title="prefer-result.dol"
+  output="Err(\"Division by zero\")"
+/>
+
+### 2. Add context to errors
+
+<DOLRepl
+  code={`fn read_config() -> Result<String, String> {
+    Err("file not found")
+}
+
+fn load_app() -> Result<(), String> {
+    read_config()
+        .map_err(|e| "Failed to load app config: " + e)?
+    Ok(())
+}
+
+log(load_app())`}
+  title="context.dol"
+  output="Err(\"Failed to load app config: file not found\")"
+/>
+
+## Key Takeaways
+
+- `Option<T>` represents optional values (`Some` or `None`)
+- `Result<T, E>` represents success (`Ok`) or failure (`Err`)
+- Use `?` to propagate errors cleanly
+- `map`, `and_then`, `unwrap_or` transform Option/Result values
+- Define custom error types for domain-specific errors
+- Always prefer explicit error handling over panics
+
+## Challenge
+
+Create a user validation system:
+
+1. Define a function to parse an age from string (returns Result)
+2. Define a function to validate age is between 0 and 150
+3. Define a function to validate name is not empty
+4. Create a `validate_user` function that uses `?` to chain validations
+
+<DOLRepl
+  code={`// Challenge: User Validation
+
+fn parse_age(s: String) -> Result<Int, String> {
+    // Your code here
+    Err("Not implemented")
+}
+
+fn validate_age_range(age: Int) -> Result<Int, String> {
+    // Your code here
+    Err("Not implemented")
+}
+
+fn validate_name(name: String) -> Result<String, String> {
+    // Your code here
+    Err("Not implemented")
+}
+
+fn validate_user(name: String, age_str: String) -> Result<String, String> {
+    // Use ? to chain validations
+    Err("Not implemented")
+}
+
+log(validate_user("Alice", "25"))
+log(validate_user("", "25"))
+log(validate_user("Bob", "abc"))`}
+  title="challenge.dol"
+  output={`Err("Not implemented")
+Err("Not implemented")
+Err("Not implemented")`}
+/>
+
+## Next Steps
+
+Let us complete the fundamentals by learning how to organize code into modules.
+
+<div className="mt-8 flex justify-between">
+  <a
+    href="/dol/tutorials/006-entities-components"
+    className="btn-secondary inline-flex items-center gap-2"
+  >
+    <span>←</span>
+    Previous: Entities and Components
+  </a>
+  <a
+    href="/dol/tutorials/008-modules-imports"
+    className="btn-primary inline-flex items-center gap-2"
+  >
+    Next: Modules and Imports
+    <span>→</span>
+  </a>
+</div>

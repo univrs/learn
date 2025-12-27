@@ -1,0 +1,435 @@
+// Lion & Swan - Gallery Module
+// Checkpoint 005: Gallery component for listing and displaying content
+//
+// This module handles the presentation layer for images and narratives
+
+use std::host::{log, storage, time}
+use crate::symbols::{Symbol, Allegiance}
+use crate::image_gen::{GeneratedImage, ImageStyle}
+use crate::narrative::{Narrative, Scene, SceneType}
+
+/// Display format options
+pub enum DisplayFormat {
+  /// Compact list view
+  List,
+  /// Detailed grid view
+  Grid,
+  /// Full presentation view
+  Full,
+  /// Slideshow mode
+  Slideshow,
+}
+
+/// A gallery item that can be displayed
+pub trait Displayable {
+  /// Get the display title
+  is title() -> String
+
+  /// Get the display description
+  is description() -> String
+
+  /// Get the display timestamp
+  is timestamp() -> UInt64
+
+  /// Get the allegiance (if applicable)
+  is allegiance() -> Option<Allegiance>
+
+  /// Render to display format
+  is render(format: DisplayFormat) -> String
+}
+
+/// Gallery item wrapper for images
+pub gene ImageGalleryItem {
+  has image: GeneratedImage
+  has symbol: Symbol
+  has view_count: UInt64 = 0
+
+  impl Displayable {
+    pub fun title() -> String {
+      return this.symbol.name
+    }
+
+    pub fun description() -> String {
+      return this.symbol.description
+    }
+
+    pub fun timestamp() -> UInt64 {
+      return this.image.created_at
+    }
+
+    pub fun allegiance() -> Option<Allegiance> {
+      return Some(this.symbol.allegiance)
+    }
+
+    pub fun render(format: DisplayFormat) -> String {
+      match format {
+        DisplayFormat::List => {
+          let allegiance_str = match this.symbol.allegiance {
+            Allegiance::Lion => "[LION]",
+            Allegiance::Swan => "[SWAN]",
+          }
+          return "{allegiance_str} {this.symbol.name}"
+        },
+        DisplayFormat::Grid => {
+          return """
+            +----------------------------------+
+            | {this.symbol.name}               |
+            | {this.symbol.allegiance}         |
+            | {this.image.width}x{this.image.height} |
+            +----------------------------------+
+          """
+        },
+        DisplayFormat::Full => {
+          return """
+            =====================================
+            {this.symbol.name}
+            =====================================
+            Allegiance: {this.symbol.allegiance}
+            Description: {this.symbol.description}
+
+            Image: {this.image.url}
+            Size: {this.image.width}x{this.image.height}
+            Style: {this.image.style}
+            Generated: {this.image.created_at}
+            =====================================
+          """
+        },
+        DisplayFormat::Slideshow => {
+          return """
+
+            [{this.symbol.allegiance}]
+
+                  {this.symbol.name}
+
+            "{this.symbol.description}"
+
+          """
+        },
+      }
+    }
+  }
+
+  /// Record a view
+  pub fun record_view(self) -> ImageGalleryItem {
+    return ImageGalleryItem {
+      ...self,
+      view_count: self.view_count + 1,
+    }
+  }
+
+  exegesis {
+    ImageGalleryItem wraps a GeneratedImage with its associated
+    Symbol for display purposes. It tracks view counts and
+    provides multiple rendering formats.
+  }
+}
+
+/// Gallery item wrapper for narratives
+pub gene NarrativeGalleryItem {
+  has narrative: Narrative
+  has view_count: UInt64 = 0
+
+  impl Displayable {
+    pub fun title() -> String {
+      return this.narrative.title
+    }
+
+    pub fun description() -> String {
+      let (lion, swan) = this.narrative.allegiance_balance()
+      return "A tale of {this.narrative.scenes.len()} scenes (Lion: {lion}, Swan: {swan})"
+    }
+
+    pub fun timestamp() -> UInt64 {
+      return this.narrative.created_at
+    }
+
+    pub fun allegiance() -> Option<Allegiance> {
+      let (lion, swan) = this.narrative.allegiance_balance()
+      if lion > swan {
+        return Some(Allegiance::Lion)
+      } else if swan > lion {
+        return Some(Allegiance::Swan)
+      } else {
+        return None
+      }
+    }
+
+    pub fun render(format: DisplayFormat) -> String {
+      match format {
+        DisplayFormat::List => {
+          return "{this.narrative.title} ({this.narrative.scenes.len()} scenes)"
+        },
+        DisplayFormat::Grid => {
+          let (lion, swan) = this.narrative.allegiance_balance()
+          return """
+            +----------------------------------+
+            | {this.narrative.title}           |
+            | Scenes: {this.narrative.scenes.len()} |
+            | Lion: {lion} / Swan: {swan}      |
+            +----------------------------------+
+          """
+        },
+        DisplayFormat::Full => {
+          let (lion, swan) = this.narrative.allegiance_balance()
+          let full_text = this.narrative.full_text()
+          return """
+            =====================================
+            {this.narrative.title}
+            =====================================
+            Scenes: {this.narrative.scenes.len()}
+            Allegiance Balance: Lion {lion} / Swan {swan}
+            Created: {this.narrative.created_at}
+
+            --- THE STORY ---
+
+            {full_text}
+
+            =====================================
+          """
+        },
+        DisplayFormat::Slideshow => {
+          return this.render_slideshow()
+        },
+      }
+    }
+  }
+
+  /// Render as a slideshow (one scene at a time)
+  pub fun render_slideshow(self) -> String {
+    let mut output = "\n=== {this.narrative.title} ===\n\n"
+    for (i, scene) in this.narrative.scenes.iter().enumerate() {
+      output = output + "--- Scene {i + 1}: {scene.scene_type} ---\n\n"
+      output = output + "{scene.text}\n\n"
+    }
+    output = output + "=== THE END ===\n"
+    return output
+  }
+
+  /// Get a specific scene for display
+  pub fun get_scene(self, index: UInt32) -> Option<Scene> {
+    if index < this.narrative.scenes.len() as UInt32 {
+      return Some(this.narrative.scenes[index as UInt64])
+    }
+    return None
+  }
+
+  /// Record a view
+  pub fun record_view(self) -> NarrativeGalleryItem {
+    return NarrativeGalleryItem {
+      ...self,
+      view_count: self.view_count + 1,
+    }
+  }
+
+  exegesis {
+    NarrativeGalleryItem wraps a Narrative for display purposes.
+    It provides multiple rendering formats including a slideshow
+    mode that presents scenes one at a time.
+  }
+}
+
+/// The main gallery container
+pub gene Gallery {
+  has images: List<ImageGalleryItem>
+  has narratives: List<NarrativeGalleryItem>
+  has name: String = "Lion & Swan Gallery"
+
+  /// Create an empty gallery
+  pub fun new() -> Gallery {
+    return Gallery {
+      images: [],
+      narratives: [],
+      name: "Lion & Swan Gallery",
+    }
+  }
+
+  /// Add an image to the gallery
+  pub fun add_image(self, image: GeneratedImage, symbol: Symbol) -> Gallery {
+    let item = ImageGalleryItem {
+      image: image,
+      symbol: symbol,
+      view_count: 0,
+    }
+    return Gallery {
+      ...self,
+      images: self.images.push(item),
+    }
+  }
+
+  /// Add a narrative to the gallery
+  pub fun add_narrative(self, narrative: Narrative) -> Gallery {
+    let item = NarrativeGalleryItem {
+      narrative: narrative,
+      view_count: 0,
+    }
+    return Gallery {
+      ...self,
+      narratives: self.narratives.push(item),
+    }
+  }
+
+  /// Get all images
+  pub fun all_images(self) -> List<ImageGalleryItem> {
+    return self.images
+  }
+
+  /// Get images by allegiance
+  pub fun images_by_allegiance(self, allegiance: Allegiance) -> List<ImageGalleryItem> {
+    return self.images
+      .filter(|item| item.symbol.allegiance == allegiance)
+      .collect()
+  }
+
+  /// Get all narratives
+  pub fun all_narratives(self) -> List<NarrativeGalleryItem> {
+    return self.narratives
+  }
+
+  /// Get narratives by dominant allegiance
+  pub fun narratives_by_allegiance(self, allegiance: Allegiance) -> List<NarrativeGalleryItem> {
+    return self.narratives
+      .filter(|item| item.allegiance() == Some(allegiance))
+      .collect()
+  }
+
+  /// Get total item count
+  pub fun total_items(self) -> UInt64 {
+    return self.images.len() + self.narratives.len()
+  }
+
+  /// List all items in the gallery
+  pub fun list_all(self, format: DisplayFormat) -> String {
+    let mut output = "=== {self.name} ===\n\n"
+
+    output = output + "--- Images ({self.images.len()}) ---\n"
+    for item in self.images {
+      output = output + item.render(format) + "\n"
+    }
+
+    output = output + "\n--- Narratives ({self.narratives.len()}) ---\n"
+    for item in self.narratives {
+      output = output + item.render(format) + "\n"
+    }
+
+    return output
+  }
+
+  /// List items by allegiance
+  pub fun list_by_allegiance(self, allegiance: Allegiance, format: DisplayFormat) -> String {
+    let allegiance_name = match allegiance {
+      Allegiance::Lion => "Lion",
+      Allegiance::Swan => "Swan",
+    }
+
+    let mut output = "=== {allegiance_name} Gallery ===\n\n"
+
+    let filtered_images = self.images_by_allegiance(allegiance)
+    output = output + "--- Images ({filtered_images.len()}) ---\n"
+    for item in filtered_images {
+      output = output + item.render(format) + "\n"
+    }
+
+    let filtered_narratives = self.narratives_by_allegiance(allegiance)
+    output = output + "\n--- Narratives ({filtered_narratives.len()}) ---\n"
+    for item in filtered_narratives {
+      output = output + item.render(format) + "\n"
+    }
+
+    return output
+  }
+
+  /// Get most viewed items
+  pub fun most_viewed_images(self, count: UInt32) -> List<ImageGalleryItem> {
+    return self.images
+      .sort_by(|a, b| b.view_count.cmp(a.view_count))
+      .take(count as UInt64)
+      .collect()
+  }
+
+  /// Get most viewed narratives
+  pub fun most_viewed_narratives(self, count: UInt32) -> List<NarrativeGalleryItem> {
+    return self.narratives
+      .sort_by(|a, b| b.view_count.cmp(a.view_count))
+      .take(count as UInt64)
+      .collect()
+  }
+
+  exegesis {
+    The Gallery is the main container for displaying images and
+    narratives. It provides filtering, sorting, and multiple
+    display format options.
+  }
+}
+
+/// Persistent gallery storage
+pub trait GalleryStorage {
+  /// Save gallery to storage
+  is save(gallery: Gallery) -> Result<(), Error>
+
+  /// Load gallery from storage
+  is load() -> Result<Gallery, Error>
+}
+
+/// Implementation using host storage
+pub gene PersistentGallery {
+  has storage_key: String = "lion_swan_gallery"
+
+  impl GalleryStorage {
+    pub fun save(gallery: Gallery) -> Result<(), Error> {
+      log::info("Saving gallery with {gallery.total_items()} items")
+      let data = gallery.to_json()
+      storage::set(this.storage_key, data)?
+      log::info("Gallery saved successfully")
+      return Ok(())
+    }
+
+    pub fun load() -> Result<Gallery, Error> {
+      log::info("Loading gallery from storage")
+      match storage::get(this.storage_key) {
+        Some(data) => {
+          let gallery = Gallery::from_json(data)?
+          log::info("Loaded gallery with {gallery.total_items()} items")
+          return Ok(gallery)
+        },
+        None => {
+          log::info("No existing gallery found, creating new one")
+          return Ok(Gallery::new())
+        },
+      }
+    }
+  }
+
+  exegesis {
+    PersistentGallery uses host storage to persist gallery data
+    across spirit invocations. This allows users to build up a
+    collection over time.
+  }
+}
+
+/// Display a gallery overview
+pub fun display_overview(gallery: Gallery) -> String {
+  let lion_images = gallery.images_by_allegiance(Allegiance::Lion).len()
+  let swan_images = gallery.images_by_allegiance(Allegiance::Swan).len()
+  let lion_narratives = gallery.narratives_by_allegiance(Allegiance::Lion).len()
+  let swan_narratives = gallery.narratives_by_allegiance(Allegiance::Swan).len()
+
+  return """
+    =====================================
+           {gallery.name}
+    =====================================
+
+    Total Items: {gallery.total_items()}
+
+    Images:
+      Lion:  {lion_images}
+      Swan:  {swan_images}
+      Total: {gallery.images.len()}
+
+    Narratives:
+      Lion:  {lion_narratives}
+      Swan:  {swan_narratives}
+      Total: {gallery.narratives.len()}
+
+    =====================================
+  """
+}

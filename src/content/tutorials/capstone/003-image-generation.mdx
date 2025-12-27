@@ -1,0 +1,401 @@
+---
+title: "AI Image Generation"
+description: "Connect to planetserve.io for mythic image generation"
+chapter: 3
+---
+
+import { Link } from 'react-router-dom';
+import { Image, Cloud, FileCode, Terminal, ChevronRight, CheckCircle, AlertTriangle } from 'lucide-react';
+
+# Chapter 3: AI Image Generation
+
+<div className="flex items-center gap-2 text-sm mb-6" style={{ color: 'var(--soft-gray)' }}>
+  <Link to="/tutorials/capstone" className="hover:opacity-80 transition-opacity">
+    Capstone
+  </Link>
+  <ChevronRight className="w-4 h-4" />
+  <span style={{ color: 'var(--text-primary)' }}>Image Generation</span>
+</div>
+
+In this chapter, you will connect your Spirit to the planetserve.io API for
+AI-powered image generation. You will create prompt templates and implement
+the generation handler.
+
+## Setting Up Network Capability
+
+First, verify that your manifest.json has the network capability configured.
+You did this in Chapter 1, but let us review the relevant section:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <FileCode className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>manifest.json (excerpt)</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`"capabilities": {
+  "network": {
+    "allowed_hosts": ["api.planetserve.io"],
+    "max_requests_per_minute": 10
+  }
+}`}
+  </pre>
+</div>
+
+## Create Prompt Templates
+
+Create the image prompt template file:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <FileCode className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>src/prompts/image.txt</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`# Lion & Swan Image Generation Prompts
+# Variables: {scene_type}, {primary}, {secondary}, {setting}, {mood}
+
+[base]
+Mythological digital painting, ethereal lighting, cosmic atmosphere,
+highly detailed, 8k resolution, dramatic composition
+
+[confrontation]
+{primary} and {secondary} face each other in {setting}.
+The tension is palpable, {mood} atmosphere.
+Epic confrontation, opposing forces, balanced composition.
+{base}
+
+[interrogation]
+{primary} questions {secondary} in {setting}.
+Deep shadows, revealing light, {mood} atmosphere.
+Intense close-up, psychological tension, symbolic imagery.
+{base}
+
+[transformation]
+{primary} undergoes metamorphosis in {setting}.
+Radiant energy, particles of light and shadow, {mood} atmosphere.
+Dynamic movement, transitional state, magical realism.
+{base}
+
+[revelation]
+{primary} receives cosmic truth in {setting}.
+Blinding light breaking through darkness, {mood} atmosphere.
+Transcendent moment, divine intervention, sacred geometry.
+{base}`}
+  </pre>
+</div>
+
+## The Image Generation Handler
+
+Create the generation handler that calls the planetserve.io API:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <FileCode className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>src/handlers/generate.ts</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`import { Spirit, Network, Storage, Credits } from '@vudo/runtime';
+import { Scene, SceneType, BlackLion, WhiteSwan } from '../ontology/main.dol';
+
+interface GenerateOptions {
+  sceneType: SceneType;
+  setting: string;
+  mood: string;
+  includeSecondary: boolean;
+}
+
+interface GenerationResult {
+  imageUrl: string;
+  localPath: string;
+  scene: Scene;
+  creditsUsed: number;
+}
+
+// Load prompt templates
+const promptTemplates = await Storage.readText('src/prompts/image.txt');
+
+function parsePromptTemplate(template: string, sceneType: string): string {
+  const sections: Record<string, string> = {};
+  let currentSection = '';
+
+  for (const line of template.split('\\n')) {
+    if (line.startsWith('[') && line.endsWith(']')) {
+      currentSection = line.slice(1, -1);
+      sections[currentSection] = '';
+    } else if (currentSection && !line.startsWith('#')) {
+      sections[currentSection] += line + ' ';
+    }
+  }
+
+  return sections[sceneType.toLowerCase()] || sections['base'];
+}
+
+function buildPrompt(options: GenerateOptions): string {
+  const template = parsePromptTemplate(promptTemplates, options.sceneType);
+  const lion = new BlackLion();
+  const swan = new WhiteSwan();
+
+  let prompt = template
+    .replace('{scene_type}', options.sceneType)
+    .replace('{setting}', options.setting)
+    .replace('{mood}', options.mood)
+    .replace('{primary}', lion.describe())
+    .replace('{base}', parsePromptTemplate(promptTemplates, 'base'));
+
+  if (options.includeSecondary) {
+    prompt = prompt.replace('{secondary}', swan.describe());
+  } else {
+    prompt = prompt.replace('{secondary}', '');
+  }
+
+  return prompt.trim();
+}
+
+export async function generate(options: GenerateOptions): Promise<GenerationResult> {
+  const spirit = Spirit.current();
+
+  // Step 1: Check credit balance
+  const balance = await Credits.getBalance();
+  const imageCost = spirit.manifest.capabilities.credits.operations.generate_image;
+
+  if (balance < imageCost) {
+    throw new Error(\`Insufficient credits. Need \${imageCost}, have \${balance}\`);
+  }
+
+  // Step 2: Reserve credits before API call
+  const reservation = await Credits.reserve(imageCost, 'image_generation');
+
+  try {
+    // Step 3: Build the prompt
+    const prompt = buildPrompt(options);
+    console.log('Generated prompt:', prompt);
+
+    // Step 4: Call planetserve.io API
+    const response = await Network.post('https://api.planetserve.io/v1/generate', {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': \`Bearer \${spirit.secrets.PLANETSERVE_API_KEY}\`
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        model: 'mythic-v2',
+        size: '1024x1024',
+        style: 'digital-painting'
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(\`API error: \${response.status} \${response.statusText}\`);
+    }
+
+    const data = await response.json();
+
+    // Step 5: Download and store the image
+    const imageBytes = await Network.fetch(data.image_url);
+    const timestamp = Date.now();
+    const filename = \`\${options.sceneType.toLowerCase()}_\${timestamp}.png\`;
+    const localPath = \`output/images/\${filename}\`;
+
+    await Storage.writeBytes(localPath, imageBytes);
+
+    // Step 6: Consume the reserved credits
+    await Credits.consume(reservation);
+
+    // Step 7: Create the Scene record
+    const scene: Scene = {
+      scene_type: options.sceneType,
+      primary_symbol: new BlackLion(),
+      secondary_symbol: options.includeSecondary ? new WhiteSwan() : null,
+      setting: options.setting,
+      mood: options.mood,
+      generated_at: new Date()
+    };
+
+    // Step 8: Store metadata
+    await Storage.writeJson(\`output/metadata/\${timestamp}.json\`, {
+      scene,
+      prompt,
+      imageUrl: data.image_url,
+      localPath,
+      model: 'mythic-v2'
+    });
+
+    return {
+      imageUrl: data.image_url,
+      localPath,
+      scene,
+      creditsUsed: imageCost
+    };
+
+  } catch (error) {
+    // Release credits on failure
+    await Credits.release(reservation);
+    throw error;
+  }
+}
+
+// CLI handler
+export async function main(args: string[]): Promise<void> {
+  const sceneType = args[0] as SceneType || SceneType.Confrontation;
+  const setting = args[1] || 'a cosmic void between stars';
+  const mood = args[2] || 'mysterious and tense';
+  const includeSecondary = args[3] !== 'solo';
+
+  console.log(\`Generating \${sceneType} scene...\`);
+
+  const result = await generate({
+    sceneType,
+    setting,
+    mood,
+    includeSecondary
+  });
+
+  console.log('Generation complete!');
+  console.log(\`  Image saved to: \${result.localPath}\`);
+  console.log(\`  Credits used: \${result.creditsUsed}\`);
+}`}
+  </pre>
+</div>
+
+## Understanding the Flow
+
+<div className="space-y-4 my-6">
+  <div className="card">
+    <div className="flex items-center gap-2 mb-2">
+      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--glow-cyan-dim)', color: 'var(--glow-cyan)' }}>1</div>
+      <h4 className="font-normal" style={{ color: 'var(--text-primary)' }}>Check Credits</h4>
+    </div>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      Before any API call, verify the user has sufficient credits for the operation.
+    </p>
+  </div>
+
+  <div className="card">
+    <div className="flex items-center gap-2 mb-2">
+      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--glow-cyan-dim)', color: 'var(--glow-cyan)' }}>2</div>
+      <h4 className="font-normal" style={{ color: 'var(--text-primary)' }}>Reserve Credits</h4>
+    </div>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      Reserve credits before the API call to prevent race conditions.
+    </p>
+  </div>
+
+  <div className="card">
+    <div className="flex items-center gap-2 mb-2">
+      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--glow-cyan-dim)', color: 'var(--glow-cyan)' }}>3</div>
+      <h4 className="font-normal" style={{ color: 'var(--text-primary)' }}>Build Prompt</h4>
+    </div>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      Generate the prompt from templates using the Scene entities from DOL.
+    </p>
+  </div>
+
+  <div className="card">
+    <div className="flex items-center gap-2 mb-2">
+      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--glow-cyan-dim)', color: 'var(--glow-cyan)' }}>4</div>
+      <h4 className="font-normal" style={{ color: 'var(--text-primary)' }}>Call API</h4>
+    </div>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      Make the authenticated request to planetserve.io.
+    </p>
+  </div>
+
+  <div className="card">
+    <div className="flex items-center gap-2 mb-2">
+      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--glow-cyan-dim)', color: 'var(--glow-cyan)' }}>5</div>
+      <h4 className="font-normal" style={{ color: 'var(--text-primary)' }}>Store Locally</h4>
+    </div>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      Download the generated image and save it to local storage.
+    </p>
+  </div>
+
+  <div className="card">
+    <div className="flex items-center gap-2 mb-2">
+      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--glow-cyan-dim)', color: 'var(--glow-cyan)' }}>6</div>
+      <h4 className="font-normal" style={{ color: 'var(--text-primary)' }}>Consume or Release</h4>
+    </div>
+    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      On success, consume the reservation. On failure, release it back.
+    </p>
+  </div>
+</div>
+
+## Configure API Key
+
+Set up your planetserve.io API key:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <Terminal className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>Terminal</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
+{`vudo secrets set PLANETSERVE_API_KEY "your-api-key-here"`}
+  </pre>
+</div>
+
+<div className="card my-6" style={{ borderColor: 'var(--glow-gold)', backgroundColor: 'rgba(255, 215, 0, 0.05)' }}>
+  <div className="flex items-center gap-2 mb-2">
+    <AlertTriangle className="w-5 h-5" style={{ color: 'var(--glow-gold)' }} />
+    <span className="font-normal" style={{ color: 'var(--glow-gold)' }}>Security Note</span>
+  </div>
+  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+    Secrets are stored securely and never committed to version control. The
+    <code>spirit.secrets</code> object provides access to configured secrets at runtime.
+  </p>
+</div>
+
+## Test the Generation
+
+Run a test generation:
+
+<div className="rounded-xl overflow-hidden my-6" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+  <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+    <Terminal className="w-4 h-4" style={{ color: 'var(--soft-gray)' }} />
+    <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>Terminal</span>
+  </div>
+  <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-secondary)' }}>
+{`$ vudo run generate Confrontation "the edge of a black hole" "intense and dramatic"
+
+`}<span style={{ color: 'var(--glow-cyan)' }}>Generating Confrontation scene...</span>{`
+Generated prompt: Keeper of Black Lion and Transformer of White Swan face each other
+in the edge of a black hole. The tension is palpable, intense and dramatic atmosphere.
+Epic confrontation, opposing forces, balanced composition. Mythological digital painting,
+ethereal lighting, cosmic atmosphere, highly detailed, 8k resolution, dramatic composition
+
+`}<span style={{ color: 'var(--glow-cyan)' }}>Generation complete!</span>{`
+  Image saved to: output/images/confrontation_1703445123456.png
+  Credits used: 3`}
+  </pre>
+</div>
+
+## Chapter Complete
+
+<div className="card my-6" style={{ borderColor: 'var(--glow-cyan)', borderWidth: '1px' }}>
+  <div className="flex items-center gap-3 mb-4">
+    <CheckCircle className="w-6 h-6" style={{ color: 'var(--glow-cyan)' }} />
+    <span className="font-normal" style={{ color: 'var(--glow-cyan)' }}>Image Generation Complete</span>
+  </div>
+  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+    You have implemented AI image generation with proper credit management. In the
+    next chapter, you will add narrative text generation to accompany the images.
+  </p>
+</div>
+
+## What You Learned
+
+- How to create prompt templates with variable substitution
+- Implementing secure API calls with network capability
+- The credit reservation pattern (reserve, consume, release)
+- Storing generated content locally
+- Creating metadata for generated content
+
+<div className="flex gap-4 mt-8">
+  <Link to="/tutorials/capstone/004-narrative" className="btn-primary">
+    Next: Narrative Generation
+  </Link>
+  <Link to="/tutorials/capstone/002-symbol-system" className="btn-secondary">
+    Previous: Symbol System
+  </Link>
+</div>

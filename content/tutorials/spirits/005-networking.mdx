@@ -1,0 +1,979 @@
+---
+title: "Networking"
+description: "Make HTTP requests, handle responses, and work with rate limiting"
+track: "spirits"
+tutorial: 5
+duration: "40 min"
+level: "intermediate"
+prerequisites:
+  - "004-storage"
+concepts:
+  - "network::connect"
+  - "HTTP requests"
+  - "Response handling"
+  - "Rate limiting"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+import { Terminal } from '@/components/ui/Terminal'
+import { Diagram } from '@/components/ui/Diagram'
+
+# Networking
+
+Spirits can communicate with external services through controlled network access. This tutorial covers making HTTP requests, handling responses, and working within the rate limiting and security constraints of the VUDO runtime.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Make HTTP GET, POST, and other requests
+- Handle responses, errors, and timeouts
+- Work with rate limiting and quotas
+- Build a Spirit that fetches external data
+
+## Network Security Model
+
+Network access is the most sensitive capability a Spirit can request. The VUDO runtime enforces strict controls:
+
+```
++------------------------------------------------------------------+
+|                         Spirit                                     |
+|                                                                   |
+|  network::request("https://api.example.com/data")                 |
+|                           |                                       |
++---------------------------|---------------------------------------+
+                            |
+                            v
++------------------------------------------------------------------+
+|                    VUDO Runtime                                   |
+|                                                                   |
+|  1. Check capability: network.http                                |
+|  2. Verify domain allowlist                                       |
+|  3. Check rate limits                                             |
+|  4. Apply request limits (size, timeout)                          |
+|  5. Execute request                                               |
+|  6. Verify response limits                                        |
+|  7. Return to Spirit                                              |
++------------------------------------------------------------------+
+                            |
+                            v
++------------------------------------------------------------------+
+|                    External Service                               |
++------------------------------------------------------------------+
+```
+
+<Callout type="security" title="Network Restrictions">
+Spirits cannot:
+- Access localhost or internal networks
+- Make requests to arbitrary domains (must be allowlisted)
+- Send more data than their quota allows
+- Make more requests than their rate limit permits
+</Callout>
+
+### Capability Declaration
+
+Declare network capabilities in your manifest:
+
+```json
+{
+  "capabilities": {
+    "network": {
+      "http": true,
+      "allowed_domains": [
+        "api.github.com",
+        "api.openweathermap.org",
+        "*.example.com"
+      ],
+      "max_request_size_bytes": 1048576,
+      "max_response_size_bytes": 5242880
+    }
+  },
+  "limits": {
+    "network_requests_per_minute": 60,
+    "network_bytes_per_minute": 10485760
+  }
+}
+```
+
+## Making HTTP Requests
+
+### Basic GET Request
+
+```rust
+use vudo_spirit::network::{self, Request, Response};
+
+#[vudo_spirit::main]
+pub fn fetch_data(url: String) -> Result<String, vudo_spirit::Error> {
+    // Build the request
+    let request = Request::get(&url);
+
+    // Execute the request
+    let response = network::request(request)?;
+
+    // Check status
+    if !response.status().is_success() {
+        return Err(vudo_spirit::Error::new(
+            vudo_spirit::ErrorKind::NetworkError,
+            format!("Request failed with status: {}", response.status())
+        ));
+    }
+
+    // Read response body
+    let body = response.text()?;
+
+    log::info!("Fetched {} bytes from {}", body.len(), url);
+
+    Ok(body)
+}
+```
+
+### POST Request with JSON Body
+
+```rust
+use vudo_spirit::network::{self, Request};
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize)]
+struct CreateIssueRequest {
+    title: String,
+    body: String,
+    labels: Vec<String>,
+}
+
+#[derive(Deserialize)]
+struct CreateIssueResponse {
+    id: u64,
+    number: u32,
+    html_url: String,
+}
+
+#[vudo_spirit::main]
+pub fn create_github_issue(
+    repo: String,
+    title: String,
+    body: String,
+) -> Result<CreateIssueResponse, vudo_spirit::Error> {
+    let url = format!("https://api.github.com/repos/{}/issues", repo);
+
+    let payload = CreateIssueRequest {
+        title,
+        body,
+        labels: vec!["bug".to_string()],
+    };
+
+    let request = Request::post(&url)
+        .header("Authorization", &format!("Bearer {}", get_token()?))
+        .header("Accept", "application/vnd.github.v3+json")
+        .header("User-Agent", "VUDO-Spirit")
+        .json(&payload)?;
+
+    let response = network::request(request)?;
+
+    if !response.status().is_success() {
+        let error_body = response.text().unwrap_or_default();
+        return Err(vudo_spirit::Error::new(
+            vudo_spirit::ErrorKind::NetworkError,
+            format!("GitHub API error: {} - {}", response.status(), error_body)
+        ));
+    }
+
+    let issue: CreateIssueResponse = response.json()?;
+
+    log::info!(
+        issue_number = issue.number,
+        url = %issue.html_url;
+        "Created GitHub issue"
+    );
+
+    Ok(issue)
+}
+```
+
+### Request Methods
+
+The network module supports all standard HTTP methods:
+
+```rust
+use vudo_spirit::network::Request;
+
+// GET
+let req = Request::get("https://api.example.com/items");
+
+// POST
+let req = Request::post("https://api.example.com/items")
+    .json(&new_item)?;
+
+// PUT
+let req = Request::put("https://api.example.com/items/123")
+    .json(&updated_item)?;
+
+// PATCH
+let req = Request::patch("https://api.example.com/items/123")
+    .json(&partial_update)?;
+
+// DELETE
+let req = Request::delete("https://api.example.com/items/123");
+
+// HEAD (for checking existence or getting metadata)
+let req = Request::head("https://api.example.com/items/123");
+```
+
+### Request Headers
+
+Add custom headers to your requests:
+
+```rust
+use vudo_spirit::network::Request;
+
+let request = Request::get("https://api.example.com/data")
+    .header("Authorization", "Bearer token123")
+    .header("Accept", "application/json")
+    .header("X-Custom-Header", "custom-value")
+    .header("User-Agent", "MySpirit/1.0");
+```
+
+### Request Body Types
+
+```rust
+use vudo_spirit::network::Request;
+
+// JSON body (sets Content-Type: application/json)
+let req = Request::post(url)
+    .json(&my_struct)?;
+
+// Form body (sets Content-Type: application/x-www-form-urlencoded)
+let req = Request::post(url)
+    .form(&[
+        ("username", "alice"),
+        ("password", "secret"),
+    ])?;
+
+// Raw bytes
+let req = Request::post(url)
+    .header("Content-Type", "application/octet-stream")
+    .body(bytes);
+
+// Text
+let req = Request::post(url)
+    .header("Content-Type", "text/plain")
+    .body("Plain text content");
+```
+
+## Handling Responses
+
+### Response Status
+
+```rust
+use vudo_spirit::network::{self, Request, StatusCode};
+
+let response = network::request(Request::get(url))?;
+
+// Check status code
+match response.status() {
+    StatusCode::OK => {
+        // 200 - Success
+        let data = response.json()?;
+    }
+    StatusCode::CREATED => {
+        // 201 - Resource created
+        let location = response.header("Location");
+    }
+    StatusCode::NO_CONTENT => {
+        // 204 - Success, no body
+    }
+    StatusCode::BAD_REQUEST => {
+        // 400 - Client error
+        let error: ApiError = response.json()?;
+        return Err(error.into());
+    }
+    StatusCode::UNAUTHORIZED => {
+        // 401 - Authentication required
+        return Err(vudo_spirit::Error::unauthorized("Invalid credentials"));
+    }
+    StatusCode::NOT_FOUND => {
+        // 404 - Resource not found
+        return Ok(None);
+    }
+    StatusCode::TOO_MANY_REQUESTS => {
+        // 429 - Rate limited
+        let retry_after = response.header("Retry-After");
+        return Err(vudo_spirit::Error::rate_limited(retry_after));
+    }
+    status if status.is_server_error() => {
+        // 5xx - Server error
+        log::error!("Server error: {}", status);
+        return Err(vudo_spirit::Error::server_error("Service unavailable"));
+    }
+    status => {
+        log::warn!("Unexpected status: {}", status);
+    }
+}
+```
+
+### Response Headers
+
+```rust
+let response = network::request(request)?;
+
+// Get a specific header
+if let Some(content_type) = response.header("Content-Type") {
+    log::debug!("Content-Type: {}", content_type);
+}
+
+// Check for pagination
+if let Some(link) = response.header("Link") {
+    let next_url = parse_link_header(link);
+}
+
+// Get rate limit info
+let remaining = response.header("X-RateLimit-Remaining")
+    .and_then(|s| s.parse::<u32>().ok());
+```
+
+### Response Body
+
+```rust
+let response = network::request(request)?;
+
+// As text
+let text: String = response.text()?;
+
+// As JSON (deserialize into struct)
+let data: MyStruct = response.json()?;
+
+// As bytes
+let bytes: Vec<u8> = response.bytes()?;
+```
+
+## Error Handling
+
+Network operations can fail in many ways:
+
+```rust
+use vudo_spirit::network::{self, Request, NetworkError};
+
+pub fn robust_fetch(url: &str) -> Result<Data, vudo_spirit::Error> {
+    let request = Request::get(url)
+        .timeout(std::time::Duration::from_secs(10));
+
+    match network::request(request) {
+        Ok(response) => {
+            if response.status().is_success() {
+                Ok(response.json()?)
+            } else {
+                Err(vudo_spirit::Error::new(
+                    vudo_spirit::ErrorKind::NetworkError,
+                    format!("HTTP {}", response.status())
+                ))
+            }
+        }
+        Err(NetworkError::Timeout) => {
+            log::warn!("Request timed out: {}", url);
+            Err(vudo_spirit::Error::timeout("Request timed out"))
+        }
+        Err(NetworkError::ConnectionFailed(e)) => {
+            log::error!("Connection failed: {}", e);
+            Err(vudo_spirit::Error::network_error("Connection failed"))
+        }
+        Err(NetworkError::DomainNotAllowed(domain)) => {
+            log::error!("Domain not in allowlist: {}", domain);
+            Err(vudo_spirit::Error::permission_denied("Domain not allowed"))
+        }
+        Err(NetworkError::RateLimited { retry_after }) => {
+            log::warn!("Rate limited, retry after {:?}", retry_after);
+            Err(vudo_spirit::Error::rate_limited(retry_after))
+        }
+        Err(e) => {
+            log::error!("Network error: {}", e);
+            Err(e.into())
+        }
+    }
+}
+```
+
+### Retry with Backoff
+
+```rust
+use vudo_spirit::{network, time};
+use std::time::Duration;
+
+pub fn fetch_with_retry<T>(
+    url: &str,
+    max_attempts: u32,
+) -> Result<T, vudo_spirit::Error>
+where
+    T: serde::de::DeserializeOwned,
+{
+    let mut attempt = 0;
+    let mut last_error = None;
+
+    while attempt < max_attempts {
+        attempt += 1;
+
+        let request = network::Request::get(url)
+            .timeout(Duration::from_secs(30));
+
+        match network::request(request) {
+            Ok(response) if response.status().is_success() => {
+                return response.json();
+            }
+            Ok(response) if response.status() == 429 => {
+                // Rate limited - get retry delay
+                let delay = response.header("Retry-After")
+                    .and_then(|s| s.parse::<u64>().ok())
+                    .unwrap_or(60);
+
+                log::warn!(
+                    attempt = attempt,
+                    delay_secs = delay;
+                    "Rate limited, waiting"
+                );
+
+                time::sleep(Duration::from_secs(delay))?;
+            }
+            Ok(response) if response.status().is_server_error() => {
+                // Server error - exponential backoff
+                let delay = Duration::from_millis(100 * (1 << attempt));
+
+                log::warn!(
+                    attempt = attempt,
+                    status = %response.status(),
+                    delay_ms = delay.as_millis();
+                    "Server error, retrying"
+                );
+
+                last_error = Some(vudo_spirit::Error::server_error(
+                    format!("HTTP {}", response.status())
+                ));
+
+                time::sleep(delay)?;
+            }
+            Ok(response) => {
+                // Client error - don't retry
+                return Err(vudo_spirit::Error::new(
+                    vudo_spirit::ErrorKind::NetworkError,
+                    format!("HTTP {}", response.status())
+                ));
+            }
+            Err(e) => {
+                log::warn!(
+                    attempt = attempt,
+                    error = %e;
+                    "Request failed, retrying"
+                );
+
+                last_error = Some(e.into());
+
+                let delay = Duration::from_millis(100 * (1 << attempt));
+                time::sleep(delay)?;
+            }
+        }
+    }
+
+    Err(last_error.unwrap_or_else(|| {
+        vudo_spirit::Error::network_error("Max retries exceeded")
+    }))
+}
+```
+
+## Rate Limiting
+
+### Understanding Rate Limits
+
+VUDO enforces rate limits at multiple levels:
+
+1. **Spirit manifest limits**: Defined in your manifest
+2. **Runtime limits**: Enforced by the VUDO runtime
+3. **External API limits**: Enforced by the services you call
+
+```rust
+// Check your remaining quota
+let quota = network::quota()?;
+log::info!(
+    requests_remaining = quota.requests_remaining,
+    bytes_remaining = quota.bytes_remaining,
+    reset_at = quota.reset_at;
+    "Current network quota"
+);
+```
+
+### Implementing Client-Side Rate Limiting
+
+```rust
+use vudo_spirit::{storage, time, network};
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Default)]
+struct RateLimitState {
+    request_count: u32,
+    window_start: u64,
+}
+
+const REQUESTS_PER_MINUTE: u32 = 30;
+const WINDOW_SECONDS: u64 = 60;
+
+fn check_rate_limit() -> Result<bool, vudo_spirit::Error> {
+    let now = time::now()?;
+
+    let mut state: RateLimitState = storage::read("_rate_limit")?
+        .and_then(|data| serde_json::from_slice(&data).ok())
+        .unwrap_or_default();
+
+    // Check if we're in a new window
+    if now - state.window_start >= WINDOW_SECONDS {
+        state = RateLimitState {
+            request_count: 0,
+            window_start: now,
+        };
+    }
+
+    // Check limit
+    if state.request_count >= REQUESTS_PER_MINUTE {
+        let wait_time = WINDOW_SECONDS - (now - state.window_start);
+        log::warn!("Rate limited, wait {} seconds", wait_time);
+        return Ok(false);
+    }
+
+    // Increment counter
+    state.request_count += 1;
+    let data = serde_json::to_vec(&state)?;
+    storage::write("_rate_limit", &data)?;
+
+    Ok(true)
+}
+
+pub fn rate_limited_request<T>(url: &str) -> Result<T, vudo_spirit::Error>
+where
+    T: serde::de::DeserializeOwned,
+{
+    if !check_rate_limit()? {
+        return Err(vudo_spirit::Error::rate_limited(None));
+    }
+
+    let response = network::request(network::Request::get(url))?;
+    response.json()
+}
+```
+
+## Mini-Project: Weather Spirit
+
+Build a Spirit that fetches and caches weather data:
+
+### manifest.json
+
+```json
+{
+  "$schema": "https://vudo.dev/schemas/manifest-v1.json",
+  "name": "weather-spirit",
+  "version": "1.0.0",
+  "description": "Fetch weather data with caching",
+
+  "spirit": {
+    "entry": "get_weather",
+    "format": "wasm32-component"
+  },
+
+  "capabilities": {
+    "logging": true,
+    "time": {
+      "now": true
+    },
+    "storage": {
+      "read": true,
+      "write": true,
+      "namespace": "weather"
+    },
+    "network": {
+      "http": true,
+      "allowed_domains": [
+        "api.openweathermap.org"
+      ]
+    }
+  },
+
+  "limits": {
+    "memory_pages": 8,
+    "execution_time_ms": 5000,
+    "storage_bytes": 102400,
+    "network_requests_per_minute": 10
+  }
+}
+```
+
+### src/lib.rs
+
+```rust
+use vudo_spirit::{log, time, storage, network};
+use serde::{Deserialize, Serialize};
+
+const API_BASE: &str = "https://api.openweathermap.org/data/2.5";
+const CACHE_TTL_SECONDS: u64 = 600; // 10 minutes
+
+// ============================================================================
+// API Response Types
+// ============================================================================
+
+#[derive(Deserialize)]
+struct OpenWeatherResponse {
+    main: MainData,
+    weather: Vec<WeatherCondition>,
+    name: String,
+    dt: u64,
+}
+
+#[derive(Deserialize)]
+struct MainData {
+    temp: f64,
+    feels_like: f64,
+    humidity: u64,
+    pressure: u64,
+}
+
+#[derive(Deserialize)]
+struct WeatherCondition {
+    main: String,
+    description: String,
+    icon: String,
+}
+
+// ============================================================================
+// Our Types
+// ============================================================================
+
+#[derive(Serialize, Deserialize)]
+struct CachedWeather {
+    data: WeatherData,
+    fetched_at: u64,
+    expires_at: u64,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct WeatherData {
+    pub city: String,
+    pub temperature_celsius: f64,
+    pub feels_like_celsius: f64,
+    pub humidity_percent: u64,
+    pub pressure_hpa: u64,
+    pub condition: String,
+    pub description: String,
+    pub icon_code: String,
+    pub timestamp: u64,
+}
+
+#[derive(Deserialize)]
+pub struct WeatherRequest {
+    pub city: String,
+    pub api_key: String,
+    pub force_refresh: Option<bool>,
+}
+
+#[derive(Serialize)]
+pub struct WeatherResponse {
+    pub weather: WeatherData,
+    pub cached: bool,
+    pub cache_expires_at: u64,
+}
+
+// ============================================================================
+// Implementation
+// ============================================================================
+
+fn cache_key(city: &str) -> String {
+    format!("cache:{}", city.to_lowercase().replace(' ', "_"))
+}
+
+fn load_cached(city: &str) -> Result<Option<CachedWeather>, vudo_spirit::Error> {
+    let key = cache_key(city);
+    storage::read(&key)?
+        .map(|data| serde_json::from_slice(&data))
+        .transpose()
+        .map_err(Into::into)
+}
+
+fn save_cached(city: &str, weather: &WeatherData) -> Result<CachedWeather, vudo_spirit::Error> {
+    let now = time::now()?;
+    let cached = CachedWeather {
+        data: weather.clone(),
+        fetched_at: now,
+        expires_at: now + CACHE_TTL_SECONDS,
+    };
+
+    let key = cache_key(city);
+    let data = serde_json::to_vec(&cached)?;
+    storage::write(&key, &data)?;
+
+    Ok(cached)
+}
+
+fn fetch_weather(city: &str, api_key: &str) -> Result<WeatherData, vudo_spirit::Error> {
+    let url = format!(
+        "{}/weather?q={}&appid={}&units=metric",
+        API_BASE,
+        urlencoding::encode(city),
+        api_key
+    );
+
+    log::info!(city = %city; "Fetching weather from API");
+
+    let request = network::Request::get(&url)
+        .header("Accept", "application/json")
+        .timeout(std::time::Duration::from_secs(10));
+
+    let response = network::request(request)?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let body = response.text().unwrap_or_default();
+
+        log::error!(
+            status = %status,
+            body = %body;
+            "Weather API error"
+        );
+
+        return Err(vudo_spirit::Error::new(
+            vudo_spirit::ErrorKind::NetworkError,
+            format!("Weather API returned {}", status)
+        ));
+    }
+
+    let api_response: OpenWeatherResponse = response.json()?;
+
+    let condition = api_response.weather.first()
+        .map(|w| w.main.clone())
+        .unwrap_or_else(|| "Unknown".to_string());
+
+    let description = api_response.weather.first()
+        .map(|w| w.description.clone())
+        .unwrap_or_else(|| "No description".to_string());
+
+    let icon_code = api_response.weather.first()
+        .map(|w| w.icon.clone())
+        .unwrap_or_else(|| "01d".to_string());
+
+    Ok(WeatherData {
+        city: api_response.name,
+        temperature_celsius: api_response.main.temp,
+        feels_like_celsius: api_response.main.feels_like,
+        humidity_percent: api_response.main.humidity,
+        pressure_hpa: api_response.main.pressure,
+        condition,
+        description,
+        icon_code,
+        timestamp: api_response.dt,
+    })
+}
+
+/// Get weather for a city (with caching)
+#[vudo_spirit::export]
+pub fn get_weather(input: WeatherRequest) -> Result<WeatherResponse, vudo_spirit::Error> {
+    let force_refresh = input.force_refresh.unwrap_or(false);
+    let now = time::now()?;
+
+    // Check cache first (unless force refresh)
+    if !force_refresh {
+        if let Some(cached) = load_cached(&input.city)? {
+            if cached.expires_at > now {
+                log::debug!(
+                    city = %input.city,
+                    expires_in = cached.expires_at - now;
+                    "Returning cached weather"
+                );
+
+                return Ok(WeatherResponse {
+                    weather: cached.data,
+                    cached: true,
+                    cache_expires_at: cached.expires_at,
+                });
+            }
+        }
+    }
+
+    // Fetch fresh data
+    let weather = fetch_weather(&input.city, &input.api_key)?;
+
+    // Cache it
+    let cached = save_cached(&input.city, &weather)?;
+
+    log::info!(
+        city = %weather.city,
+        temp = weather.temperature_celsius,
+        condition = %weather.condition;
+        "Weather fetched and cached"
+    );
+
+    Ok(WeatherResponse {
+        weather,
+        cached: false,
+        cache_expires_at: cached.expires_at,
+    })
+}
+
+/// Get weather for multiple cities
+#[vudo_spirit::export]
+pub fn get_weather_batch(
+    cities: Vec<String>,
+    api_key: String,
+) -> Result<Vec<WeatherResponse>, vudo_spirit::Error> {
+    let mut results = Vec::with_capacity(cities.len());
+
+    for city in cities {
+        match get_weather(WeatherRequest {
+            city: city.clone(),
+            api_key: api_key.clone(),
+            force_refresh: Some(false),
+        }) {
+            Ok(weather) => results.push(weather),
+            Err(e) => {
+                log::warn!(city = %city, error = %e; "Failed to get weather");
+                // Continue with other cities
+            }
+        }
+    }
+
+    Ok(results)
+}
+
+/// Clear the weather cache
+#[vudo_spirit::export]
+pub fn clear_cache() -> Result<u32, vudo_spirit::Error> {
+    let keys = storage::list("cache:")?;
+    let count = keys.len() as u32;
+
+    for key in keys {
+        storage::delete(&key)?;
+    }
+
+    log::info!(count = count; "Cache cleared");
+
+    Ok(count)
+}
+```
+
+### Testing the Weather Spirit
+
+<Terminal>
+```bash
+# Build the spirit
+$ vudo build
+
+# Get weather (will fetch from API)
+$ vudo run weather-spirit --function get_weather --input '{
+  "city": "London",
+  "api_key": "your-api-key"
+}'
+{
+  "weather": {
+    "city": "London",
+    "temperature_celsius": 12.5,
+    "feels_like_celsius": 11.2,
+    "humidity_percent": 76,
+    "pressure_hpa": 1015,
+    "condition": "Clouds",
+    "description": "scattered clouds",
+    "icon_code": "03d",
+    "timestamp": 1703520000
+  },
+  "cached": false,
+  "cache_expires_at": 1703520600
+}
+
+# Get weather again (should be cached)
+$ vudo run weather-spirit --function get_weather --input '{
+  "city": "London",
+  "api_key": "your-api-key"
+}'
+{
+  "weather": { ... },
+  "cached": true,
+  "cache_expires_at": 1703520600
+}
+
+# Force refresh
+$ vudo run weather-spirit --function get_weather --input '{
+  "city": "London",
+  "api_key": "your-api-key",
+  "force_refresh": true
+}'
+
+# Get multiple cities
+$ vudo run weather-spirit --function get_weather_batch --input '{
+  "cities": ["London", "Paris", "Tokyo"],
+  "api_key": "your-api-key"
+}'
+```
+</Terminal>
+
+## Best Practices
+
+### Security
+
+```rust
+// DO: Use HTTPS
+let req = Request::get("https://api.example.com/data");
+
+// DON'T: Hardcode secrets
+// let api_key = "sk-12345...";  // NEVER DO THIS
+
+// DO: Accept secrets as input or from secure storage
+fn get_api_key() -> Result<String, vudo_spirit::Error> {
+    storage::read("api_key")?
+        .map(|bytes| String::from_utf8_lossy(&bytes).to_string())
+        .ok_or_else(|| vudo_spirit::Error::not_found("API key not configured"))
+}
+```
+
+### Efficiency
+
+```rust
+// DO: Cache responses when appropriate
+// DO: Use compression when available
+let req = Request::get(url)
+    .header("Accept-Encoding", "gzip, deflate");
+
+// DO: Request only what you need
+let req = Request::get(url)
+    .header("Accept", "application/json");
+
+// DO: Set reasonable timeouts
+let req = Request::get(url)
+    .timeout(Duration::from_secs(10));
+```
+
+### Reliability
+
+```rust
+// DO: Handle all error cases
+// DO: Implement retry logic for transient failures
+// DO: Respect rate limits
+// DO: Validate responses before processing
+```
+
+## Key Takeaways
+
+1. **Network access is controlled** through capability declarations and domain allowlists
+
+2. **Use the Request builder** for clean, typed HTTP requests
+
+3. **Handle all response cases** including errors, rate limits, and timeouts
+
+4. **Implement caching** to reduce API calls and improve performance
+
+5. **Respect rate limits** both from VUDO and external services
+
+## What's Next?
+
+Now that you can fetch external data, let's understand the economic model. In the next tutorial, you'll learn:
+
+- How credits work in the VUDO ecosystem
+- Managing credit balances and reservations
+- Implementing economic incentives
+
+Continue to [Credits and Economics](/tutorials/spirits/006-credits).
+
+## Additional Resources
+
+- [Network API Reference](/dol/reference/network)
+- [Security Best Practices](/dol/guides/security)
+- [Weather Spirit Example](https://github.com/univrs/spirit-examples/tree/main/weather)

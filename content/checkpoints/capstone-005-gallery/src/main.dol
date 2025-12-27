@@ -1,0 +1,260 @@
+// Lion & Swan - Capstone Project
+// A generative storytelling spirit that creates symbolic imagery and narratives
+//
+// Checkpoint 005: Gallery component integrated
+// Now with Gallery for listing and displaying content
+
+use std::host::{log, time}
+use crate::symbols::{Symbol, Allegiance, SymbolRegistry, lion_archetypes, swan_archetypes}
+use crate::image_gen::{ImageGenerator, ImaginatorClient, ImageConfig, GeneratedImage, generate_batch, ImageRequest}
+use crate::narrative::{
+  SceneType, Scene, Narrative, NarrativeGenerator, StoryWeaver,
+  SceneTemplates, generate_allegiance_story
+}
+use crate::gallery::{
+  Gallery, DisplayFormat, Displayable, ImageGalleryItem, NarrativeGalleryItem,
+  PersistentGallery, GalleryStorage, display_overview
+}
+
+/// The Lion & Swan spirit entry point
+pub system LionSwan @ 0.1.0 {
+  state registry: SymbolRegistry
+  state image_client: ImaginatorClient
+  state story_weaver: StoryWeaver
+  state gallery: Gallery
+  state persistent_storage: PersistentGallery
+
+  /// Spirit initialization
+  pub fun init() -> LionSwan {
+    log::info("Lion & Swan spirit initialized")
+    log::info("Version: 0.1.0")
+
+    // Initialize the symbol registry with archetypes
+    let mut registry = SymbolRegistry::new()
+
+    for symbol in lion_archetypes() {
+      registry = registry.add(symbol)
+      log::debug("Registered Lion symbol: {symbol.name}")
+    }
+
+    for symbol in swan_archetypes() {
+      registry = registry.add(symbol)
+      log::debug("Registered Swan symbol: {symbol.name}")
+    }
+
+    log::info("Loaded {registry.lion_count} Lion symbols")
+    log::info("Loaded {registry.swan_count} Swan symbols")
+
+    // Initialize clients
+    let image_client = ImaginatorClient {}
+    let story_weaver = StoryWeaver { templates: SceneTemplates {} }
+
+    if image_client.is_available() {
+      log::info("Imaginarium API is available")
+    } else {
+      log::warn("Imaginarium API is not available")
+    }
+
+    log::info("StoryWeaver initialized")
+
+    // Load or create gallery
+    let persistent_storage = PersistentGallery {}
+    let gallery = match persistent_storage.load() {
+      Ok(g) => g,
+      Err(_) => Gallery::new(),
+    }
+
+    log::info("Gallery loaded with {gallery.total_items()} items")
+
+    return LionSwan {
+      registry: registry,
+      image_client: image_client,
+      story_weaver: story_weaver,
+      gallery: gallery,
+      persistent_storage: persistent_storage,
+    }
+  }
+
+  /// Main execution entry point
+  pub fun run(self) -> Result<(), Error> {
+    let start_time = time::now()
+
+    log::info("Lion & Swan beginning execution...")
+
+    // Display current symbol balance
+    match self.registry.dominant_allegiance() {
+      Some(Allegiance::Lion) => log::info("The Lion holds dominance"),
+      Some(Allegiance::Swan) => log::info("The Swan holds dominance"),
+      None => log::info("The allegiances are in balance"),
+    }
+
+    // Display gallery overview
+    log::info(display_overview(self.gallery))
+
+    let elapsed = time::now() - start_time
+    log::info("Execution completed in {elapsed}ms")
+
+    return Ok(())
+  }
+
+  // ============= Gallery Operations =============
+
+  /// Display the gallery overview
+  pub fun show_gallery(self) -> String {
+    return display_overview(self.gallery)
+  }
+
+  /// List all gallery items
+  pub fun list_gallery(self, format: DisplayFormat) -> String {
+    return self.gallery.list_all(format)
+  }
+
+  /// List gallery items by allegiance
+  pub fun list_by_allegiance(self, allegiance: Allegiance, format: DisplayFormat) -> String {
+    return self.gallery.list_by_allegiance(allegiance, format)
+  }
+
+  /// Save the gallery to persistent storage
+  pub fun save_gallery(self) -> Result<(), Error> {
+    return self.persistent_storage.save(self.gallery)
+  }
+
+  // ============= Narrative Generation =============
+
+  /// Generate a new narrative and add to gallery
+  pub fun generate_narrative(self, scene_count: UInt32) -> Result<LionSwan, Error> {
+    log::info("Generating narrative with {scene_count} scenes...")
+
+    let narrative = self.story_weaver.generate_narrative(self.registry, scene_count)
+    log::info("Generated narrative: \"{narrative.title}\"")
+
+    let (lion, swan) = narrative.allegiance_balance()
+    log::info("Allegiance balance - Lion: {lion}, Swan: {swan}")
+
+    // Add to gallery
+    let updated_gallery = self.gallery.add_narrative(narrative)
+
+    return Ok(LionSwan {
+      ...self,
+      gallery: updated_gallery,
+    })
+  }
+
+  /// Generate a narrative focused on a specific allegiance
+  pub fun generate_allegiance_narrative(self, allegiance: Allegiance, scene_count: UInt32) -> Result<LionSwan, Error> {
+    log::info("Generating {allegiance} narrative with {scene_count} scenes...")
+
+    let narrative = generate_allegiance_story(self.registry, allegiance, scene_count)
+    log::info("Generated narrative: \"{narrative.title}\"")
+
+    let updated_gallery = self.gallery.add_narrative(narrative)
+
+    return Ok(LionSwan {
+      ...self,
+      gallery: updated_gallery,
+    })
+  }
+
+  /// Get all narratives from gallery
+  pub fun all_narratives(self) -> List<NarrativeGalleryItem> {
+    return self.gallery.all_narratives()
+  }
+
+  // ============= Image Generation =============
+
+  /// Generate an image for a specific symbol and add to gallery
+  pub fun generate_image(self, symbol: Symbol) -> Result<LionSwan, Error> {
+    let request = ImageRequest::new(symbol)
+    let image = self.image_client.generate(request)?
+
+    let updated_gallery = self.gallery.add_image(image, symbol)
+
+    return Ok(LionSwan {
+      ...self,
+      gallery: updated_gallery,
+    })
+  }
+
+  /// Generate images for all symbols of an allegiance
+  pub fun generate_allegiance_images(self, allegiance: Allegiance) -> Result<LionSwan, Error> {
+    let symbols = self.registry.by_allegiance(allegiance)
+    let config = ImageConfig::for_allegiance(allegiance)
+    let images = generate_batch(self.image_client, symbols, Some(config))?
+
+    let mut updated_gallery = self.gallery
+    for (image, symbol) in images.iter().zip(symbols.iter()) {
+      updated_gallery = updated_gallery.add_image(image, symbol)
+    }
+
+    return Ok(LionSwan {
+      ...self,
+      gallery: updated_gallery,
+    })
+  }
+
+  /// Generate images for all symbols
+  pub fun generate_all_images(self) -> Result<LionSwan, Error> {
+    log::info("Generating images for all symbols...")
+
+    let lion_symbols = self.registry.by_allegiance(Allegiance::Lion)
+    let swan_symbols = self.registry.by_allegiance(Allegiance::Swan)
+
+    let lion_images = generate_batch(
+      self.image_client,
+      lion_symbols,
+      Some(ImageConfig::for_allegiance(Allegiance::Lion))
+    )?
+
+    let swan_images = generate_batch(
+      self.image_client,
+      swan_symbols,
+      Some(ImageConfig::for_allegiance(Allegiance::Swan))
+    )?
+
+    log::info("Generated {lion_images.len()} Lion images")
+    log::info("Generated {swan_images.len()} Swan images")
+
+    let mut updated_gallery = self.gallery
+    for (image, symbol) in lion_images.iter().zip(lion_symbols.iter()) {
+      updated_gallery = updated_gallery.add_image(image, symbol)
+    }
+    for (image, symbol) in swan_images.iter().zip(swan_symbols.iter()) {
+      updated_gallery = updated_gallery.add_image(image, symbol)
+    }
+
+    return Ok(LionSwan {
+      ...self,
+      gallery: updated_gallery,
+    })
+  }
+
+  /// Get all images from gallery
+  pub fun all_images(self) -> List<ImageGalleryItem> {
+    return self.gallery.all_images()
+  }
+
+  // ============= Symbol Management =============
+
+  /// Add a custom symbol to the registry
+  pub fun add_symbol(self, name: String, allegiance: Allegiance, description: String) -> LionSwan {
+    let symbol = Symbol::new(name, allegiance, description)
+    log::info("Created new symbol: {name} ({allegiance})")
+    return LionSwan {
+      ...self,
+      registry: self.registry.add(symbol)
+    }
+  }
+
+  /// Get symbols by allegiance
+  pub fun symbols_of(self, allegiance: Allegiance) -> List<Symbol> {
+    return self.registry.by_allegiance(allegiance)
+  }
+
+  exegesis {
+    The Lion & Swan is a generative storytelling spirit that explores
+    the duality of symbols through two allegiances.
+
+    This checkpoint adds the Gallery component for listing and
+    displaying generated content, with persistent storage support.
+  }
+}
