@@ -1,6 +1,6 @@
 import { useParams, Link, Navigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { ChevronRight, Clock, ArrowLeft, ArrowRight } from "lucide-react";
+import { ChevronRight, Clock } from "lucide-react";
 import { Suspense, lazy, useMemo } from "react";
 import { MDXProvider } from "@mdx-js/react";
 
@@ -230,9 +230,6 @@ export default function DOLTutorial() {
 
     const currentIndex = tutorials.findIndex((t) => t.slug === slug);
     const tutorial = tutorials[currentIndex];
-    const prevTutorial = currentIndex > 0 ? tutorials[currentIndex - 1] : null;
-    const nextTutorial =
-        currentIndex < tutorials.length - 1 ? tutorials[currentIndex + 1] : null;
 
     // Dynamically import the MDX content
     const TutorialContent = useMemo(() => {
@@ -325,41 +322,6 @@ export default function DOLTutorial() {
                         </MDXProvider>
                     </article>
 
-                    {/* Navigation */}
-                    <div
-                        className="mt-12 pt-8 flex justify-between items-center"
-                        style={{ borderTop: "1px solid var(--border-subtle)" }}
-                    >
-                        {prevTutorial ? (
-                            <Link
-                                to={`/dol/tutorials/${prevTutorial.slug}`}
-                                className="btn-secondary inline-flex items-center gap-2"
-                            >
-                                <ArrowLeft className="w-4 h-4" />
-                                Previous: {prevTutorial.title}
-                            </Link>
-                        ) : (
-                            <span />
-                        )}
-
-                        {nextTutorial ? (
-                            <Link
-                                to={`/dol/tutorials/${nextTutorial.slug}`}
-                                className="btn-primary inline-flex items-center gap-2"
-                            >
-                                Next: {nextTutorial.title}
-                                <ArrowRight className="w-4 h-4" />
-                            </Link>
-                        ) : (
-                            <Link
-                                to="/dol/learn"
-                                className="btn-primary inline-flex items-center gap-2"
-                            >
-                                Complete! Back to Learn
-                                <ArrowRight className="w-4 h-4" />
-                            </Link>
-                        )}
-                    </div>
                 </div>
             </section>
         </>
