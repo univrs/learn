@@ -1,6 +1,8 @@
 import { Routes, Route, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { FileCode, BookOpen, Library, Code2, ArrowRight, Sparkles, Zap } from "lucide-react";
+import { FileCode, BookOpen, Library, Code2, ArrowRight, Sparkles, Zap, Package, Github } from "lucide-react";
+
+const DOL_VERSION = "0.2.3";
 import DOLLearn from "./Learn";
 import DOLReference from "./Reference";
 import DOLStdlib from "./Stdlib";
@@ -86,12 +88,63 @@ function DOLOverview() {
                             </h1>
                         </div>
                         <p
-                            className="text-xl"
+                            className="text-xl mb-6"
                             style={{ color: "var(--text-secondary)" }}
                         >
                             A specification language for systems that know what
                             they should be.
                         </p>
+                        <div className="flex flex-wrap items-center gap-4">
+                            <a
+                                href={`https://crates.io/crates/dol/${DOL_VERSION}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-opacity hover:opacity-80"
+                                style={{
+                                    backgroundColor: "var(--bg-tertiary)",
+                                    border: "1px solid var(--border-subtle)",
+                                    color: "var(--glow-cyan)",
+                                }}
+                            >
+                                <Package className="w-4 h-4" />
+                                v{DOL_VERSION}
+                            </a>
+                            <a
+                                href="https://github.com/univrs/dol"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-opacity hover:opacity-80"
+                                style={{
+                                    backgroundColor: "var(--bg-tertiary)",
+                                    border: "1px solid var(--border-subtle)",
+                                    color: "var(--text-secondary)",
+                                }}
+                            >
+                                <Github className="w-4 h-4" />
+                                GitHub
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Install Section */}
+            <section className="py-8" style={{ backgroundColor: "var(--bg-tertiary)" }}>
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                            Install:
+                        </span>
+                        <code
+                            className="px-4 py-2 rounded-lg font-mono text-sm"
+                            style={{
+                                backgroundColor: "var(--void)",
+                                border: "1px solid var(--border-subtle)",
+                                color: "var(--glow-cyan)",
+                            }}
+                        >
+                            cargo install dol --features cli
+                        </code>
                     </div>
                 </div>
             </section>
