@@ -1,4 +1,4 @@
-import { ExternalLink, Github } from 'lucide-react'
+import { ExternalLink, Github, BookOpen } from 'lucide-react'
 
 const repos = [
   {
@@ -11,10 +11,11 @@ const repos = [
   {
     name: 'vudo',
     description: 'VUDO VM, Spirit Runtime, and Registry',
-    href: 'https://github.com/univrs/vudo',
+    href: 'https://vudo.univrs.io',
     language: 'Rust',
     color: '#f97316',
     isNew: true,
+    isDocsLink: true,
   },
   {
     name: 'llvm-translation-mcp',
@@ -31,9 +32,9 @@ const repos = [
     color: '#3b82f6',
   },
   {
-    name: 'univrs-network',
+    name: 'network',
     description: 'Decentralized network dashboard',
-    href: 'https://github.com/univrs/univrs-network',
+    href: 'https://github.com/univrs/network',
     language: 'TypeScript',
     color: '#3b82f6',
   },
@@ -89,10 +90,17 @@ export default function Ecosystem() {
               )}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <Github
-                    className="w-5 h-5"
-                    style={{ color: 'var(--soft-gray)' }}
-                  />
+                  {'isDocsLink' in repo && repo.isDocsLink ? (
+                    <BookOpen
+                      className="w-5 h-5"
+                      style={{ color: 'var(--soft-gray)' }}
+                    />
+                  ) : (
+                    <Github
+                      className="w-5 h-5"
+                      style={{ color: 'var(--soft-gray)' }}
+                    />
+                  )}
                   <span
                     className="font-mono text-sm transition-colors"
                     style={{ color: 'var(--glow-cyan)' }}
