@@ -1,436 +1,404 @@
 ---
 title: "Error Handling"
-description: "Handle errors gracefully with Result, Option, and the ? operator"
+description: "Handle errors with Option, Result, and pattern matching in DOL"
 lesson: 7
 track: "dol-fundamentals"
 duration: "15 minutes"
-concepts: ["Result<T, E>", "Option<T>", "? operator", "error creation", "error propagation"]
-prev: "/dol/tutorials/006-entities-components"
+concepts: ["Option<T>", "Result<T, E>", "pattern matching", "? operator", "error propagation"]
+prev: "/dol/tutorials/006-traits-constraints"
 next: "/dol/tutorials/008-modules-imports"
 ---
 
-import DOLRepl from '@/components/code/DOLRepl';
-
 # Error Handling
 
-DOL uses explicit error handling with `Result` and `Option` types. This approach makes errors visible in your code and impossible to ignore.
+DOL uses explicit error handling with `Option` and `Result` types. This approach makes errors visible in your code and impossible to ignore.
 
 ## The Option Type
 
 `Option<T>` represents a value that may or may not exist:
 
-- `Some(value)` - The value exists
-- `None` - No value
+```dol
+pub gene Option<T> {
+  type: enum {
+    Some { value: T },
+    None
+  }
 
-<DOLRepl
-  code={`// Option represents optional values
-let list = [1, 2, 3]
+  exegesis {
+    Option represents an optional value. Some(value) indicates
+    presence, None indicates absence. This eliminates null
+    pointer errors by making optionality explicit.
+  }
+}
+```
 
-let first = list.first()  // Some(1)
-let empty_first = [].first()  // None
+### Using Option in Genes
 
-log(first)
-log(empty_first)`}
-  title="option-basic.dol"
-  output={`Some(1)
-None`}
-/>
+```dol
+pub gene GeneDecl {
+  has name: String
+  has type_def: Option<TypeExpr>
+  has exegesis: Option<String>
+  has span: Span
+
+  exegesis {
+    A gene declaration with optional type definition
+    and optional exegesis block.
+  }
+}
+
+pub gene UserProfile {
+  has username: String
+  has email: String
+  has bio: Option<String>
+  has avatar_url: Option<String>
+
+  exegesis {
+    User profile where bio and avatar are optional.
+  }
+}
+```
 
 ### Working with Option
 
-<DOLRepl
-  code={`// Check if value exists
-let maybe_value: Option<Int> = Some(42)
+Pattern match to safely extract values:
 
-if maybe_value.is_some() {
-    log("Value exists: " + maybe_value.unwrap().to_string())
-} else {
-    log("No value")
+```dol
+pub fun greet_user(name: Option<String>) -> String {
+  match name {
+    Some(n) => {
+      return "Hello, " + n + "!"
+    },
+    None => {
+      return "Hello, stranger!"
+    }
+  }
 }
-
-// Pattern matching with Option
-match maybe_value {
-    Some(x) => log("Got: " + x.to_string()),
-    None => log("Nothing")
-}`}
-  title="option-check.dol"
-  output={`Value exists: 42
-Got: 42`}
-/>
+```
 
 ### Option Methods
 
-<DOLRepl
-  code={`let some_value: Option<Int> = Some(10)
-let no_value: Option<Int> = None
+```dol
+val maybe_value: Option<Int64> = Some(42)
+val nothing: Option<Int64> = None
 
-// unwrap_or provides a default
-log(some_value.unwrap_or(0))  // 10
-log(no_value.unwrap_or(0))    // 0
+// Unwrap with default
+val value = maybe_value.unwrap_or(0)  // 42
+val default = nothing.unwrap_or(0)    // 0
 
-// map transforms the inner value
-let doubled = some_value.map(|x| x * 2)
-log(doubled)  // Some(20)
+// Map over Option
+val doubled = maybe_value.map(|v| v * 2)  // Some(84)
 
-// and_then for chaining
-let result = some_value
-    .map(|x| x + 5)        // Some(15)
-    .and_then(|x| if x > 10 { Some(x) } else { None })
-log(result)`}
-  title="option-methods.dol"
-  output={`10
-0
-Some(20)
-Some(15)`}
-/>
+// Chain operations
+val result = maybe_value
+  .filter(|v| v > 10)
+  .map(|v| v * 2)
+  .unwrap_or(0)  // 84
+```
 
 ## The Result Type
 
 `Result<T, E>` represents an operation that may succeed or fail:
 
-- `Ok(value)` - Success with a value
-- `Err(error)` - Failure with an error
+```dol
+pub gene Result<T, E> {
+  type: enum {
+    Ok { value: T },
+    Err { error: E }
+  }
 
-<DOLRepl
-  code={`// Result represents success or failure
-fn divide(a: Int, b: Int) -> Result<Int, String> {
-    if b == 0 {
-        Err("Cannot divide by zero")
-    } else {
-        Ok(a / b)
+  exegesis {
+    Result represents success (Ok) or failure (Err).
+    Forces explicit error handling at compile time.
+  }
+}
+```
+
+### Functions that Return Result
+
+```dol
+pub gene ParseError {
+  has message: String
+  has position: UInt32
+  has span: Span
+
+  exegesis {
+    Error returned when parsing fails.
+  }
+}
+
+pub fun parse_int(text: String) -> Result<Int64, ParseError> {
+  if text.is_empty() {
+    return Err(ParseError {
+      message: "Empty string",
+      position: 0,
+      span: Span.empty()
+    })
+  }
+  // Parse the string to integer (simplified example)
+  let value = text.parse_int64()?
+  return Ok(value)
+}
+```
+
+### Pattern Matching on Result
+
+```dol
+pub fun process_input(text: String) -> String {
+  val result = parse_int(text)
+
+  match result {
+    Ok(value) => {
+      return "Parsed: " + value.to_string()
+    },
+    Err(error) => {
+      return "Error: " + error.message
     }
+  }
 }
-
-log(divide(10, 2))  // Ok(5)
-log(divide(10, 0))  // Err("Cannot divide by zero")`}
-  title="result-basic.dol"
-  output={`Ok(5)
-Err("Cannot divide by zero")`}
-/>
-
-### Handling Results
-
-<DOLRepl
-  code={`fn parse_number(s: String) -> Result<Int, String> {
-    s.parse_int().map_err(|_| "Invalid number: " + s)
-}
-
-let good = parse_number("42")
-let bad = parse_number("hello")
-
-// Pattern matching
-match good {
-    Ok(n) => log("Parsed: " + n.to_string()),
-    Err(e) => log("Error: " + e)
-}
-
-// is_ok and is_err
-log("Good is ok: " + good.is_ok().to_string())
-log("Bad is err: " + bad.is_err().to_string())`}
-  title="result-handle.dol"
-  output={`Parsed: 42
-Good is ok: true
-Bad is err: true`}
-/>
+```
 
 ### Result Methods
 
-<DOLRepl
-  code={`fn risky() -> Result<Int, String> {
-    Ok(42)
-}
+```dol
+val success: Result<Int64, String> = Ok(42)
+val failure: Result<Int64, String> = Err("not found")
 
-let result = risky()
+// Check status
+val is_ok = success.is_ok()    // true
+val is_err = failure.is_err()  // true
 
-// unwrap_or for default on error
-log(result.unwrap_or(0))
+// Unwrap with default
+val value = failure.unwrap_or(0)  // 0
 
-// map transforms success value
-let doubled = result.map(|x| x * 2)
-log(doubled)
+// Map success value
+val doubled = success.map(|v| v * 2)  // Ok(84)
 
-// map_err transforms error
-let with_context = Err("file not found")
-    .map_err(|e| "Config error: " + e)
-log(with_context)`}
-  title="result-methods.dol"
-  output={`42
-Ok(84)
-Err("Config error: file not found")`}
-/>
+// Map error
+val with_context = failure.map_err(|e| "Parse failed: " + e)
+```
 
 ## The ? Operator
 
-The `?` operator makes error propagation clean and readable:
+The `?` operator provides clean error propagation:
 
-<DOLRepl
-  code={`fn get_user_age(id: Int) -> Result<Int, String> {
-    if id == 1 { Ok(25) } else { Err("User not found") }
+```dol
+pub fun parse_config(text: String) -> Result<Config, Error> {
+  val name = parse_name(text)?   // Returns Err early if parse fails
+  val port = parse_port(text)?   // Returns Err early if parse fails
+  val host = parse_host(text)?   // Returns Err early if parse fails
+
+  Ok(Config { name, port, host })
+}
+```
+
+Without `?`, the same code would be verbose:
+
+```dol
+pub fun parse_config_verbose(text: String) -> Result<Config, Error> {
+  val name = match parse_name(text) {
+    Ok(n) => n,
+    Err(e) => { return Err(e) }
+  }
+
+  val port = match parse_port(text) {
+    Ok(p) => p,
+    Err(e) => { return Err(e) }
+  }
+
+  val host = match parse_host(text) {
+    Ok(h) => h,
+    Err(e) => { return Err(e) }
+  }
+
+  Ok(Config { name, port, host })
+}
+```
+
+## Error Types with Enums
+
+Define rich error types using enum variants:
+
+```dol
+pub gene ValidationError {
+  type: enum {
+    /// Field is missing
+    MissingField { name: String },
+    /// Value out of range
+    OutOfRange { field: String, min: Int64, max: Int64, actual: Int64 },
+    /// Invalid format
+    InvalidFormat { field: String, expected: String },
+    /// Type mismatch
+    TypeMismatch { expected: String, actual: String }
+  }
+  has span: Span
+
+  exegesis {
+    Validation errors with detailed context about what went wrong.
+  }
 }
 
-fn get_user_name(id: Int) -> Result<String, String> {
-    if id == 1 { Ok("Alice") } else { Err("User not found") }
+pub fun validate_age(value: Int64) -> Result<Int64, ValidationError> {
+  if value < 0 || value > 150 {
+    return Err(ValidationError {
+      type: ValidationError.OutOfRange {
+        field: "age",
+        min: 0,
+        max: 150,
+        actual: value
+      },
+      span: Span.empty()
+    })
+  }
+  return Ok(value)
 }
+```
 
-// Without ? operator - verbose
-fn greet_user_verbose(id: Int) -> Result<String, String> {
-    let name = match get_user_name(id) {
-        Ok(n) => n,
-        Err(e) => return Err(e)
-    };
-    let age = match get_user_age(id) {
-        Ok(a) => a,
-        Err(e) => return Err(e)
-    };
-    Ok(name + " is " + age.to_string())
-}
+### Handling Different Error Variants
 
-// With ? operator - clean!
-fn greet_user(id: Int) -> Result<String, String> {
-    let name = get_user_name(id)?
-    let age = get_user_age(id)?
-    Ok(name + " is " + age.to_string())
-}
-
-log(greet_user(1))
-log(greet_user(2))`}
-  title="question-op.dol"
-  output={`Ok("Alice is 25")
-Err("User not found")`}
-/>
-
-The `?` operator:
-1. Returns the inner value if `Ok`
-2. Propagates the error if `Err`
-
-## Custom Error Types
-
-Define your own error types for better error handling:
-
-<DOLRepl
-  code={`// Define custom error type
-enum AppError {
-    NotFound(String),
-    InvalidInput(String),
-    NetworkError { code: Int, message: String }
-}
-
-fn find_user(id: Int) -> Result<String, AppError> {
-    if id <= 0 {
-        Err(AppError::InvalidInput("ID must be positive"))
-    } else if id > 100 {
-        Err(AppError::NotFound("User " + id.to_string()))
-    } else {
-        Ok("User_" + id.to_string())
+```dol
+pub fun handle_validation(result: Result<User, ValidationError>) -> String {
+  match result {
+    Ok(user) => {
+      return "Valid user: " + user.name
+    },
+    Err(error) => {
+      match error.type {
+        ValidationError.MissingField { name } => {
+          return "Missing required field: " + name
+        },
+        ValidationError.OutOfRange { field, min, max, actual } => {
+          return field + " must be between " + min.to_string() +
+                 " and " + max.to_string() + ", got " + actual.to_string()
+        },
+        ValidationError.InvalidFormat { field, expected } => {
+          return field + " has invalid format, expected: " + expected
+        },
+        ValidationError.TypeMismatch { expected, actual } => {
+          return "Type mismatch: expected " + expected + ", got " + actual
+        }
+      }
     }
+  }
 }
+```
 
-// Handle different error types
-match find_user(0) {
-    Ok(user) => log("Found: " + user),
-    Err(AppError::NotFound(msg)) => log("Not found: " + msg),
-    Err(AppError::InvalidInput(msg)) => log("Invalid: " + msg),
-    Err(AppError::NetworkError { code, message }) =>
-        log("Network error " + code.to_string() + ": " + message)
-}`}
-  title="custom-errors.dol"
-  output="Invalid: ID must be positive"
-/>
+## Converting Between Option and Result
 
-## Error Chaining
-
-Chain operations that might fail:
-
-<DOLRepl
-  code={`fn parse_config(text: String) -> Result<Int, String> {
-    text.parse_int().map_err(|_| "Parse error")
-}
-
-fn validate(value: Int) -> Result<Int, String> {
-    if value > 0 && value <= 100 {
-        Ok(value)
-    } else {
-        Err("Value out of range")
-    }
-}
-
-fn process(value: Int) -> Result<String, String> {
-    Ok("Processed: " + value.to_string())
-}
-
-// Chain with and_then
-let result = parse_config("50")
-    .and_then(validate)
-    .and_then(process)
-
-log(result)
-
-// Chain with ?
-fn process_config(text: String) -> Result<String, String> {
-    let value = parse_config(text)?
-    let validated = validate(value)?
-    process(validated)
-}
-
-log(process_config("75"))`}
-  title="chaining.dol"
-  output={`Ok("Processed: 50")
-Ok("Processed: 75")`}
-/>
-
-## Combining Option and Result
-
-Convert between Option and Result:
-
-<DOLRepl
-  code={`// Option to Result
-let maybe: Option<Int> = Some(42)
-let result: Result<Int, String> = maybe.ok_or("No value")
-log(result)
+```dol
+// Option to Result
+val maybe: Option<Int64> = Some(42)
+val result: Result<Int64, String> = maybe.ok_or("No value found")
 
 // Result to Option
-let res: Result<Int, String> = Ok(42)
-let opt: Option<Int> = res.ok()
-log(opt)
+val res: Result<Int64, String> = Ok(42)
+val opt: Option<Int64> = res.ok()  // Some(42)
 
-// Transpose
-let nested: Option<Result<Int, String>> = Some(Ok(42))
-let transposed: Result<Option<Int>, String> = nested.transpose()
-log(transposed)`}
-  title="convert.dol"
-  output={`Ok(42)
-Some(42)
-Ok(Some(42))`}
-/>
+val err: Result<Int64, String> = Err("failed")
+val none: Option<Int64> = err.ok()  // None
+```
 
-## Try Blocks (Experimental)
+## Chaining Fallible Operations
 
-Group fallible operations:
-
-<DOLRepl
-  code={`fn complex_operation() -> Result<Int, String> {
-    try {
-        let a = parse("10")?
-        let b = parse("20")?
-        let c = validate(a + b)?
-        Ok(c * 2)
-    }
+```dol
+pub fun process_data(input: String) -> Result<Output, Error> {
+  parse(input)
+    .and_then(|parsed| validate(parsed))
+    .and_then(|valid| transform(valid))
+    .map(|transformed| Output { data: transformed })
 }
+```
 
-log(complex_operation())`}
-  title="try-block.dol"
-  output="Ok(60)"
-/>
+Or with the `?` operator:
 
-## Best Practices
-
-### 1. Prefer Result over panics
-
-<DOLRepl
-  code={`// Bad: panic on error
-fn bad_divide(a: Int, b: Int) -> Int {
-    a / b  // Panics if b == 0!
+```dol
+pub fun process_data(input: String) -> Result<Output, Error> {
+  val parsed = parse(input)?
+  val valid = validate(parsed)?
+  val transformed = transform(valid)?
+  Ok(Output { data: transformed })
 }
+```
 
-// Good: return Result
-fn good_divide(a: Int, b: Int) -> Result<Int, String> {
-    if b == 0 {
-        Err("Division by zero")
-    } else {
-        Ok(a / b)
-    }
+## Error Context
+
+Add context to errors for better debugging:
+
+```dol
+pub fun load_config(path: String) -> Result<Config, Error> {
+  val content = read_file(path)
+    .map_err(|e| Error {
+      message: "Failed to read config file: " + e.message,
+      source: Some(Box.new(e))
+    })?
+
+  val config = parse_config(content)
+    .map_err(|e| Error {
+      message: "Failed to parse config: " + e.message,
+      source: Some(Box.new(e))
+    })?
+
+  Ok(config)
 }
-
-log(good_divide(10, 0))`}
-  title="prefer-result.dol"
-  output="Err(\"Division by zero\")"
-/>
-
-### 2. Add context to errors
-
-<DOLRepl
-  code={`fn read_config() -> Result<String, String> {
-    Err("file not found")
-}
-
-fn load_app() -> Result<(), String> {
-    read_config()
-        .map_err(|e| "Failed to load app config: " + e)?
-    Ok(())
-}
-
-log(load_app())`}
-  title="context.dol"
-  output="Err(\"Failed to load app config: file not found\")"
-/>
+```
 
 ## Key Takeaways
 
-- `Option<T>` represents optional values (`Some` or `None`)
-- `Result<T, E>` represents success (`Ok`) or failure (`Err`)
+- `Option<T>` represents optional values (`Some(v)` or `None`)
+- `Result<T, E>` represents success (`Ok(v)`) or failure (`Err(e)`)
+- Pattern match to safely handle both cases
 - Use `?` to propagate errors cleanly
-- `map`, `and_then`, `unwrap_or` transform Option/Result values
-- Define custom error types for domain-specific errors
-- Always prefer explicit error handling over panics
+- `map`, `and_then`, `unwrap_or` transform values
+- Define rich error types with enum variants
+- Add context to errors for debugging
 
-## Challenge
+## Practice Exercise
 
-Create a user validation system:
+Create error handling for a user registration system:
 
-1. Define a function to parse an age from string (returns Result)
-2. Define a function to validate age is between 0 and 150
-3. Define a function to validate name is not empty
-4. Create a `validate_user` function that uses `?` to chain validations
+```dol
+pub gene RegistrationError {
+  type: enum {
+    // Add variants for:
+    // - InvalidEmail { email: String }
+    // - WeakPassword { reason: String }
+    // - UsernameTaken { username: String }
+    // - AgeTooYoung { age: Int64, minimum: Int64 }
+  }
+  has span: Span
 
-<DOLRepl
-  code={`// Challenge: User Validation
-
-fn parse_age(s: String) -> Result<Int, String> {
-    // Your code here
-    Err("Not implemented")
+  exegesis {
+    // Your explanation here
+  }
 }
 
-fn validate_age_range(age: Int) -> Result<Int, String> {
-    // Your code here
-    Err("Not implemented")
+pub fun validate_email(email: String) -> Result<String, RegistrationError> {
+  // Check email contains @
+  // Return Ok(email) or Err(InvalidEmail)
 }
 
-fn validate_name(name: String) -> Result<String, String> {
-    // Your code here
-    Err("Not implemented")
+pub fun validate_password(password: String) -> Result<String, RegistrationError> {
+  // Check password length >= 8
+  // Return Ok(password) or Err(WeakPassword)
 }
 
-fn validate_user(name: String, age_str: String) -> Result<String, String> {
-    // Use ? to chain validations
-    Err("Not implemented")
+pub fun register_user(
+  email: String,
+  password: String,
+  age: Int64
+) -> Result<User, RegistrationError> {
+  // Use ? to chain validations
+  let valid_email = validate_email(email)?
+  let valid_password = validate_password(password)?
+  // ... create and return user
 }
-
-log(validate_user("Alice", "25"))
-log(validate_user("", "25"))
-log(validate_user("Bob", "abc"))`}
-  title="challenge.dol"
-  output={`Err("Not implemented")
-Err("Not implemented")
-Err("Not implemented")`}
-/>
+```
 
 ## Next Steps
 
-Let us complete the fundamentals by learning how to organize code into modules.
+In the final lesson of this track, we'll learn how to organize code with modules and imports.
 
 <div className="mt-8 flex justify-between">
-  <a
-    href="/dol/tutorials/006-entities-components"
-    className="btn-secondary inline-flex items-center gap-2"
-  >
-    <span>←</span>
-    Previous: Entities and Components
-  </a>
-  <a
-    href="/dol/tutorials/008-modules-imports"
-    className="btn-primary inline-flex items-center gap-2"
-  >
-    Next: Modules and Imports
-    <span>→</span>
-  </a>
+  <a href="/dol/tutorials/006-traits-constraints" className="btn-secondary inline-flex items-center gap-2">← Previous: Traits and Constraints</a>
+  <a href="/dol/tutorials/008-modules-imports" className="btn-primary inline-flex items-center gap-2">Next: Modules and Imports →</a>
 </div>

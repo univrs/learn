@@ -1,481 +1,430 @@
 ---
 title: "Modules and Imports"
-description: "Organize code into reusable modules with proper visibility"
+description: "Organize DOL specifications into reusable modules"
 lesson: 8
 track: "dol-fundamentals"
 duration: "15 minutes"
-concepts: ["modules", "imports", "pub/private", "visibility", "standard library", "packages"]
+concepts: ["module", "use", "pub", "requires", "versioning", "systems"]
 prev: "/dol/tutorials/007-error-handling"
 next: null
 ---
 
-import DOLRepl from '@/components/code/DOLRepl';
-
 # Modules and Imports
 
-As your DOL projects grow, you need to organize code into modules. Modules help you:
-- Group related functionality
-- Control what is public vs private
-- Avoid naming conflicts
-- Create reusable libraries
+As your DOL specifications grow, you need to organize them into modules. Modules help you group related declarations, control visibility, and manage dependencies.
 
-## Defining Modules
+## Module Declaration
 
-Use the `mod` keyword to create a module:
+Every DOL file can declare its module with a version. DOL v0.3.0 prefers `mod` over `module`:
 
-<DOLRepl
-  code={`// Define a module
-mod math {
-    pub fn add(a: Int, b: Int) -> Int {
-        a + b
-    }
+```dol
+mod dol.token @ 0.4.0
 
-    pub fn multiply(a: Int, b: Int) -> Int {
-        a * b
-    }
-
-    // Private function - only accessible within module
-    fn internal_helper() -> Int {
-        42
-    }
+exegesis {
+  Token span tracks the location of tokens in source code.
 }
 
-// Use the module
-log(math::add(5, 3))
-log(math::multiply(4, 7))`}
-  title="modules.dol"
-  output={`8
-28`}
-/>
+/// Source location information
+pub gene Span {
+  has start: UInt32
+  has end: UInt32
+  has file_id: UInt32
+}
+```
+
+The module declaration includes:
+- `mod` - keyword (also accepts `module` for compatibility)
+- `dol.token` - module path using dot notation
+- `@` - version separator
+- `0.4.0` - semver version number
+
+## Import Syntax
+
+Use the `use` statement to import from other modules:
+
+```dol
+mod dol.ast @ 0.4.0
+
+use dol.token.{ Span }
+use dol.types.{ TypeExpr, TypeParam }
+
+pub gene GeneDecl {
+  has name: String
+  has type_params: List<TypeParam>
+  has fields: List<Field>
+  has span: Span
+
+  exegesis {
+    A gene declaration with type parameters and fields.
+    Imports Span from dol.token module.
+  }
+}
+```
+
+### Import Patterns
+
+```dol
+// Import single item
+use dol.token.{ Span }
+
+// Import multiple items
+use dol.types.{ TypeExpr, TypeParam, Field }
+
+// Import with alias
+use dol.token.{ Span as SourceSpan }
+
+// Import all public items
+use dol.ast.{ * }
+```
 
 ## Public vs Private
 
-By default, everything in a module is **private**. Use `pub` to make items public:
+Items are private by default. Use `pub` to make them public:
 
-<DOLRepl
-  code={`mod user {
-    // Public - accessible outside module
-    pub struct User {
-        pub name: String,  // Public field
-        age: Int           // Private field
-    }
-
-    pub fn create(name: String, age: Int) -> User {
-        User { name, age }
-    }
-
-    // Public function
-    pub fn get_name(user: &User) -> String {
-        user.name.clone()
-    }
-
-    // Private function
-    fn validate_age(age: Int) -> Bool {
-        age >= 0 && age <= 150
-    }
-}
-
-let alice = user::create("Alice", 30)
-log(user::get_name(&alice))`}
-  title="visibility.dol"
-  output="Alice"
-/>
-
-## Nested Modules
-
-Modules can contain other modules:
-
-<DOLRepl
-  code={`mod game {
-    pub mod player {
-        pub struct Stats {
-            pub health: Int,
-            pub level: Int
-        }
-
-        pub fn new_stats() -> Stats {
-            Stats { health: 100, level: 1 }
-        }
-    }
-
-    pub mod enemy {
-        pub struct Enemy {
-            pub name: String,
-            pub damage: Int
-        }
-    }
-}
-
-let stats = game::player::new_stats()
-log("Health: " + stats.health.to_string())`}
-  title="nested.dol"
-  output="Health: 100"
-/>
-
-## Imports with use
-
-The `use` statement brings items into scope:
-
-<DOLRepl
-  code={`mod math {
-    pub fn add(a: Int, b: Int) -> Int { a + b }
-    pub fn sub(a: Int, b: Int) -> Int { a - b }
-    pub fn mul(a: Int, b: Int) -> Int { a * b }
-    pub fn div(a: Int, b: Int) -> Int { a / b }
-}
-
-// Import specific items
-use math::add
-use math::sub
-
-// Now use without prefix
-log(add(10, 5))
-log(sub(10, 5))
-
-// Still need prefix for non-imported
-log(math::mul(10, 5))`}
-  title="use.dol"
-  output={`15
-5
-50`}
-/>
-
-### Import Multiple Items
-
-<DOLRepl
-  code={`mod collections {
-    pub struct List<T> { items: Vec<T> }
-    pub struct Map<K, V> { entries: Vec<(K, V)> }
-    pub struct Set<T> { items: Vec<T> }
-}
-
-// Import multiple items
-use collections::{List, Map, Set}
-
-// Or import all public items
-use collections::*
-
-log("Collections imported")`}
-  title="multi-import.dol"
-  output="Collections imported"
-/>
-
-### Renaming Imports
-
-<DOLRepl
-  code={`mod long_module_name {
-    pub fn very_long_function_name() -> Int { 42 }
-}
-
-// Rename for convenience
-use long_module_name::very_long_function_name as short_fn
-
-log(short_fn())`}
-  title="rename.dol"
-  output="42"
-/>
-
-## File-Based Modules
-
-In larger projects, modules correspond to files:
-
-```
-my_project/
-├── main.dol          # Main entry point
-├── lib.dol           # Library root
-├── math/
-│   ├── mod.dol       # math module declaration
-│   ├── algebra.dol   # math::algebra
-│   └── geometry.dol  # math::geometry
-└── utils/
-    ├── mod.dol       # utils module declaration
-    └── strings.dol   # utils::strings
-```
-
-**main.dol:**
 ```dol
-// Declare modules from files
-mod math;
-mod utils;
+mod user.account @ 1.0.0
 
-use math::algebra::quadratic;
-use utils::strings::capitalize;
+// Public - accessible from other modules
+pub gene User {
+  has id: UInt64
+  has name: String
+  has email: String
+  has password_hash: String  // Private field within public gene
 
-fn main() {
-    let result = quadratic(1, -5, 6);
-    log(capitalize("hello"));
+  exegesis {
+    A user account in the system.
+  }
+}
+
+// Private - only accessible within this module
+gene InternalCache {
+  has entries: Map<UInt64, User>
+
+  exegesis {
+    Internal caching mechanism, not exposed.
+  }
+}
+
+// Public function
+pub fun create_user(name: String, email: String) -> User {
+  // implementation
+}
+
+// Private function
+fun hash_password(password: String) -> String {
+  // internal implementation
 }
 ```
 
-**math/mod.dol:**
+## Systems and Dependencies
+
+Systems declare external dependencies with `requires`:
+
 ```dol
-// Submodule declarations
-pub mod algebra;
-pub mod geometry;
-```
+system greeting.service @0.1.0 {
+  requires entity.greetable >= 0.0.1
+  requires greeting.protocol >= 0.0.1
 
-## Re-exports
+  uses hello.world
 
-Make nested items available at a higher level:
-
-<DOLRepl
-  code={`mod internal {
-    pub mod deep {
-        pub fn helper() -> Int { 42 }
-    }
+  service has greeting.templates
+  service has message.history
 }
 
-mod api {
-    // Re-export from internal
-    pub use internal::deep::helper;
+exegesis {
+  The greeting service orchestrates salutations across the Univrs platform.
+  It depends on the greetable trait (any entity that can receive greetings)
+  and the greeting protocol (standard formats and delivery mechanisms).
+  The service uses the hello.world gene for basic message structure.
+
+  Templates provide customizable greeting formats. History maintains
+  an audit trail of all greetings sent, enabling replay and analysis.
 }
-
-// Users can access via api directly
-log(api::helper())`}
-  title="reexport.dol"
-  output="42"
-/>
-
-## The Standard Library
-
-DOL comes with a standard library (`std`). Key modules include:
-
-<DOLRepl
-  code={`// Standard library imports
-use std::io::{read_file, write_file}
-use std::collections::{HashMap, HashSet}
-use std::time::{now, Duration}
-use std::math::{sqrt, pow, PI}
-
-// Using std::math
-let radius = 5.0
-let area = PI * pow(radius, 2.0)
-log("Circle area: " + area.to_string())
-
-// Using std::time
-let start = now()
-// ... some work ...
-let elapsed = now() - start
-log("Elapsed: " + elapsed.to_string())`}
-  title="stdlib.dol"
-  output={`Circle area: 78.53981633974483
-Elapsed: 0ms`}
-/>
-
-### Common Standard Library Modules
-
-| Module | Description |
-|--------|-------------|
-| `std::io` | File and console I/O |
-| `std::collections` | Data structures |
-| `std::string` | String utilities |
-| `std::math` | Mathematical functions |
-| `std::time` | Time and duration |
-| `std::fs` | Filesystem operations |
-| `std::net` | Networking |
-| `std::json` | JSON parsing |
-
-## Prelude
-
-Some items are automatically imported via the **prelude**:
-
-<DOLRepl
-  code={`// These are always available (prelude)
-// - Option, Some, None
-// - Result, Ok, Err
-// - Bool, Int, Float, String
-// - List, Map basic types
-// - log(), assert!(), etc.
-
-let maybe: Option<Int> = Some(42)
-let result: Result<Int, String> = Ok(42)
-
-log(maybe)
-log(result)`}
-  title="prelude.dol"
-  output={`Some(42)
-Ok(42)`}
-/>
-
-## Creating Packages
-
-A **package** is a collection of modules distributed together:
-
-**dol.toml:**
-```toml
-[package]
-name = "my_library"
-version = "1.0.0"
-authors = ["Your Name <you@example.com>"]
-
-[dependencies]
-some_library = "2.0"
-another_lib = { git = "https://github.com/user/repo" }
 ```
 
-## Visibility Levels
+### Dependency Constraints
+
+```dol
+system mycelium.network @0.2.0 {
+  // Exact version
+  requires transport.protocol = 0.1.0
+
+  // Minimum version
+  requires nutrient.model >= 0.0.1
+
+  // Version range
+  requires spatial.coords >= 0.1.0, < 1.0.0
+
+  uses MyceliumNode
+  uses HyphalSegment
+}
+
+exegesis {
+  Mycelium network with versioned dependencies.
+}
+```
+
+## Module Organization
+
+A typical DOL project structure:
+
+```
+my-project/
+├── dol.toml              # Project manifest
+├── src/
+│   ├── lib.dol           # Library entry point
+│   ├── types/
+│   │   ├── mod.dol       # Types module
+│   │   ├── core.dol      # Core types
+│   │   └── errors.dol    # Error types
+│   ├── traits/
+│   │   ├── mod.dol       # Traits module
+│   │   └── lifecycle.dol # Lifecycle traits
+│   └── systems/
+│       ├── mod.dol       # Systems module
+│       └── network.dol   # Network system
+└── examples/
+    └── demo.dol          # Example usage
+```
+
+### lib.dol (Entry Point)
+
+```dol
+mod myproject @ 1.0.0
+
+// Re-export public API
+pub use myproject.types.{ User, Config, Error }
+pub use myproject.traits.{ Lifecycle, Observable }
+pub use myproject.systems.{ NetworkSystem }
+
+exegesis {
+  My Project library - a DOL specification for [purpose].
+  This mod re-exports the public API.
+}
+```
+
+### types/mod.dol
+
+```dol
+mod myproject.types @ 1.0.0
+
+pub use myproject.types.core.{ User, Config }
+pub use myproject.types.errors.{ Error, ValidationError }
+
+exegesis {
+  Type definitions for myproject.
+}
+```
+
+## Evolution and Versioning
+
+DOL tracks how specifications change over time:
+
+```dol
+evolves container.lifecycle @0.0.2 from @0.0.1 {
+  // Added new state
+  add container is pausing
+
+  // Renamed field
+  rename status to state
+
+  // Changed type
+  change timeout: Int32 to timeout: Int64
+}
+
+exegesis {
+  Evolution from v0.0.1 to v0.0.2 of the container lifecycle.
+  Added pausing state for graceful pause support.
+  Renamed status to state for clarity.
+  Changed timeout to 64-bit for longer durations.
+}
+```
+
+### Evolution Commands
+
+| Command | Description |
+|---------|-------------|
+| `add field has property` | Add new property |
+| `remove field` | Remove property |
+| `rename old to new` | Rename property |
+| `change field: OldType to field: NewType` | Change type |
+
+## Visibility Modifiers
 
 DOL has several visibility levels:
 
-| Visibility | Syntax | Accessible From |
-|------------|--------|-----------------|
-| Private | (default) | Same module only |
-| Public | `pub` | Anywhere |
-| Crate-public | `pub(crate)` | Same package only |
-| Parent-public | `pub(super)` | Parent module |
-| Path-restricted | `pub(in path)` | Specific module path |
+| Modifier | Visibility |
+|----------|------------|
+| (none) | Private to module |
+| `pub` | Public everywhere |
+| `pub(crate)` | Public within package |
+| `pub(super)` | Public to parent module |
 
-<DOLRepl
-  code={`mod outer {
-    pub mod inner {
-        // Only visible in outer and its children
-        pub(super) fn restricted() -> Int { 42 }
+```dol
+mod myproject.internal @ 1.0.0
 
-        // Visible everywhere
-        pub fn public_fn() -> Int { restricted() }
-    }
-
-    pub fn use_inner() -> Int {
-        inner::restricted()  // OK - we're in outer
-    }
+// Private - only this mod
+gene PrivateHelper {
+  has data: String
 }
 
-// inner::restricted() not accessible here
-log(outer::inner::public_fn())`}
-  title="visibility-levels.dol"
-  output="42"
-/>
+// Public to parent module only
+pub(super) gene ParentVisible {
+  has value: Int64
+}
 
-## Module Best Practices
+// Public within package
+pub(crate) gene PackageVisible {
+  has config: Config
+}
 
-### 1. Keep modules focused
+// Fully public
+pub gene PublicAPI {
+  has result: Result<Data, Error>
+}
+```
+
+## Best Practices
+
+### 1. One Concept Per Module
 
 ```dol
 // Good: focused modules
-mod user;     // User-related code
-mod auth;     // Authentication
-mod database; // Database access
+mod myproject.user @ 1.0.0
+mod myproject.auth @ 1.0.0
+mod myproject.session @ 1.0.0
 
-// Bad: catch-all module
-mod utils;    // Too vague
+// Avoid: catch-all modules
+mod myproject.misc @ 1.0.0  // Too vague
 ```
 
-### 2. Minimize public API
-
-<DOLRepl
-  code={`mod api {
-    // Only expose what users need
-    pub struct Config {
-        pub timeout: Int
-    }
-
-    pub fn init(config: Config) -> () {
-        internal_setup(config.timeout);
-    }
-
-    // Keep implementation private
-    fn internal_setup(timeout: Int) {
-        log("Setup with timeout: " + timeout.to_string())
-    }
-}
-
-api::init(api::Config { timeout: 30 })`}
-  title="minimal-api.dol"
-  output="Setup with timeout: 30"
-/>
-
-### 3. Use re-exports for clean APIs
+### 2. Minimize Public API
 
 ```dol
-// lib.dol - Clean public API
-pub use crate::core::Engine;
-pub use crate::config::Config;
-pub use crate::error::Error;
+mod myproject.auth @ 1.0.0
 
-// Internal modules remain hidden
-mod core;
-mod config;
-mod error;
-mod internal;
+// Only expose what users need
+pub gene Session {
+  has token: String
+  has expires_at: UInt64
+}
+
+pub fun authenticate(credentials: Credentials) -> Result<Session, AuthError>
+
+// Keep implementation private
+gene TokenCache {
+  has entries: Map<String, Session>
+}
+
+fun validate_token(token: String) -> Bool {
+  // internal logic
+}
+```
+
+### 3. Version Meaningfully
+
+```dol
+// Major: Breaking changes
+mod myproject @ 2.0.0  // Incompatible API changes
+
+// Minor: New features
+mod myproject @ 1.1.0  // Added new genes/functions
+
+// Patch: Bug fixes
+mod myproject @ 1.0.1  // Fixed behavior, no API changes
 ```
 
 ## Key Takeaways
 
-- Use `mod` to define modules and organize code
-- Items are private by default; use `pub` to expose them
-- `use` brings items into scope for convenient access
-- File-based modules map to your directory structure
-- The standard library (`std`) provides common functionality
-- Re-exports create clean public APIs
-- Follow best practices: focused modules, minimal public API
+- Declare modules with `mod path.name @ version`
+- Import with `use module.path.{ Items }`
+- Use `pub` for public visibility
+- Systems declare dependencies with `requires name >= version`
+- Organize projects with clear module boundaries
+- Track changes with `evolves` declarations
+- Follow semver for versioning
 
-## Challenge
+## Practice Exercise
 
-Create a small library structure:
+Create a module structure for a blog system:
 
-1. Define a `math` module with `add` and `multiply` functions
-2. Define a `utils` module with a `format_number` function
-3. Create a `calculator` module that uses both
-4. Re-export key functions at the top level
+```dol
+mod blog @ 1.0.0
 
-<DOLRepl
-  code={`// Challenge: Build a mini library
+use blog.types.{ Post, Author, Comment }
+use blog.traits.{ Publishable, Commentable }
 
-mod math {
-    // Your code here
+exegesis {
+  Blog system module. Re-exports public API.
 }
 
-mod utils {
-    // Your code here
+// In blog/types.dol:
+mod blog.types @ 1.0.0
+
+pub gene Post {
+  has id: UInt64
+  has title: String
+  has content: String
+  has author_id: UInt64
+  has published_at: Option<UInt64>
+  has tags: List<String>
+
+  exegesis {
+    A blog post with optional publication date.
+  }
 }
 
-mod calculator {
-    // Use math and utils
+pub gene Author {
+  // Add fields: id, name, email, bio
 }
 
-// Re-export at top level
-pub use calculator::calculate;
+pub gene Comment {
+  // Add fields: id, post_id, author_id, content, created_at
+}
 
-log("Complete this challenge!")`}
-  title="challenge.dol"
-  output="Complete this challenge!"
-/>
+// In blog/traits.dol:
+mod blog.traits @ 1.0.0
+
+use blog.types.{ Post }
+
+pub trait Publishable {
+  uses Post
+
+  post is draft
+  post is published
+  post is archived
+
+  // Add transitions and constraints
+}
+
+exegesis {
+  // Your explanation
+}
+```
 
 ## Congratulations!
 
-You have completed the DOL Fundamentals track! You now have a solid foundation in:
+You have completed the DOL Fundamentals track! You now understand:
 
-- Basic syntax and the REPL
-- Types and type inference
-- Functions and closures
+- Genes and the `has` predicate
+- Values, types, and enums
+- Functions with `fun` keyword
 - Control flow and pattern matching
-- Collections and functional methods
-- Entity-component architecture
-- Error handling with Result and Option
-- Modules and code organization
+- Collections: List, Map, Option
+- Traits and constraints
+- Error handling with Result
+- Modules and imports
 
 ## What's Next?
 
-Continue your DOL journey with these resources:
+Continue your DOL journey:
 
 - **[DOL Reference](/dol/reference)** - Complete language specification
-- **[Standard Library](/dol/stdlib)** - Explore built-in modules
-- **[Examples](/dol/examples)** - Real-world DOL projects
-- **[Metal DOL](/dol/language)** - Advanced ontology features
+- **[Metal DOL](/dol/language)** - The simple ontology syntax
+- **[Examples](/dol/examples)** - Real-world specifications
+- **[Grammar](/dol/grammar)** - Formal EBNF grammar
 
 <div className="mt-8 flex justify-between">
-  <a
-    href="/dol/tutorials/007-error-handling"
-    className="btn-secondary inline-flex items-center gap-2"
-  >
-    <span>←</span>
-    Previous: Error Handling
-  </a>
-  <a
-    href="/dol/reference"
-    className="btn-primary inline-flex items-center gap-2"
-  >
-    Explore the Reference
-    <span>→</span>
-  </a>
+  <a href="/dol/tutorials/007-error-handling" className="btn-secondary inline-flex items-center gap-2">← Previous: Error Handling</a>
+  <a href="/dol/reference" className="btn-primary inline-flex items-center gap-2">Explore the Reference →</a>
 </div>

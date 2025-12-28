@@ -4,34 +4,64 @@
     "basePath": "/tutorials",
     "items": {
       "dol": {
-        "label": "DOL Concepts",
-        "description": "Understand the Design Ontology Language from first principles",
-        "duration": "1-2 hours",
+        "label": "DOL Fundamentals",
+        "description": "Learn the Design Ontology Language from first principles",
+        "duration": "2-3 hours",
         "level": "beginner",
         "icon": "BookOpen",
         "items": [
           {
-            "slug": "001-what-is-dol",
-            "title": "What is DOL?",
-            "description": "Declarative specifications vs imperative code",
+            "slug": "001-hello-dol",
+            "title": "Hello DOL",
+            "description": "Write your first DOL specification and learn core concepts",
+            "duration": "15 min"
+          },
+          {
+            "slug": "002-values-types",
+            "title": "Values and Types",
+            "description": "Learn about DOL's type system and typed gene declarations",
+            "duration": "15 min"
+          },
+          {
+            "slug": "003-functions",
+            "title": "Functions",
+            "description": "Add behavior with methods and standalone functions",
             "duration": "20 min"
           },
           {
-            "slug": "002-compilation-pipeline",
-            "title": "Compilation Pipeline",
-            "description": "From DOL source to target code",
+            "slug": "004-control-flow",
+            "title": "Control Flow",
+            "description": "Conditionals, loops, and pattern matching",
+            "duration": "20 min"
+          },
+          {
+            "slug": "005-collections",
+            "title": "Collections",
+            "description": "Work with Lists, Maps, and functional operations",
+            "duration": "20 min"
+          },
+          {
+            "slug": "006-traits-constraints",
+            "title": "Traits and Constraints",
+            "description": "Define behaviors and enforce invariants",
             "duration": "25 min"
           },
           {
-            "slug": "003-core-declarations",
-            "title": "Core Declarations",
-            "description": "Types, traits, and modules",
-            "duration": "30 min"
+            "slug": "007-error-handling",
+            "title": "Error Handling",
+            "description": "Handle errors with Option, Result, and pattern matching",
+            "duration": "15 min"
+          },
+          {
+            "slug": "008-modules-imports",
+            "title": "Modules and Imports",
+            "description": "Organize DOL specs into reusable modules",
+            "duration": "15 min"
           }
         ]
       },
       "dol-syntax": {
-        "label": "DOL Syntax",
+        "label": "DOL v0.3.0 Syntax",
         "description": "Master the declarative syntax of DOL v0.3.0",
         "duration": "2-3 hours",
         "level": "beginner",
@@ -75,7 +105,7 @@
           },
           {
             "slug": "007-v030-syntax",
-            "title": "DOL v0.3.0 Syntax",
+            "title": "DOL v0.3.0 New Features",
             "description": "New features: type keyword, extends, val/var, HIR",
             "duration": "35 min"
           }

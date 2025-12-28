@@ -12,6 +12,7 @@ import DOLSex from "./Sex";
 import DOLCheatsheet from "./Cheatsheet";
 import DOLQuickStart from "./QuickStart";
 import DOLPlayground from "./Playground";
+import DOLTutorial from "./Tutorial";
 
 const sections = [
     {
@@ -325,6 +326,7 @@ export default function DOLIndex() {
             <Route index element={<DOLOverview />} />
             <Route path="playground" element={<DOLPlayground />} />
             <Route path="learn" element={<DOLLearn />} />
+            <Route path="tutorials/:slug" element={<DOLTutorial />} />
             <Route path="metaprogramming" element={<DOLMetaprogramming />} />
             <Route path="sex" element={<DOLSex />} />
             <Route path="examples" element={<DOLExamples />} />

@@ -1,197 +1,217 @@
 ---
 title: "Hello DOL"
-description: "Write your first DOL program and learn the basics of the REPL"
+description: "Write your first DOL specification and learn the core concepts"
 lesson: 1
 track: "dol-fundamentals"
-duration: "10 minutes"
-concepts: ["REPL", "log()", "comments", "basic syntax"]
+duration: "15 minutes"
+concepts: ["genes", "exegesis", "has predicate", "qualified identifiers"]
 prev: null
 next: "/dol/tutorials/002-values-types"
 ---
 
-import DOLRepl from '@/components/code/DOLRepl';
-
 # Hello DOL
 
-Welcome to your first DOL lesson! In this tutorial, you will learn how to use the DOL REPL (Read-Eval-Print Loop) and write your first program.
+Welcome to your first DOL lesson! DOL (Design Ontology Language) is a **specification language** for building self-aware systems. Unlike traditional programming languages that focus on *how* to do things, DOL focuses on *what* things are and how they relate to each other.
 
-## What is DOL?
+## What Makes DOL Different?
 
-DOL (Design Ontology Language) is a specification language for building self-aware systems. Unlike traditional programming languages that focus on *how* to do things, DOL focuses on *what* things are and how they relate to each other.
+DOL is not a general-purpose programming language. Instead, it is a language for describing **ontologies** - formal specifications of what exists in your system, what properties things have, and what rules they must follow.
 
-But before we dive into ontologies and specifications, let us start with the basics.
+Think of DOL as a way to write a "contract" that describes your system's structure and rules.
 
-## The DOL REPL
+## Your First Gene
 
-The REPL is an interactive environment where you can type DOL code and see results immediately. It is perfect for learning and experimenting.
+The fundamental building block in DOL is the **gene**. A gene declares an entity and its properties.
 
-To start the REPL on your machine, run:
+Here is the simplest possible DOL specification:
+
+```dol
+gene hello.world {
+  message has content
+  message has sender
+  message has timestamp
+}
+
+exegesis {
+  The hello.world gene is the simplest possible DOL example. It defines
+  a message entity with three essential properties: content (what the
+  message says), sender (who sent it), and timestamp (when it was sent).
+
+  This demonstrates the basic pattern:
+  - gene <domain>.<name> declares a new gene
+  - <entity> has <property> declares properties
+  - exegesis explains the intent and usage
+}
+```
+
+Let's break down what we just wrote.
+
+## Understanding the Structure
+
+### The Gene Declaration
+
+```dol
+gene hello.world {
+  ...
+}
+```
+
+- `gene` is the keyword that starts a gene declaration
+- `hello.world` is a **qualified identifier** - names in DOL use dot notation to create namespaces
+- The curly braces `{ }` contain the gene's body
+
+### The `has` Predicate
+
+```dol
+message has content
+message has sender
+message has timestamp
+```
+
+The `has` predicate declares that an entity possesses a property:
+- `message` is the entity we are describing
+- `has` is the predicate keyword
+- `content`, `sender`, `timestamp` are properties
+
+This says: "A message has content, a message has sender, a message has timestamp."
+
+### The Exegesis
+
+```dol
+exegesis {
+  Description of the gene goes here...
+}
+```
+
+**Exegesis is mandatory** in DOL. Every declaration must include an `exegesis` block that explains:
+- What the declaration represents
+- Why it exists
+- How it should be used
+
+Exegesis is not just documentation - it's a first-class part of the specification that can be parsed and analyzed.
+
+## Another Example: Containers
+
+Here's a more complete example from the DOL codebase:
+
+```dol
+gene container.exists {
+  container has identity
+  container has status
+  container has boundaries
+  container has resources
+  container has image
+}
+
+exegesis {
+  The container gene defines the essential properties of a container in
+  the Univrs platform. A container is an isolated execution environment
+  that encapsulates a workload.
+
+  Identity: Every container has a unique cryptographic identity derived
+  from an Ed25519 keypair. This identity is immutable for the container's
+  lifetime and serves as the basis for all authentication.
+
+  State: Containers exist in discrete states (created, running, paused,
+  stopped, archived). State transitions are atomic and authenticated.
+
+  Boundaries: Resource isolation is enforced through Linux namespaces and
+  cgroups. A container cannot escape its boundaries.
+
+  Resources: CPU, memory, network, and storage allocations are declared
+  and enforced. Resource limits are constraints, not suggestions.
+
+  Image: The container's filesystem derives from an OCI-compliant image.
+  The image is immutable; runtime changes use copy-on-write layers.
+}
+```
+
+Notice how the exegesis provides rich context about what each property means and why it matters.
+
+## Comments in DOL
+
+DOL supports two styles of comments:
+
+```dol
+// Single-line comment
+
+/* Multi-line
+   comment */
+
+/// Documentation comment (for inline docs)
+```
+
+Comments are for code authors. Exegesis is for specification consumers.
+
+## Running DOL
+
+To work with DOL files, you can use the DOL compiler:
 
 ```bash
-dol repl
+# Install DOL
+cargo install dol --features cli
+
+# Parse a DOL file
+dol-parse example.dol
+
+# Check a DOL file for errors
+dol-check example.dol
 ```
 
-You will see a prompt like this:
+## The `is` Predicate
 
-```
-DOL v0.2.3 REPL
-Type :help for commands, :quit to exit
-
-dol>
-```
-
-## Your First Program
-
-The traditional first program in any language is "Hello, World!" In DOL, we use the `log()` function to output text.
-
-Try running this code:
-
-<DOLRepl
-  code={`// Your first DOL program
-log("Hello, DOL!")`}
-  title="hello.dol"
-  output="Hello, DOL!"
-/>
-
-Congratulations! You have written your first DOL program.
-
-## Understanding the Code
-
-Let us break down what happened:
-
-### Comments
-
-The line starting with `//` is a **comment**. Comments are ignored by DOL and are used to explain your code to humans (including your future self).
+Besides `has`, DOL uses the `is` predicate to declare states or traits:
 
 ```dol
-// This is a single-line comment
+gene identity.cryptographic {
+  identity has keypair
+  identity has algorithm
 
-/* This is a
-   multi-line comment */
+  identity is immutable
+  identity is verifiable
+}
+
+exegesis {
+  A cryptographic identity is an entity that cannot change (immutable)
+  and can be verified through cryptographic proofs (verifiable).
+}
 ```
 
-### The log() Function
-
-`log()` is a built-in function that outputs values to the console. It can print strings, numbers, and any other DOL value.
-
-<DOLRepl
-  code={`// log() can output different types
-log("A string")
-log(42)
-log(3.14)
-log(true)`}
-  title="log-examples.dol"
-  output={`A string
-42
-3.14
-true`}
-/>
-
-### Strings
-
-Text in DOL is represented as **strings**. Strings are enclosed in double quotes (`""`):
-
-```dol
-"Hello, DOL!"
-"This is a string"
-"Strings can contain numbers: 123"
-```
-
-## Multiple Statements
-
-You can write multiple statements in a DOL program. Each statement is executed in order:
-
-<DOLRepl
-  code={`// Multiple log statements
-log("First line")
-log("Second line")
-log("Third line")`}
-  title="multiple.dol"
-  output={`First line
-Second line
-Third line`}
-/>
-
-## String Concatenation
-
-You can combine strings using the `+` operator:
-
-<DOLRepl
-  code={`// Combining strings
-let greeting = "Hello"
-let name = "World"
-log(greeting + ", " + name + "!")`}
-  title="concat.dol"
-  output="Hello, World!"
-/>
-
-We will learn more about `let` bindings in the next lesson, but this gives you a preview of how DOL handles variables.
-
-## REPL Commands
-
-The DOL REPL has special commands that start with `:`. Here are the most useful ones:
-
-| Command | Description |
-|---------|-------------|
-| `:help` | Show available commands |
-| `:quit` or `:q` | Exit the REPL |
-| `:clear` | Clear the screen |
-| `:type <expr>` | Show the type of an expression |
-| `:load <file>` | Load and run a DOL file |
-
-Try typing `:type "hello"` in the REPL to see the type of a string.
-
-## Expressions vs Statements
-
-In DOL, almost everything is an **expression** that produces a value. This is different from many languages where statements do not return values.
-
-<DOLRepl
-  code={`// The last expression's value is returned
-let x = 5
-let y = 10
-x + y`}
-  title="expressions.dol"
-  output="15"
-/>
-
-When you type an expression in the REPL without using `log()`, the REPL automatically shows its value.
+The `is` predicate says something **about the nature** of an entity, while `has` says what properties it possesses.
 
 ## Key Takeaways
 
-- The DOL REPL lets you interactively run code
-- Use `log()` to output values
-- Comments start with `//` for single-line or `/* */` for multi-line
-- Strings are enclosed in double quotes
-- Almost everything in DOL is an expression
+- DOL is a **specification language**, not a general-purpose programming language
+- **Genes** are the fundamental building blocks that declare entities and properties
+- Use **qualified identifiers** with dot notation: `domain.name`
+- The `has` predicate declares properties: `entity has property`
+- The `is` predicate declares states or traits: `entity is state`
+- **Exegesis is mandatory** - every declaration must be explained
 
-## Challenge
+## Practice Exercise
 
-Now it is your turn! Modify the code below to:
+Try writing a gene that describes a "user account" with these properties:
+- A user has username
+- A user has email
+- A user has created_at
+- A user is authenticated
 
-1. Print your name
-2. Print today's date
-3. Add a comment explaining what the program does
+Remember to include an exegesis block explaining what a user account represents!
 
-<DOLRepl
-  code={`// Challenge: Personalize this program
-log("Hello, DOL!")
-log("Today is a great day to learn!")`}
-  title="challenge.dol"
-  output={`Hello, DOL!
-Today is a great day to learn!`}
-/>
+```dol
+gene account.user {
+  // Your declarations here...
+}
+
+exegesis {
+  // Your explanation here...
+}
+```
 
 ## Next Steps
 
-In the next lesson, we will explore DOL's type system and learn about all the different values you can work with.
+In the next lesson, we'll explore DOL's type system and learn how to add type annotations to our properties.
 
-<div className="mt-8 flex justify-between">
-  <span></span>
-  <a
-    href="/dol/tutorials/002-values-types"
-    className="btn-primary inline-flex items-center gap-2"
-  >
-    Next: Values and Types
-    <span>→</span>
-  </a>
+<div className="mt-8 flex justify-end">
+  <a href="/dol/tutorials/002-values-types" className="btn-primary inline-flex items-center gap-2">Next: Values and Types →</a>
 </div>
