@@ -2,18 +2,17 @@
 title: "Spirit Development"
 description: "Learn to build secure, composable WebAssembly programs for the VUDO ecosystem"
 track: "spirits"
-duration: "4-6 hours"
+duration: "2-3 hours"
 level: "intermediate"
 prerequisites:
   - "DOL Fundamentals track"
   - "Basic Rust knowledge"
   - "VUDO CLI installed"
 concepts:
-  - "WebAssembly sandboxing"
+  - "VUDO platform architecture"
+  - "Spirit manifests"
   - "Capability-based security"
-  - "Host function interfaces"
-  - "Persistent storage"
-  - "Credit economics"
+  - "Runtime modules"
 ---
 
 import { Card, CardGrid } from '@/components/ui/Card'
@@ -22,7 +21,7 @@ import { LearningPath } from '@/components/docs/LearningPath'
 
 # Spirit Development Track
 
-Build secure, composable programs that run in the VUDO runtime. Spirits are WebAssembly modules with controlled access to system resources through a capability-based security model.
+Build secure, composable programs that run in the VUDO runtime. Spirits are WebAssembly modules with manifest metadata, WASM bytecode, and Ed25519 signatures that provide controlled access to system resources through a capability-based security model.
 
 <Prerequisites items={[
   { text: "DOL Fundamentals track", link: "/tutorials/dol" },
@@ -32,121 +31,82 @@ Build secure, composable programs that run in the VUDO runtime. Spirits are WebA
 
 ## What You'll Learn
 
-By the end of this track, you'll be able to:
+By the end of this track, you will be able to:
 
-- Understand the Spirit architecture and security model
-- Create, build, and run Spirits using VUDO CLI
-- Use host functions for time, logging, and random numbers
-- Implement persistent storage for Spirit state
-- Make network requests from Spirits
-- Manage credits and economic incentives
-- Test Spirits with mocked host functions
-- Package and publish Spirits to the Imaginarium
+- Understand the two-crate VUDO architecture (vudo_vm + spirit_runtime)
+- Create and configure Spirit manifests in TOML format
+- Work with all 14 capability types in the security system
+- Use the 6 runtime modules for package management
 
 ## Track Overview
 
 <CardGrid>
   <Card
     number={1}
-    title="What is a Spirit?"
-    description="Understand Spirit architecture, sandbox security, and capability-based access control."
-    duration="25 min"
-    link="/tutorials/spirits/001-what-is-spirit"
+    title="VUDO Platform Architecture"
+    description="Understand the two-crate design, security model, fuel metering, and data flow."
+    duration="30 min"
+    link="/tutorials/spirits/001-architecture"
   />
 
   <Card
     number={2}
-    title="Your First Spirit"
-    description="Create, build, and run your first Spirit using vudo new and the manifest system."
-    duration="30 min"
-    link="/tutorials/spirits/002-first-spirit"
+    title="Spirit Manifests"
+    description="Learn the TOML manifest format with required fields, optional metadata, and capability declarations."
+    duration="25 min"
+    link="/tutorials/spirits/002-manifests"
   />
 
   <Card
     number={3}
-    title="Using Host Functions"
-    description="Access time, logging, random numbers, and other host-provided capabilities."
+    title="Capabilities System"
+    description="Master all 14 capability types across network, storage, compute, sensors, and actuators."
     duration="35 min"
-    link="/tutorials/spirits/003-host-functions"
+    link="/tutorials/spirits/003-capabilities"
   />
 
   <Card
     number={4}
-    title="Persistent Storage"
-    description="Store and retrieve data across Spirit invocations with the storage API."
-    duration="40 min"
-    link="/tutorials/spirits/004-storage"
-  />
-
-  <Card
-    number={5}
-    title="Networking"
-    description="Make HTTP requests, handle responses, and work with rate limiting."
-    duration="40 min"
-    link="/tutorials/spirits/005-networking"
-  />
-
-  <Card
-    number={6}
-    title="Credits and Economics"
-    description="Understand credit balances, reservations, transfers, and economic incentives."
+    title="Spirit Runtime Modules"
+    description="Explore the 6 runtime modules: manifest, signature, registry, version, dependency, and pricing."
     duration="30 min"
-    link="/tutorials/spirits/006-credits"
-  />
-
-  <Card
-    number={7}
-    title="Testing Spirits"
-    description="Write test functions, use assertions, and mock host functions for testing."
-    duration="35 min"
-    link="/tutorials/spirits/007-testing"
-  />
-
-  <Card
-    number={8}
-    title="Packaging and Distribution"
-    description="Pack, sign, and publish Spirits to the Imaginarium marketplace."
-    duration="25 min"
-    link="/tutorials/spirits/008-distribution"
+    link="/tutorials/spirits/004-runtime-modules"
   />
 </CardGrid>
 
-## The Spirit Model
+## The VUDO Platform
 
-Spirits represent a new paradigm for composable, secure software:
+The VUDO platform consists of two primary crates working together:
 
 ```
 +------------------------------------------------------------------+
-|                         VUDO Runtime                              |
+|                         VUDO Platform                             |
 |                                                                   |
-|  +-----------------------+   +-----------------------+            |
-|  |      Spirit A         |   |      Spirit B         |            |
-|  |  +---------------+    |   |  +---------------+    |            |
-|  |  | WebAssembly   |    |   |  | WebAssembly   |    |            |
-|  |  | Sandbox       |    |   |  | Sandbox       |    |            |
-|  |  +-------+-------+    |   |  +-------+-------+    |            |
-|  |          |            |   |          |            |            |
-|  |  +-------v-------+    |   |  +-------v-------+    |            |
-|  |  | Capabilities  |    |   |  | Capabilities  |    |            |
-|  |  | - storage     |    |   |  | - network     |    |            |
-|  |  | - time        |    |   |  | - storage     |    |            |
-|  |  +---------------+    |   |  +---------------+    |            |
-|  +-----------+-----------+   +-----------+-----------+            |
-|              |                           |                        |
-|  +-----------v---------------------------v-----------+            |
-|  |                 Host Functions                     |            |
-|  |  time::now()  storage::read()  network::request() |            |
-|  +---------------------------------------------------+            |
+|  +---------------------------+   +---------------------------+    |
+|  |        vudo_vm            |   |     spirit_runtime        |    |
+|  |                           |   |                           |    |
+|  |  Sandbox Runtime          |   |  Package Management       |    |
+|  |  +---------------------+  |   |  +---------------------+  |    |
+|  |  | WebAssembly Engine  |  |   |  | Manifest Parsing    |  |    |
+|  |  | Fuel Metering       |  |   |  | Ed25519 Signatures  |  |    |
+|  |  | Capability Checks   |  |   |  | Registry Storage    |  |    |
+|  |  | Resource Limits     |  |   |  | Version Resolution  |  |    |
+|  |  +---------------------+  |   |  | Dependency Graph    |  |    |
+|  |                           |   |  | Credit Pricing      |  |    |
+|  +---------------------------+   |  +---------------------+  |    |
+|                                  +---------------------------+    |
+|                                                                   |
+|  Spirit Package = Manifest + WASM Bytecode + Ed25519 Signature    |
 +------------------------------------------------------------------+
 ```
 
 ### Key Principles
 
-1. **Sandboxed Execution**: Spirits run in isolated WebAssembly environments with no direct system access
-2. **Capability-Based Security**: Spirits must declare required capabilities in their manifest
-3. **Controlled Resources**: All system interactions go through auditable host functions
-4. **Economic Incentives**: Credit system encourages efficient resource usage
-5. **Composability**: Spirits can invoke other Spirits through controlled interfaces
+1. **Two-Crate Design**: Separation of concerns between execution (vudo_vm) and management (spirit_runtime)
+2. **Defense in Depth**: Multiple security layers with fuel metering and capability checks
+3. **Cryptographic Identity**: Ed25519 signatures ensure package authenticity
+4. **Credit Economics**: Resource usage tracked through the pricing module
+5. **Minimal Capability**: Spirits only request capabilities they actually need
 
 ## Prerequisites Check
 
@@ -187,4 +147,4 @@ If any commands fail, visit the [installation guide](/dol/install) to set up you
 - **Examples**: [Spirit Examples Repository](https://github.com/univrs/spirit-examples)
 - **Community**: [GitHub Discussions](https://github.com/univrs/dol/discussions)
 
-Ready to begin? Start with [What is a Spirit?](/tutorials/spirits/001-what-is-spirit)
+Ready to begin? Start with [VUDO Platform Architecture](/tutorials/spirits/001-architecture)

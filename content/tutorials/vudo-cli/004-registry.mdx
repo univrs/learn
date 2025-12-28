@@ -1,0 +1,732 @@
+---
+title: "Registry Operations"
+description: "Install, search, and summon Spirits from the registry"
+track: "vudo-cli"
+tutorial: 4
+duration: "25 min"
+objectives:
+  - "Install Spirits from the registry"
+  - "Search for Spirits effectively"
+  - "Get detailed Spirit information"
+  - "Summon and run installed Spirits"
+  - "Understand registry directory structure"
+tags:
+  - "cli"
+  - "vudo"
+  - "registry"
+  - "install"
+  - "search"
+  - "summon"
+---
+
+# Registry Operations
+
+In this tutorial, you will learn to work with the Spirit registry. By the end, you will be able to install, search, and summon Spirits from the registry.
+
+## The Spirit Registry
+
+The registry is a centralized repository of published Spirits:
+
+```
+     Registry                             Local
+   ┌──────────────┐                   ┌──────────────┐
+   │   Search     │                   │   Install    │
+   │   Install    │ ───────────────>  │   Summon     │
+   │   Info       │                   │   Update     │
+   └──────────────┘                   └──────────────┘
+   registry.dol.dev                   ~/.vudo/registry/
+```
+
+## Registry Directory Structure
+
+VUDO maintains a local registry at `~/.vudo/`:
+
+<Terminal title="Registry structure">
+```
+$ tree ~/.vudo/registry/
+~/.vudo/
+└── registry/
+    ├── index.json              # Local registry index
+    ├── spirits/
+    │   ├── my-spirit/
+    │   │   ├── 1.0.0/
+    │   │   │   ├── manifest.json
+    │   │   │   └── spirit.wasm
+    │   │   ├── 1.1.0/
+    │   │   │   ├── manifest.json
+    │   │   │   └── spirit.wasm
+    │   │   └── latest -> 1.1.0/
+    │   ├── ai-helper/
+    │   │   ├── 2.0.0/
+    │   │   │   ├── manifest.json
+    │   │   │   └── spirit.wasm
+    │   │   └── latest -> 2.0.0/
+    │   └── data-processor/
+    │       └── ...
+    └── cache/
+        ├── downloads/          # Temporary downloads
+        └── metadata/           # Cached Spirit info
+```
+</Terminal>
+
+<CodeBlock title="~/.vudo/registry/index.json" language="json">
+```json
+{
+  "version": 1,
+  "updated": "2024-12-26T12:00:00Z",
+  "spirits": {
+    "my-spirit": {
+      "versions": ["1.0.0", "1.1.0"],
+      "latest": "1.1.0",
+      "installed": "2024-12-26T10:00:00Z"
+    },
+    "ai-helper": {
+      "versions": ["2.0.0"],
+      "latest": "2.0.0",
+      "installed": "2024-12-25T14:30:00Z"
+    }
+  }
+}
+```
+</CodeBlock>
+
+## Installing Spirits
+
+The `vudo install` command downloads and installs Spirits from the registry:
+
+<Terminal title="vudo install --help">
+```
+$ vudo install --help
+Install Spirit from registry
+
+USAGE:
+    vudo install <SPIRIT> [OPTIONS]
+
+ARGS:
+    <SPIRIT>    Spirit name (optionally with @version)
+
+OPTIONS:
+    -g, --global            Install globally (default)
+    -l, --local             Install to current project
+        --registry <NAME>   Source registry [default: default]
+        --verify            Verify signature before install
+        --no-verify         Skip signature verification
+    -h, --help              Print help information
+
+EXAMPLES:
+    vudo install my-spirit
+    vudo install my-spirit@1.0.0
+    vudo install my-spirit@^1.0.0
+```
+</Terminal>
+
+### Basic Installation
+
+<Terminal title="Installing a Spirit">
+```
+$ vudo install my-spirit
+Fetching my-spirit...
+  Resolving latest version...
+  Selected: my-spirit@1.1.0
+
+Downloading my-spirit@1.1.0...
+  [========================================] 100%
+
+Verifying signature...
+  Author: Developer <dev@example.com>
+  Public key: ed25519:5Kd2bRg9X7...
+  Signature: VALID
+
+Installing to ~/.vudo/registry/spirits/my-spirit/1.1.0/
+  manifest.json   (1.2 KB)
+  spirit.wasm     (256 KB)
+
+Installed successfully!
+
+Run with: vudo summon my-spirit
+```
+</Terminal>
+
+### Version Specification
+
+<Terminal title="Version specifiers">
+```
+$ # Install latest version
+$ vudo install my-spirit
+
+$ # Install specific version
+$ vudo install my-spirit@1.0.0
+
+$ # Install with version constraint
+$ vudo install my-spirit@^1.0.0    # Compatible with 1.x
+$ vudo install my-spirit@~1.0.0    # Compatible with 1.0.x
+$ vudo install my-spirit@>=1.0.0   # At least 1.0.0
+
+$ # Example with constraint resolution
+$ vudo install my-spirit@^1.0.0
+Resolving my-spirit@^1.0.0...
+
+Available versions:
+  1.1.0 (latest)
+  1.0.1
+  1.0.0
+
+Selected: my-spirit@1.1.0 (highest compatible)
+Installing...
+```
+</Terminal>
+
+### Installing Multiple Versions
+
+<Terminal title="Multiple versions">
+```
+$ vudo install my-spirit@1.0.0
+Installing my-spirit@1.0.0...
+Installed successfully!
+
+$ vudo install my-spirit@1.1.0
+Installing my-spirit@1.1.0...
+Installed successfully!
+
+$ ls ~/.vudo/registry/spirits/my-spirit/
+1.0.0/
+1.1.0/
+latest -> 1.1.0/
+
+$ # Run specific version
+$ vudo summon my-spirit@1.0.0
+```
+</Terminal>
+
+## Searching the Registry
+
+The `vudo search` command finds Spirits in the registry:
+
+<Terminal title="vudo search --help">
+```
+$ vudo search --help
+Search the Spirit registry
+
+USAGE:
+    vudo search <QUERY> [OPTIONS]
+
+ARGS:
+    <QUERY>    Search query (name, description, keywords)
+
+OPTIONS:
+        --author <NAME>      Filter by author
+        --category <CAT>     Filter by category
+        --limit <N>          Maximum results [default: 20]
+        --sort <FIELD>       Sort by: relevance|downloads|recent [default: relevance]
+    -h, --help               Print help information
+```
+</Terminal>
+
+### Basic Search
+
+<Terminal title="Searching for Spirits">
+```
+$ vudo search image
+Searching registry for 'image'...
+
+RESULTS (5 matches):
+
+ai-image-gen @2.1.0
+  AI-powered image generation Spirit
+  Author: univrs <team@univrs.io>
+  Downloads: 12,456 | License: MIT
+  Keywords: ai, image, generation, stable-diffusion
+
+image-processor @1.3.0
+  Image processing and manipulation
+  Author: imgtools <dev@imgtools.io>
+  Downloads: 8,234 | License: Apache-2.0
+  Keywords: image, processing, resize, crop
+
+screenshot-spirit @0.8.0
+  Capture and annotate screenshots
+  Author: devtools <info@devtools.io>
+  Downloads: 3,456 | License: MIT
+  Keywords: screenshot, capture, image, annotate
+
+ocr-spirit @1.0.0
+  Optical character recognition
+  Author: textai <contact@textai.io>
+  Downloads: 2,890 | License: MIT
+  Keywords: ocr, image, text, recognition
+
+thumb-generator @0.5.0
+  Thumbnail generation for images
+  Author: mediatools <hello@mediatools.io>
+  Downloads: 1,234 | License: MIT
+  Keywords: thumbnail, image, resize
+```
+</Terminal>
+
+### Filtered Search
+
+<Terminal title="Filtered search">
+```
+$ vudo search ai --author univrs
+Searching for 'ai' by author 'univrs'...
+
+RESULTS (3 matches):
+
+ai-image-gen @2.1.0
+  AI-powered image generation Spirit
+  Downloads: 12,456 | License: MIT
+
+ai-text-gen @2.0.0
+  AI-powered text generation Spirit
+  Downloads: 15,678 | License: MIT
+
+ai-assistant @1.5.0
+  General AI assistant Spirit
+  Downloads: 8,901 | License: MIT
+
+$ vudo search data --category processing --sort downloads
+Searching for 'data' in category 'processing'...
+
+[sorted by downloads, descending]
+```
+</Terminal>
+
+## Getting Spirit Information
+
+The `vudo info` command displays detailed Spirit information:
+
+<Terminal title="vudo info --help">
+```
+$ vudo info --help
+Display Spirit information
+
+USAGE:
+    vudo info <SPIRIT> [OPTIONS]
+
+ARGS:
+    <SPIRIT>    Spirit name (optionally with @version)
+
+OPTIONS:
+        --versions          Show all available versions
+        --dependencies      Show dependency tree
+        --files             List package files
+        --json              Output as JSON
+    -h, --help              Print help information
+```
+</Terminal>
+
+### Basic Info
+
+<Terminal title="Spirit information">
+```
+$ vudo info my-spirit
+my-spirit
+=========
+
+Version:     1.1.0 (latest)
+Published:   2024-12-26
+License:     MIT
+Downloads:   5,678
+Size:        256 KB
+
+Description:
+  A helpful Spirit for demonstration purposes.
+  Provides greeting and utility functions.
+
+Author:
+  Developer <dev@example.com>
+  Public key: ed25519:5Kd2bRg9X7...
+
+Repository:
+  https://github.com/developer/my-spirit
+
+Keywords:
+  greeting, utility, demo
+
+Capabilities Required:
+  - None (pure computation)
+
+Install: vudo install my-spirit
+```
+</Terminal>
+
+### Version History
+
+<Terminal title="Version history">
+```
+$ vudo info my-spirit --versions
+my-spirit - Version History
+===========================
+
+VERSION   PUBLISHED     SIZE    NOTES
+1.1.0     2024-12-26    256 KB  [LATEST]
+  - Added new greeting modes
+  - Performance improvements
+
+1.0.1     2024-12-20    248 KB
+  - Bug fix for Unicode handling
+
+1.0.0     2024-12-15    245 KB  [INITIAL]
+  - Initial release
+
+Install specific version:
+  vudo install my-spirit@1.0.0
+```
+</Terminal>
+
+### Dependencies
+
+<Terminal title="Dependency tree">
+```
+$ vudo info complex-spirit --dependencies
+complex-spirit@1.0.0 - Dependencies
+===================================
+
+complex-spirit@1.0.0
+├── core-utils@2.0.0
+│   └── std-spirit@1.0.0
+├── data-handler@1.5.0
+│   ├── std-spirit@1.0.0 (shared)
+│   └── json-parser@3.0.0
+└── ai-connector@0.8.0
+    └── http-spirit@2.1.0
+
+Total: 6 dependencies
+Shared: 1 (std-spirit)
+```
+</Terminal>
+
+## Summoning Spirits
+
+The `vudo summon` command runs an installed Spirit:
+
+<Terminal title="vudo summon --help">
+```
+$ vudo summon --help
+Run an installed Spirit
+
+USAGE:
+    vudo summon <SPIRIT> [OPTIONS] [-- <ARGS>...]
+
+ARGS:
+    <SPIRIT>     Spirit name (optionally with @version)
+    <ARGS>...    Arguments to pass to Spirit
+
+OPTIONS:
+        --sandbox <LEVEL>    Sandbox level [default: standard]
+        --memory <LIMIT>     Memory limit [default: 256MB]
+        --timeout <SECS>     Execution timeout [default: 30]
+        --allow-network      Allow network access
+        --allow-fs <PATH>    Allow filesystem access
+    -v, --verbose            Verbose output
+    -h, --help               Print help information
+```
+</Terminal>
+
+### Basic Summoning
+
+<Terminal title="Summoning a Spirit">
+```
+$ vudo summon my-spirit
+Summoning my-spirit@1.1.0...
+
+Loading from ~/.vudo/registry/spirits/my-spirit/1.1.0/
+Verifying signature... OK
+Starting sandbox (standard)...
+
+Spirit 'my-spirit' v1.1.0 ready
+Hello from my-spirit!
+
+Execution completed in 0.12s
+```
+</Terminal>
+
+### With Arguments
+
+<Terminal title="Summon with arguments">
+```
+$ vudo summon my-spirit -- --name "World" --formal
+Summoning my-spirit@1.1.0...
+
+Spirit 'my-spirit' v1.1.0 ready
+Good day, World!
+
+Execution completed in 0.15s
+```
+</Terminal>
+
+### Specific Version
+
+<Terminal title="Summon specific version">
+```
+$ vudo summon my-spirit@1.0.0
+Summoning my-spirit@1.0.0...
+
+Spirit 'my-spirit' v1.0.0 ready
+Hello from my-spirit! (legacy version)
+
+Execution completed in 0.11s
+```
+</Terminal>
+
+### With Capabilities
+
+<Terminal title="Summon with capabilities">
+```
+$ vudo summon ai-helper --allow-network
+Summoning ai-helper@2.0.0...
+
+Loading from ~/.vudo/registry/spirits/ai-helper/2.0.0/
+Sandbox: standard (network ENABLED)
+
+Spirit 'ai-helper' v2.0.0 ready
+Connected to AI service...
+Processing request...
+
+Response: Here is your AI-generated content.
+
+Execution completed in 2.34s
+```
+</Terminal>
+
+## Managing Installed Spirits
+
+### List Installed
+
+<Terminal title="List installed Spirits">
+```
+$ vudo list
+Installed Spirits:
+==================
+
+SPIRIT          VERSION   SIZE     INSTALLED
+my-spirit       1.1.0     256 KB   2024-12-26
+my-spirit       1.0.0     245 KB   2024-12-20
+ai-helper       2.0.0     1.2 MB   2024-12-25
+data-processor  0.5.0     512 KB   2024-12-24
+
+Total: 4 Spirits (3 unique)
+Storage: 2.2 MB
+```
+</Terminal>
+
+### Update Spirits
+
+<Terminal title="Update Spirits">
+```
+$ vudo update
+Checking for updates...
+
+Updates available:
+  ai-helper      2.0.0 -> 2.1.0 (minor)
+  data-processor 0.5.0 -> 0.6.0 (minor)
+
+Run 'vudo update --apply' to install updates.
+
+$ vudo update --apply
+Updating 2 Spirits...
+
+ai-helper: 2.0.0 -> 2.1.0
+  Downloading... [========================================] 100%
+  Installed successfully
+
+data-processor: 0.5.0 -> 0.6.0
+  Downloading... [========================================] 100%
+  Installed successfully
+
+All Spirits updated.
+```
+</Terminal>
+
+### Remove Spirits
+
+<Terminal title="Remove Spirits">
+```
+$ vudo remove my-spirit@1.0.0
+Removing my-spirit@1.0.0...
+
+Removed: ~/.vudo/registry/spirits/my-spirit/1.0.0/
+Freed: 245 KB
+
+Note: my-spirit@1.1.0 still installed.
+
+$ vudo remove my-spirit
+Remove all versions of my-spirit? [y/N] y
+
+Removing my-spirit (all versions)...
+  Removed: 1.1.0 (256 KB)
+
+Freed: 256 KB total
+```
+</Terminal>
+
+### Clean Cache
+
+<Terminal title="Clean cache">
+```
+$ vudo cache status
+Registry cache: ~/.vudo/registry/cache/
+
+Downloads:  12.4 MB (15 files)
+Metadata:   2.1 MB (42 entries)
+Total:      14.5 MB
+
+Last cleaned: 2024-12-20
+
+$ vudo cache clean
+Cleaning registry cache...
+
+Removed:
+  - Old downloads (8 files, 9.2 MB)
+  - Expired metadata (23 entries, 1.5 MB)
+
+Freed: 10.7 MB
+```
+</Terminal>
+
+## Tips and Best Practices
+
+<Tip type="info">
+**Use version constraints**: When depending on Spirits, use `^` for flexibility while maintaining compatibility.
+</Tip>
+
+<Tip type="success">
+**Verify before summon**: The first time you run a Spirit, use `--verbose` to see verification details and understand what capabilities it requests.
+</Tip>
+
+<Tip type="warning">
+**Review capabilities**: Before summoning Spirits with `--allow-network` or `--allow-fs`, review their source code or documentation to understand why they need access.
+</Tip>
+
+## Common Issues
+
+### Spirit Not Found
+
+<Terminal title="Not found">
+```
+$ vudo install unknown-spirit
+Error: Spirit 'unknown-spirit' not found in registry
+
+Suggestions:
+  - Check spelling
+  - Search for similar: vudo search unknown
+  - Spirit may be private or unpublished
+```
+</Terminal>
+
+### Version Conflict
+
+<Terminal title="Version conflict">
+```
+$ vudo install my-spirit@^2.0.0
+Error: No compatible version found
+
+Requested: my-spirit@^2.0.0
+Available: 1.0.0, 1.0.1, 1.1.0
+
+Highest version is 1.1.0 (incompatible with ^2.0.0)
+
+Options:
+  - Use available version: vudo install my-spirit@^1.0.0
+  - Wait for 2.x release
+```
+</Terminal>
+
+### Signature Verification Failed
+
+<Terminal title="Verification failed">
+```
+$ vudo install suspicious-spirit
+Downloading suspicious-spirit@1.0.0...
+
+Error: Signature verification FAILED
+
+The package signature does not match the claimed author.
+This may indicate:
+  - Package was tampered with
+  - Author key was changed
+  - Corrupted download
+
+Installation aborted for security.
+
+If you trust this package, use --no-verify (NOT RECOMMENDED)
+```
+</Terminal>
+
+## Track Complete!
+
+Congratulations! You have completed the VUDO CLI track. You now have the skills to use VUDO efficiently for the complete Spirit development and deployment lifecycle.
+
+<TrackComplete
+  track="VUDO CLI"
+  nextTrack={{
+    title: "Spirit Binding Track",
+    href: "/tutorials/spirits",
+    description: "Deep dive into Spirit capabilities and host functions"
+  }}
+/>
+
+## Summary
+
+You have learned to:
+
+1. Install Spirits with `vudo install`
+2. Search the registry with `vudo search`
+3. Get Spirit information with `vudo info`
+4. Summon and run Spirits with `vudo summon`
+5. Manage installed Spirits with `vudo list`, `vudo update`, and `vudo remove`
+6. Understand the **registry directory structure**
+
+## Quick Reference
+
+```
+Registry Operations Quick Reference
+===================================
+
+INSTALL
+  vudo install <spirit>              Latest version
+  vudo install <spirit>@1.0.0        Specific version
+  vudo install <spirit>@^1.0.0       Version constraint
+  vudo install <spirit> --local      Project-local install
+
+SEARCH
+  vudo search <query>                Basic search
+  vudo search <query> --author <n>   Filter by author
+  vudo search <query> --category <c> Filter by category
+  vudo search <query> --sort <field> Sort results
+
+INFO
+  vudo info <spirit>                 Basic info
+  vudo info <spirit> --versions      Version history
+  vudo info <spirit> --dependencies  Dependency tree
+  vudo info <spirit> --files         Package contents
+
+SUMMON
+  vudo summon <spirit>               Run installed Spirit
+  vudo summon <spirit>@1.0.0         Run specific version
+  vudo summon <spirit> -- <args>     Pass arguments
+  vudo summon <spirit> --allow-*     Grant capabilities
+
+MANAGE
+  vudo list                          List installed
+  vudo update                        Check for updates
+  vudo update --apply                Apply updates
+  vudo remove <spirit>               Uninstall
+
+CACHE
+  vudo cache status                  Show cache info
+  vudo cache clean                   Clean cache
+
+REGISTRY STRUCTURE
+  ~/.vudo/registry/
+    index.json              Local index
+    spirits/
+      <name>/
+        <version>/
+          manifest.json
+          spirit.wasm
+        latest -> <version>/
+    cache/
+      downloads/
+      metadata/
+```

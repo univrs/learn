@@ -4,188 +4,197 @@
     "basePath": "/tutorials",
     "items": {
       "dol": {
-        "label": "DOL Fundamentals",
-        "description": "Learn the Design Ontology Language from first principles",
-        "duration": "3-4 hours",
+        "label": "DOL Concepts",
+        "description": "Understand the Design Ontology Language from first principles",
+        "duration": "1-2 hours",
         "level": "beginner",
         "icon": "BookOpen",
         "items": [
           {
-            "slug": "001-introduction",
-            "title": "Introduction to DOL",
-            "description": "What is DOL and why does it matter?",
+            "slug": "001-what-is-dol",
+            "title": "What is DOL?",
+            "description": "Declarative specifications vs imperative code",
             "duration": "20 min"
           },
           {
-            "slug": "002-genes",
-            "title": "Working with Genes",
+            "slug": "002-compilation-pipeline",
+            "title": "Compilation Pipeline",
+            "description": "From DOL source to target code",
+            "duration": "25 min"
+          },
+          {
+            "slug": "003-core-declarations",
+            "title": "Core Declarations",
+            "description": "Types, traits, and modules",
+            "duration": "30 min"
+          }
+        ]
+      },
+      "dol-syntax": {
+        "label": "DOL Syntax",
+        "description": "Master the declarative syntax of DOL v0.3.0",
+        "duration": "2-3 hours",
+        "level": "beginner",
+        "icon": "Code",
+        "items": [
+          {
+            "slug": "001-genes",
+            "title": "Genes and Types",
             "description": "Define properties and data structures",
             "duration": "25 min"
           },
           {
-            "slug": "003-traits",
+            "slug": "002-traits",
             "title": "Defining Traits",
             "description": "Define behaviors and capabilities",
             "duration": "30 min"
           },
           {
-            "slug": "004-constraints",
-            "title": "Constraints and Rules",
-            "description": "Define invariants and validation logic",
+            "slug": "003-systems",
+            "title": "System Modules",
+            "description": "Organize code with mod and system blocks",
             "duration": "25 min"
           },
           {
-            "slug": "005-systems",
-            "title": "Composing Systems",
-            "description": "Combine genes, traits, and constraints",
-            "duration": "35 min"
-          },
-          {
-            "slug": "006-metaprogramming",
-            "title": "Meta-Programming",
-            "description": "Quote, Eval, Reflect, and Macros",
-            "duration": "40 min"
-          },
-          {
-            "slug": "007-sex-system",
-            "title": "The SEX System",
-            "description": "Side Effect eXecution for controlled I/O",
+            "slug": "004-constraints",
+            "title": "Constraints and Rules",
+            "description": "Define invariants with forall and exists",
             "duration": "30 min"
           },
           {
-            "slug": "008-best-practices",
-            "title": "Best Practices",
-            "description": "Patterns, conventions, and real-world tips",
+            "slug": "005-evolution",
+            "title": "Version Evolution",
+            "description": "Manage change across specifications",
             "duration": "25 min"
+          },
+          {
+            "slug": "006-exegesis",
+            "title": "Exegesis Documentation",
+            "description": "Document meaning and intent",
+            "duration": "20 min"
+          },
+          {
+            "slug": "007-v030-syntax",
+            "title": "DOL v0.3.0 Syntax",
+            "description": "New features: type keyword, extends, val/var, HIR",
+            "duration": "35 min"
           }
         ]
       },
       "spirits": {
         "label": "Spirit Development",
-        "description": "Build secure, composable WebAssembly programs",
-        "duration": "4-6 hours",
+        "description": "Build secure WebAssembly programs for VUDO",
+        "duration": "2-3 hours",
         "level": "intermediate",
         "icon": "Sparkles",
         "items": [
           {
-            "slug": "001-what-is-spirit",
-            "title": "What is a Spirit?",
-            "description": "Spirit architecture and sandbox security",
-            "duration": "25 min"
-          },
-          {
-            "slug": "002-first-spirit",
-            "title": "Your First Spirit",
-            "description": "Create, build, and run your first Spirit",
+            "slug": "001-architecture",
+            "title": "VUDO Platform Architecture",
+            "description": "Two-crate design, security model, fuel metering",
             "duration": "30 min"
           },
           {
-            "slug": "003-host-functions",
-            "title": "Using Host Functions",
-            "description": "Access time, logging, random, and more",
-            "duration": "35 min"
-          },
-          {
-            "slug": "004-storage",
-            "title": "Persistent Storage",
-            "description": "Store and retrieve data across invocations",
-            "duration": "40 min"
-          },
-          {
-            "slug": "005-networking",
-            "title": "Networking",
-            "description": "HTTP requests and response handling",
-            "duration": "40 min"
-          },
-          {
-            "slug": "006-credits",
-            "title": "Credits and Economics",
-            "description": "Understand the credit system and incentives",
-            "duration": "30 min"
-          },
-          {
-            "slug": "007-testing",
-            "title": "Testing Spirits",
-            "description": "Write tests and mock host functions",
-            "duration": "35 min"
-          },
-          {
-            "slug": "008-distribution",
-            "title": "Packaging and Distribution",
-            "description": "Publish Spirits to the Imaginarium",
+            "slug": "002-manifests",
+            "title": "Spirit Manifests",
+            "description": "TOML configuration for Spirit metadata",
             "duration": "25 min"
+          },
+          {
+            "slug": "003-capabilities",
+            "title": "Capability-Based Security",
+            "description": "All 14 capability types explained",
+            "duration": "35 min"
+          },
+          {
+            "slug": "004-runtime-modules",
+            "title": "Runtime Modules",
+            "description": "The 6 modules for Spirit execution",
+            "duration": "30 min"
           }
         ]
       },
-      "cli": {
-        "label": "CLI Mastery",
+      "vudo-cli": {
+        "label": "VUDO CLI",
         "description": "Master the VUDO command-line interface",
-        "duration": "2 hours",
+        "duration": "1.5 hours",
         "level": "beginner",
         "icon": "Terminal",
         "items": [
           {
-            "slug": "001-overview",
-            "title": "CLI Overview",
-            "description": "Tour of all VUDO commands and capabilities",
-            "duration": "15 min"
-          },
-          {
-            "slug": "002-templates",
-            "title": "Project Templates",
-            "description": "Create projects with templates",
+            "slug": "001-project-creation",
+            "title": "Project Creation",
+            "description": "Create new Spirit projects with vudo new",
             "duration": "20 min"
           },
           {
-            "slug": "003-repl",
-            "title": "The DOL REPL",
-            "description": "Interactive development and exploration",
+            "slug": "002-build-run",
+            "title": "Build and Run",
+            "description": "Compile and execute Spirits locally",
             "duration": "25 min"
           },
           {
-            "slug": "004-quality-tools",
-            "title": "Code Quality Tools",
-            "description": "Checking, formatting, and documentation",
-            "duration": "20 min"
+            "slug": "003-signing",
+            "title": "Signing Spirits",
+            "description": "Ed25519 keys and manifest signatures",
+            "duration": "25 min"
           },
           {
-            "slug": "005-registry",
+            "slug": "004-registry",
             "title": "Registry Operations",
-            "description": "Install, search, and publish modules",
+            "description": "Publish and install from the Imaginarium",
             "duration": "20 min"
           }
         ]
       },
       "capstone": {
-        "label": "Capstone: Lion and Swan",
-        "description": "Build a complete system using all your skills",
+        "label": "Capstone: Lion & Swan",
+        "description": "Build a complete Spirit from DOL to deployment",
         "duration": "6-8 hours",
         "level": "advanced",
         "icon": "Trophy",
         "items": [
           {
-            "slug": "001-project-overview",
-            "title": "Project Overview",
-            "description": "Understanding the Lion and Swan architecture",
+            "slug": "001-ontology",
+            "title": "Define the Ontology",
+            "description": "Create the complete DOL specification",
+            "duration": "45 min"
+          },
+          {
+            "slug": "002-project-setup",
+            "title": "Create Spirit Project",
+            "description": "Scaffold with vudo new and configure manifest",
             "duration": "30 min"
           },
           {
-            "slug": "002-design-phase",
-            "title": "Design Phase",
-            "description": "Create the DOL specification",
-            "duration": "90 min"
-          },
-          {
-            "slug": "003-implementation",
-            "title": "Implementation",
-            "description": "Build the Spirit components",
-            "duration": "180 min"
-          },
-          {
-            "slug": "004-deployment",
-            "title": "Deployment and CI/CD",
-            "description": "Automate and publish your project",
+            "slug": "003-image-gen",
+            "title": "Image Generation",
+            "description": "Integrate AI image generation APIs",
             "duration": "60 min"
+          },
+          {
+            "slug": "004-narrative",
+            "title": "Narrative Engine",
+            "description": "Build the storytelling system",
+            "duration": "60 min"
+          },
+          {
+            "slug": "005-credits",
+            "title": "Credit Integration",
+            "description": "Implement mycelial economics",
+            "duration": "45 min"
+          },
+          {
+            "slug": "006-testing",
+            "title": "Testing and Quality",
+            "description": "Test pyramid and quality assurance",
+            "duration": "45 min"
+          },
+          {
+            "slug": "007-publish",
+            "title": "Sign and Publish",
+            "description": "Deploy to the Imaginarium registry",
+            "duration": "30 min"
           }
         ]
       }

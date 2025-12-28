@@ -1,0 +1,468 @@
+---
+title: "Sign and Publish"
+description: "Release your Lion & Swan Spirit to the registry and become a Saint"
+track: "capstone"
+tutorial: 7
+duration: "25 min"
+level: "advanced"
+prerequisites:
+  - "Step 6: Testing and Polish"
+concepts:
+  - "Ed25519 cryptographic signing"
+  - "Spirit packaging"
+  - "Registry publishing"
+  - "Key management"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+
+# Sign and Publish
+
+Your Lion & Swan Spirit is complete. The ontology is defined, the manifest is configured, capabilities are wired, and all tests pass. Now it is time to release your creation to the world.
+
+In this final step, you will package, sign, and publish your Spirit to the registry - becoming a **Saint** in the Univrs ecosystem.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Package your Spirit into a distributable format
+- Generate Ed25519 signing keys
+- Cryptographically sign your manifest for authenticity
+- Publish to the local registry
+- Understand the path to Sainthood
+
+## The Publishing Workflow
+
+```
++------------------+     +------------------+     +------------------+
+|   vudo pack      | --> |   vudo sign      | --> |   vudo publish   |
+|   (Create .wasm) |     |   (Ed25519 sig)  |     |   (To registry)  |
++------------------+     +------------------+     +------------------+
+```
+
+Publishing a Spirit involves three distinct phases:
+1. **Pack**: Compile and bundle into a distributable package
+2. **Sign**: Cryptographically sign to prove authenticity
+3. **Publish**: Register in the Spirit registry for others to use
+
+## Pre-Publication Checklist
+
+Before publishing, verify everything is in order:
+
+```bash
+# Final quality check
+vudo check --strict
+
+# Run all tests
+vudo test
+
+# Verify manifest
+vudo manifest validate
+
+# Check for any uncommitted changes
+git status
+```
+
+<Callout type="warning" title="Version Control">
+Ensure all changes are committed before publishing. The publish process records the git commit hash for reproducibility.
+</Callout>
+
+## Step 1: Pack Your Spirit
+
+First, ensure your project compiles and create the distributable package:
+
+```bash
+# Build the release version
+vudo build --release
+
+# Pack into distributable format
+vudo pack
+```
+
+The `pack` command creates a Spirit package directory containing:
+
+```
+lion-swan-spirit/
+├── manifest.toml       # Spirit manifest
+├── spirit.wasm         # Compiled WebAssembly module
+└── assets/             # Optional assets directory
+```
+
+Verify the package contents:
+
+```bash
+# List package contents
+ls -la target/pack/
+
+# Verify WASM module was created
+file target/pack/spirit.wasm
+```
+
+Expected output:
+
+```
+target/pack/spirit.wasm: WebAssembly (wasm) binary module version 0x1 (MVP)
+```
+
+<Callout type="info" title="WASM Magic Bytes">
+Valid WebAssembly files begin with the magic bytes `\0asm` (0x00 0x61 0x73 0x6d). The VUDO runtime verifies these bytes before loading any Spirit.
+</Callout>
+
+## Step 2: Generate Signing Keys
+
+Before signing, you need an Ed25519 keypair. VUDO uses Ed25519 signatures because they provide:
+
+- **128-bit security level** (equivalent to ~3000-bit RSA)
+- **64-byte signatures** (compact and efficient)
+- **32-byte keys** (both public and private)
+- **Deterministic signatures** (same input always produces same output)
+- **Fast signing and verification**
+
+Generate your keypair:
+
+```bash
+# Generate a new keypair
+vudo keys generate
+
+# Or specify a custom location
+vudo keys generate --output ~/.vudo/lion-swan.key
+```
+
+This creates your key files:
+
+```
+~/.vudo/keys/
+├── signing.key         # Private key (32 bytes, keep SECRET)
+└── verifying.key       # Public key (32 bytes, shareable)
+```
+
+<Callout type="warning" title="Protect Your Private Key">
+Your signing key is your digital identity. Never commit it to version control, share it publicly, or store it unencrypted. Use `chmod 600` to restrict file access. Consider hardware security modules for production environments.
+</Callout>
+
+View your public key (this becomes your author identity):
+
+```bash
+vudo keys show --public
+```
+
+Example output:
+
+```
+Public Key: a4f8c2e1b9d73f2a1c8e5b9d7f4a2c1e... (64 hex characters)
+```
+
+This 64-character hex string uniquely identifies you as an author in the Univrs ecosystem.
+
+## Step 3: Sign the Manifest
+
+With your keys ready, sign the manifest:
+
+```bash
+# Sign using default key location
+vudo sign
+
+# Or specify the key file
+vudo sign --key ~/.vudo/lion-swan.key
+```
+
+The signing process:
+
+1. Reads your manifest content
+2. Computes a SHA-256 hash of the content (name, version, author, description, capabilities)
+3. Signs the hash with your Ed25519 private key
+4. Embeds the 64-byte signature in the manifest
+
+After signing, your manifest contains a signature field:
+
+```toml
+[package]
+name = "lion-swan-spirit"
+version = "0.1.0"
+author = "a4f8c2e1b9d73f2a1c8e5b9d7f4a2c1e..."
+description = "Lion & Swan mythology generator"
+
+[signature]
+algorithm = "ed25519"
+value = "8b3f2a1c5e9d7b4a..."  # 128 hex characters (64 bytes)
+```
+
+The signature guarantees:
+- **Authenticity**: The Spirit was created by the claimed author
+- **Integrity**: Any tampering with the manifest invalidates the signature
+- **Non-repudiation**: The author cannot deny creating the signed Spirit
+
+Verify the signature is valid:
+
+```bash
+vudo verify
+```
+
+Expected output:
+
+```
+Verifying manifest signature...
+  Author: a4f8c2e1b9d73f2a1c8e5b9d7f4a2c1e...
+  Algorithm: Ed25519
+  Content hash: valid
+  Signature: valid
+
+Spirit signature verified successfully.
+```
+
+## Step 4: Publish to Registry
+
+Initialize the local registry (first time only):
+
+```bash
+vudo registry init
+```
+
+This creates the registry structure at `~/.vudo/registry/`:
+
+```
+~/.vudo/registry/
+├── index.json              # Registry metadata
+├── spirits/                # Installed Spirit packages
+│   └── (your spirits here)
+└── cache/                  # Downloaded packages (future)
+```
+
+Now publish your Spirit:
+
+```bash
+vudo publish
+```
+
+The publish command:
+
+1. Validates the manifest structure
+2. Verifies the signature is present and valid
+3. Copies the package to `~/.vudo/registry/spirits/`
+4. Updates the registry index
+
+Expected output:
+
+```
+Publishing lion-swan-spirit v0.1.0...
+  Validating manifest... OK
+  Verifying signature... OK
+  Copying to registry... OK
+  Updating index... OK
+
+Published: lion-swan-spirit v0.1.0
+Location: ~/.vudo/registry/spirits/lion-swan-spirit/0.1.0/
+
+You are now a Saint.
+```
+
+## Verify Installation
+
+Confirm your Spirit is in the registry:
+
+```bash
+# List all installed spirits
+vudo registry list
+
+# Search for your spirit
+vudo registry search --name lion-swan
+
+# Get detailed information
+vudo registry info lion-swan-spirit
+```
+
+Example output:
+
+```
+lion-swan-spirit
+  Latest: 0.1.0
+  Versions: ["0.1.0"]
+  Installed: 2024-12-27T12:00:00Z
+  Source: Local { path: "/home/user/lion-swan-spirit" }
+```
+
+## What the Registry Stores
+
+Your Spirit is now installed at:
+
+```
+~/.vudo/registry/
+├── index.json                    # Registry metadata
+└── spirits/
+    └── lion-swan-spirit/
+        ├── 0.1.0/
+        │   ├── manifest.toml     # Signed manifest
+        │   ├── spirit.wasm       # WASM module
+        │   └── assets/           # Optional assets
+        └── latest -> 0.1.0/      # Symlink to latest version
+```
+
+The registry index tracks:
+- All installed versions
+- Installation timestamps
+- Source locations
+- Latest version references
+
+## Publishing Future Versions
+
+When you improve your Spirit, increment the version and republish:
+
+```bash
+# Update version in manifest.toml
+# version = "0.2.0"
+
+# Rebuild, resign, republish
+vudo build --release
+vudo pack
+vudo sign
+vudo publish
+```
+
+Both versions remain available:
+
+```bash
+# Use latest version
+vudo run lion-swan-spirit
+
+# Use specific version
+vudo run lion-swan-spirit@0.1.0
+```
+
+### Version Management Best Practices
+
+```bash
+# Patch release (bug fixes): 0.1.0 -> 0.1.1
+# Minor release (new features): 0.1.0 -> 0.2.0
+# Major release (breaking changes): 0.1.0 -> 1.0.0
+```
+
+To keep the registry clean, remove old versions:
+
+```bash
+# Remove a specific version
+vudo registry uninstall lion-swan-spirit@0.0.1
+
+# Keep only the 3 most recent versions
+vudo registry prune lion-swan-spirit --keep 3
+```
+
+## Running Your Published Spirit
+
+Others can now use your Spirit:
+
+```bash
+# Run with default parameters
+vudo run lion-swan-spirit
+
+# Run with arguments
+vudo run lion-swan-spirit generate --archetype lion
+
+# Get WASM for direct execution
+vudo registry get-wasm lion-swan-spirit
+```
+
+## Troubleshooting
+
+### "Signature verification failed"
+
+The signature does not match the content. Possible causes:
+
+1. Content was modified after signing
+2. Wrong public key in manifest author field
+3. Corrupted signature
+
+Solution: Re-sign with the correct key:
+
+```bash
+vudo sign --key ~/.vudo/lion-swan.key
+```
+
+### "No manifest.toml found"
+
+The package directory is missing the manifest:
+
+```bash
+ls target/pack/
+# Ensure manifest.toml exists
+```
+
+### "No spirit.wasm found"
+
+The WASM file was not included in the package:
+
+```bash
+# Rebuild and repack
+vudo build --release
+vudo pack
+```
+
+### "Already installed"
+
+The same version is already in the registry:
+
+```bash
+# Either increment the version or uninstall first
+vudo registry uninstall lion-swan-spirit@0.1.0
+vudo publish
+```
+
+## Key Takeaways
+
+1. **Pack creates distributable bundles**: The WASM module and manifest are packaged together
+2. **Ed25519 provides cryptographic identity**: Your 32-byte public key is your author identity
+3. **Signing ensures integrity**: SHA-256 hash signed with Ed25519 guarantees authenticity
+4. **The registry manages versions**: Multiple versions can coexist at `~/.vudo/registry/`
+5. **Verification before trust**: Always verify signatures before running unknown Spirits
+
+---
+
+## Celebration
+
+You have completed the capstone project.
+
+Your Lion & Swan Spirit is signed, published, and ready to generate mythic content for the Univrs.io narrative.
+
+**You are now a Saint.**
+
+In the Univrs ecosystem, a Saint is one who has:
+- Defined an ontology with meaning and purpose
+- Built a Spirit that embodies that ontology
+- Signed their creation with cryptographic identity
+- Published for others to use and learn from
+
+Your Lion & Swan mythology can now:
+- Generate images of the Black Lion and White Swan
+- Create narratives exploring the eternal balance
+- Ask the self-correcting question: *"Are we protectors or oppressors?"*
+- Contribute to the ever-growing Univrs.io story
+
+```
+     The Black Lion guards the harmony.
+     The White Swan promises transformation.
+     The Saint publishes the truth.
+
+     Welcome to the mythology.
+```
+
+## What Comes Next?
+
+Your journey as a Saint has just begun. Consider:
+
+- **Create new archetypes**: Extend the mythology with new symbols
+- **Build companion Spirits**: Create Spirits that interact with Lion & Swan
+- **Contribute to the narrative**: Add your stories to Univrs.io
+- **Mentor others**: Help new developers become Saints
+
+Thank you for completing this capstone project.
+
+The Keepers of Light welcome you.
+
+---
+
+<Callout type="success" title="Capstone Complete">
+You have successfully completed all seven tutorials in the Lion & Swan capstone project. Your Spirit is now part of the Univrs ecosystem.
+</Callout>
+
+Return to [Tutorials Home](/tutorials) or explore the [DOL Reference](/dol/reference).

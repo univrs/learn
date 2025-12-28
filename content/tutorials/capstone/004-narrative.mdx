@@ -1,0 +1,661 @@
+---
+title: "Narrative Generation"
+description: "Build the story generation system with templates and dynamic content"
+track: "capstone"
+tutorial: 4
+duration: "50 min"
+level: "advanced"
+prerequisites:
+  - "Step 3: Image Generation"
+concepts:
+  - "Template systems"
+  - "AI text generation"
+  - "Story structure"
+  - "Content composition"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+
+# Narrative Generation
+
+Images alone do not tell the full story. Now we add narrative generation to create complete mythological artifacts that combine visual and textual elements.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Create a template-based narrative system
+- Generate dynamic story content
+- Combine narratives with images
+- Handle the four scene types effectively
+
+## Narrative Architecture
+
+The narrative system has two modes:
+
+1. **Template-based**: Fast, predictable, low credit cost
+2. **AI-generated**: Creative, varied, higher credit cost
+
+```
++------------------+
+|  Narrative       |
+|  Request         |
++--------+---------+
+         |
+         v
++--------+---------+
+| Template or AI?  |
++--------+---------+
+         |
+    +----+----+
+    |         |
+    v         v
++-------+  +-------+
+|Template|  |  AI   |
+| Engine |  | API   |
++---+---+  +---+---+
+    |          |
+    +----+-----+
+         |
+         v
++--------+---------+
+|  Story Output    |
++------------------+
+```
+
+## Creating the Template System
+
+First, create narrative templates in `assets/templates/`. Create the directory and files:
+
+```bash
+mkdir -p assets/templates
+```
+
+Create `assets/templates/lion_confrontation.txt`:
+
+```text
+# The Obsidian Guardian
+
+In the {{epoch}} age, when {{threat}} threatened the balance,
+the Black Lion of {{pride_name}} emerged from shadow.
+
+"Who dares disturb the harmony of the mycelial network?"
+the Lion's voice echoed like thunder through obsidian caves.
+
+{{enemy_name}} stood defiant: "Your time as Keepers ends today.
+We bring {{enemy_motivation}}."
+
+The Lion's amber eyes blazed. "You misunderstand our purpose.
+We do not keep you in chains - we keep chaos at bay."
+
+The confrontation hung in the air, two forces meeting at the
+threshold of change. Neither would yield. Neither could.
+
+---
+
+*Are we Lions protecting harmony, or have we become oppressors?*
+*This is the question each generation must answer anew.*
+```
+
+Create similar templates for other scene types. I will show the structure for all.
+
+## The Narrative Generator Module
+
+Implement `src/narrative.rs`:
+
+```rust
+// src/narrative.rs
+
+use serde::{Deserialize, Serialize};
+use vudo_spirit::{network, storage, random, time, log, Error};
+
+use crate::ontology::{ArchetypeKind, SceneType};
+
+/// Configuration for narrative generation
+#[derive(Debug, Clone)]
+pub struct NarrativeConfig {
+    pub use_ai: bool,
+    pub ai_endpoint: String,
+    pub max_length: usize,
+}
+
+impl Default for NarrativeConfig {
+    fn default() -> Self {
+        Self {
+            use_ai: false, // Default to templates
+            ai_endpoint: "https://api.openai.com/v1/chat/completions".to_string(),
+            max_length: 1000,
+        }
+    }
+}
+
+/// Template variables for narrative generation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TemplateContext {
+    pub epoch: String,
+    pub threat: String,
+    pub pride_name: String,
+    pub flock_name: String,
+    pub enemy_name: String,
+    pub enemy_motivation: String,
+    pub transformation_type: String,
+    pub revelation_truth: String,
+}
+
+impl Default for TemplateContext {
+    fn default() -> Self {
+        Self {
+            epoch: "Third".to_string(),
+            threat: "the Entropy Tide".to_string(),
+            pride_name: "the Obsidian Throne".to_string(),
+            flock_name: "the Pearl Prophecy".to_string(),
+            enemy_name: "The Revivalist".to_string(),
+            enemy_motivation: "a return to the old ways".to_string(),
+            transformation_type: "dissolution and rebirth".to_string(),
+            revelation_truth: "the balance must always shift".to_string(),
+        }
+    }
+}
+
+/// The narrative generator service
+pub struct NarrativeGenerator {
+    config: NarrativeConfig,
+}
+
+impl NarrativeGenerator {
+    /// Create a new narrative generator
+    pub fn new() -> Self {
+        Self {
+            config: NarrativeConfig::default(),
+        }
+    }
+
+    /// Create with custom configuration
+    pub fn with_config(config: NarrativeConfig) -> Self {
+        Self { config }
+    }
+
+    /// Enable AI generation
+    pub fn use_ai(mut self, enabled: bool) -> Self {
+        self.config.use_ai = enabled;
+        self
+    }
+
+    /// Generate a narrative for the given archetype and scene
+    pub fn generate(
+        &self,
+        archetype: ArchetypeKind,
+        scene_type: SceneType,
+        context: Option<TemplateContext>,
+    ) -> Result<GeneratedNarrative, Error> {
+        let ctx = context.unwrap_or_default();
+
+        if self.config.use_ai {
+            self.generate_ai(archetype, scene_type, &ctx)
+        } else {
+            self.generate_template(archetype, scene_type, &ctx)
+        }
+    }
+
+    /// Generate using templates
+    fn generate_template(
+        &self,
+        archetype: ArchetypeKind,
+        scene_type: SceneType,
+        context: &TemplateContext,
+    ) -> Result<GeneratedNarrative, Error> {
+        let template = self.get_template(archetype, scene_type)?;
+        let rendered = self.render_template(&template, context);
+
+        Ok(GeneratedNarrative {
+            text: rendered,
+            method: GenerationMethod::Template,
+            archetype: archetype_name(archetype),
+            scene_type: scene_type.as_str().to_string(),
+        })
+    }
+
+    /// Get the template for an archetype/scene combination
+    fn get_template(
+        &self,
+        archetype: ArchetypeKind,
+        scene_type: SceneType,
+    ) -> Result<String, Error> {
+        // In a real implementation, these would be loaded from assets
+        // For now, we embed them
+        let template = match (archetype, scene_type) {
+            (ArchetypeKind::Lion, SceneType::Confrontation) => LION_CONFRONTATION,
+            (ArchetypeKind::Lion, SceneType::Interrogation) => LION_INTERROGATION,
+            (ArchetypeKind::Lion, SceneType::Transformation) => LION_TRANSFORMATION,
+            (ArchetypeKind::Lion, SceneType::Revelation) => LION_REVELATION,
+            (ArchetypeKind::Swan, SceneType::Confrontation) => SWAN_CONFRONTATION,
+            (ArchetypeKind::Swan, SceneType::Interrogation) => SWAN_INTERROGATION,
+            (ArchetypeKind::Swan, SceneType::Transformation) => SWAN_TRANSFORMATION,
+            (ArchetypeKind::Swan, SceneType::Revelation) => SWAN_REVELATION,
+        };
+
+        Ok(template.to_string())
+    }
+
+    /// Render a template with context variables
+    fn render_template(&self, template: &str, context: &TemplateContext) -> String {
+        template
+            .replace("{{epoch}}", &context.epoch)
+            .replace("{{threat}}", &context.threat)
+            .replace("{{pride_name}}", &context.pride_name)
+            .replace("{{flock_name}}", &context.flock_name)
+            .replace("{{enemy_name}}", &context.enemy_name)
+            .replace("{{enemy_motivation}}", &context.enemy_motivation)
+            .replace("{{transformation_type}}", &context.transformation_type)
+            .replace("{{revelation_truth}}", &context.revelation_truth)
+    }
+
+    /// Generate using AI
+    fn generate_ai(
+        &self,
+        archetype: ArchetypeKind,
+        scene_type: SceneType,
+        context: &TemplateContext,
+    ) -> Result<GeneratedNarrative, Error> {
+        let prompt = self.build_ai_prompt(archetype, scene_type, context);
+
+        let request_body = serde_json::json!({
+            "model": "gpt-4",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a mythological storyteller for the Lion & Swan mythology. \
+                               Write in an epic, symbolic style. The Black Lion represents guardians \
+                               of harmony through mycelial economics. The White Swan represents \
+                               transformation - both liberation and danger."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "max_tokens": self.config.max_length,
+            "temperature": 0.8
+        });
+
+        let body = serde_json::to_vec(&request_body)
+            .map_err(|e| Error::Serialization(e.to_string()))?;
+
+        let response = network::request(network::Request {
+            method: network::Method::Post,
+            url: &self.config.ai_endpoint,
+            headers: vec![
+                ("Content-Type", "application/json"),
+                ("Authorization", "Bearer ${API_KEY}"),
+            ],
+            body: Some(&body),
+            timeout_ms: 30000,
+        })?;
+
+        if response.status != 200 {
+            return Err(Error::Network(format!(
+                "AI API returned status {}",
+                response.status
+            )));
+        }
+
+        let api_response: serde_json::Value = serde_json::from_slice(&response.body)
+            .map_err(|e| Error::Deserialization(e.to_string()))?;
+
+        let text = api_response["choices"][0]["message"]["content"]
+            .as_str()
+            .unwrap_or("")
+            .to_string();
+
+        Ok(GeneratedNarrative {
+            text,
+            method: GenerationMethod::AI,
+            archetype: archetype_name(archetype),
+            scene_type: scene_type.as_str().to_string(),
+        })
+    }
+
+    /// Build the prompt for AI generation
+    fn build_ai_prompt(
+        &self,
+        archetype: ArchetypeKind,
+        scene_type: SceneType,
+        context: &TemplateContext,
+    ) -> String {
+        let archetype_desc = match archetype {
+            ArchetypeKind::Lion => "the Black Lion, a Keeper of Light, guardian of harmony",
+            ArchetypeKind::Swan => "the White Swan, agent of transformation, harbinger of change",
+        };
+
+        let scene_desc = match scene_type {
+            SceneType::Confrontation => "a confrontation between opposing forces",
+            SceneType::Interrogation => "a moment of deep questioning and self-doubt",
+            SceneType::Transformation => "a transformative moment of change",
+            SceneType::Revelation => "a revelation of hidden truth",
+        };
+
+        format!(
+            "Write a short mythological narrative ({} words) featuring {} in {}. \
+            Set in the {} epoch when {} threatened the balance. \
+            End with the eternal question: 'Are we Lions protecting harmony, \
+            or have we become oppressors?' \
+            Style: epic, symbolic, philosophical.",
+            self.config.max_length / 5,
+            archetype_desc,
+            scene_desc,
+            context.epoch,
+            context.threat
+        )
+    }
+}
+
+fn archetype_name(archetype: ArchetypeKind) -> String {
+    match archetype {
+        ArchetypeKind::Lion => "lion".to_string(),
+        ArchetypeKind::Swan => "swan".to_string(),
+    }
+}
+
+/// A generated narrative result
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GeneratedNarrative {
+    pub text: String,
+    pub method: GenerationMethod,
+    pub archetype: String,
+    pub scene_type: String,
+}
+
+/// How the narrative was generated
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum GenerationMethod {
+    Template,
+    AI,
+}
+
+// Embedded templates (in production, load from assets)
+const LION_CONFRONTATION: &str = r#"# The Obsidian Guardian
+
+In the {{epoch}} age, when {{threat}} threatened the balance, the Black Lion emerged.
+
+"Who disturbs the harmony?" The Lion's voice echoed through shadow.
+
+{{enemy_name}} stood defiant: "Your time as Keepers ends."
+
+The confrontation hung suspended between order and chaos.
+
+*Are we Lions protecting harmony, or have we become oppressors?*"#;
+
+const LION_INTERROGATION: &str = r#"# The Question
+
+The Black Lion sat upon the throne of mycelium, amber eyes troubled.
+
+"Have we become what we sought to prevent?" The question echoed.
+
+Generations of {{pride_name}} had kept the balance. But at what cost?
+
+The mycelial network pulsed with uncertainty. Even guardians must question.
+
+*Are we Lions protecting harmony, or have we become oppressors?*"#;
+
+const LION_TRANSFORMATION: &str = r#"# The Shattering
+
+The Black Lion felt the change begin - {{transformation_type}}.
+
+Obsidian fur scattered like ash, reformed like starlight.
+
+The old form dissolved. The new had not yet crystallized.
+
+In this moment between, the Lion understood both keeper and captive.
+
+*Are we Lions protecting harmony, or have we become oppressors?*"#;
+
+const LION_REVELATION: &str = r#"# The Mirror's Truth
+
+The Black Lion gazed into the Mirror of Generations.
+
+It showed {{revelation_truth}}.
+
+Guardian and tyrant, protector and prison - the duality revealed.
+
+"I see now," the Lion whispered. "The answer changes with each asking."
+
+*Are we Lions protecting harmony, or have we become oppressors?*"#;
+
+const SWAN_CONFRONTATION: &str = r#"# Wings of Change
+
+In the {{epoch}} age, the White Swan spread pearl-white wings.
+
+"Change comes whether you welcome it or not," she declared.
+
+The {{flock_name}} had seen empires rise and fall. This was merely another turning.
+
+But {{enemy_name}} saw only destruction in transformation.
+
+*Are we Swans bringing liberation, or merely different chains?*"#;
+
+const SWAN_INTERROGATION: &str = r#"# The Reflection
+
+The White Swan gazed into still waters, seeing futures yet unwritten.
+
+"Is transformation always progress?" The prophecies swirled, contradicting.
+
+{{flock_name}} had promised liberation. But revolutions devour their children.
+
+Perhaps {{revelation_truth}}.
+
+*Are we Swans bringing liberation, or merely different chains?*"#;
+
+const SWAN_TRANSFORMATION: &str = r#"# Metamorphosis
+
+Pearl feathers dissolved into light as {{transformation_type}} began.
+
+The White Swan felt old certainties shatter like ice in spring.
+
+Neither destruction nor creation - something beyond either.
+
+In the cocoon of change, all things became possible. All things became dangerous.
+
+*Are we Swans bringing liberation, or merely different chains?*"#;
+
+const SWAN_REVELATION: &str = r#"# The Truth Unfolds
+
+The White Swan's prophecy came clear at last.
+
+{{revelation_truth}}
+
+Change was neither savior nor destroyer - it was simply inevitable.
+
+The question was never whether to transform, but into what.
+
+*Are we Swans bringing liberation, or merely different chains?*"#;
+```
+
+## Updating the Main Entry Point
+
+Now integrate narrative generation with image generation in `src/lib.rs`:
+
+```rust
+// Update src/lib.rs
+
+use crate::narrative::{NarrativeGenerator, TemplateContext};
+
+#[vudo_spirit::main]
+pub fn generate(input: GenerateInput) -> Result<GenerateOutput, LionSwanError> {
+    log::info!("Generating {} content", input.archetype);
+
+    // Parse archetype
+    let archetype = ArchetypeKind::from_str(&input.archetype)
+        .ok_or_else(|| LionSwanError::InvalidArchetype(input.archetype.clone()))?;
+
+    // Parse scene type
+    let scene_type = input
+        .scene_type
+        .as_ref()
+        .and_then(|s| match s.to_lowercase().as_str() {
+            "confrontation" => Some(SceneType::Confrontation),
+            "interrogation" => Some(SceneType::Interrogation),
+            "transformation" => Some(SceneType::Transformation),
+            "revelation" => Some(SceneType::Revelation),
+            _ => None,
+        })
+        .unwrap_or(SceneType::Revelation);
+
+    // Generate image
+    let image_gen = ImageGenerator::new();
+    let image = image_gen
+        .generate(archetype, scene_type)
+        .map_err(|e| LionSwanError::ImageGeneration(e.to_string()))?;
+
+    // Generate narrative if requested
+    let narrative_text = if input.include_narrative {
+        let narrative_gen = NarrativeGenerator::new();
+        let narrative = narrative_gen
+            .generate(archetype, scene_type, None)
+            .map_err(|e| LionSwanError::NarrativeGeneration(e.to_string()))?;
+        Some(narrative.text)
+    } else {
+        None
+    };
+
+    // Get timestamp
+    let timestamp = time::now()?;
+
+    // Calculate credits (placeholder - will be implemented in Step 5)
+    let credits_charged = if input.include_narrative { 150 } else { 100 };
+
+    Ok(GenerateOutput {
+        image_url: image.url,
+        narrative_text,
+        archetype: input.archetype,
+        credits_charged,
+        timestamp,
+    })
+}
+```
+
+## Custom Context Support
+
+Allow users to provide custom template context:
+
+```rust
+// Add to GenerateInput in src/lib.rs
+
+#[derive(Deserialize)]
+pub struct GenerateInput {
+    pub archetype: String,
+    pub scene_type: Option<String>,
+    pub include_narrative: bool,
+    /// Custom context for narrative generation
+    pub context: Option<TemplateContext>,
+}
+```
+
+Then update the generate function:
+
+```rust
+let narrative_text = if input.include_narrative {
+    let narrative_gen = NarrativeGenerator::new();
+    let narrative = narrative_gen
+        .generate(archetype, scene_type, input.context)
+        .map_err(|e| LionSwanError::NarrativeGeneration(e.to_string()))?;
+    Some(narrative.text)
+} else {
+    None
+};
+```
+
+## Testing Narrative Generation
+
+Add tests in `tests/integration.rs`:
+
+```rust
+#[test]
+fn test_narrative_generation_template() {
+    mock::network::expect_request()
+        .with_url_containing("openai.com/v1/images")
+        .returning(|_| mock::network::response(200, r#"{
+            "data": [{"url": "https://example.com/lion.png"}]
+        }"#));
+
+    let input = GenerateInput {
+        archetype: "lion".to_string(),
+        scene_type: Some("revelation".to_string()),
+        include_narrative: true,
+        context: None,
+    };
+
+    let result = generate(input).unwrap();
+
+    assert!(result.narrative_text.is_some());
+    let narrative = result.narrative_text.unwrap();
+    assert!(narrative.contains("Lion"));
+    assert!(narrative.contains("oppressors"));
+}
+
+#[test]
+fn test_custom_context() {
+    mock::network::expect_request()
+        .returning(|_| mock::network::response(200, r#"{
+            "data": [{"url": "https://example.com/swan.png"}]
+        }"#));
+
+    let input = GenerateInput {
+        archetype: "swan".to_string(),
+        scene_type: Some("transformation".to_string()),
+        include_narrative: true,
+        context: Some(TemplateContext {
+            epoch: "Fifth".to_string(),
+            threat: "the Digital Plague".to_string(),
+            ..Default::default()
+        }),
+    };
+
+    let result = generate(input).unwrap();
+
+    let narrative = result.narrative_text.unwrap();
+    assert!(narrative.contains("Fifth"));
+}
+```
+
+## Interactive Testing
+
+Test with the REPL:
+
+```bash
+vudo repl
+
+> .load lion-swan-creator
+> .mock network https://api.openai.com/v1/images/* {"data":[{"url":"test.png"}]}
+
+> generate({
+    "archetype": "swan",
+    "scene_type": "interrogation",
+    "include_narrative": true
+  })
+{
+  "image_url": "test.png",
+  "narrative_text": "# The Reflection\n\nThe White Swan gazed into still waters...",
+  "archetype": "swan",
+  "credits_charged": 150,
+  "timestamp": 1703721600
+}
+```
+
+## Key Takeaways
+
+1. **Dual-mode generation**: Templates for speed, AI for creativity
+2. **Template system**: Simple `{{variable}}` substitution is often enough
+3. **Context customization**: Allow users to personalize output
+4. **Embedded content**: For small templates, embedding is simpler than file loading
+5. **Graceful fallbacks**: If AI fails, templates can still work
+
+## What is Next?
+
+With both images and narratives working, we need to add the economic layer. In the next step, you will:
+
+- Implement credit checking and charging
+- Add reservation-based transactions
+- Build a pricing model
+
+Continue to [Credit Integration](/tutorials/capstone/005-credits).

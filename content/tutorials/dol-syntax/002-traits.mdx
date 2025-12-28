@@ -1,0 +1,337 @@
+---
+title: "Defining Traits"
+description: "Create reusable behavior contracts with trait definitions, generic parameters, and default implementations"
+track: "dol-syntax"
+tutorial: 2
+duration: "20 min"
+objectives:
+  - "Define traits with method signatures"
+  - "Use generic type parameters"
+  - "Provide default implementations"
+  - "Extend traits with inheritance"
+tags:
+  - "traits"
+  - "generics"
+  - "behavior"
+  - "contracts"
+---
+
+# Defining Traits
+
+Traits define **behavior contracts** - they specify what operations a type must support without implementing those operations. Traits enable abstraction, polymorphism, and code reuse in DOL specifications.
+
+## Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+- Define traits with method signatures
+- Use generic type parameters in traits
+- Provide default method implementations
+- Extend traits using inheritance
+
+## Basic Trait Definition
+
+A trait declares a set of method signatures that implementing types must provide:
+
+```dol
+trait ContainerLifecycle {
+    start: fun() -> Result<Void, Error>
+    stop: fun() -> Result<Void, Error>
+    pause: fun() -> Result<Void, Error>
+    resume: fun() -> Result<Void, Error>
+}
+```
+
+This trait declares four lifecycle methods that any container implementation must support. Each method:
+- Uses `fun()` syntax for function types
+- Returns a `Result` for error handling
+- Takes no parameters (operates on `self`)
+
+<Tip type="info">
+Traits are declarative contracts. They specify *what* behavior exists, not *how* it works. Implementation details come later.
+</Tip>
+
+## Method Signatures
+
+Trait methods can have various signatures:
+
+```dol
+trait Identifiable {
+    -- Simple getter, returns a value
+    get_id: fun() -> UInt64
+
+    -- Method with parameter
+    matches_id: fun(id: UInt64) -> Bool
+
+    -- Method that may fail
+    validate_id: fun() -> Result<Void, Error>
+}
+```
+
+### Function Type Syntax
+
+DOL uses `fun` for function types:
+
+| Syntax | Description |
+|--------|-------------|
+| `fun() -> T` | No parameters, returns `T` |
+| `fun(a: A) -> T` | One parameter, returns `T` |
+| `fun(a: A, b: B) -> T` | Multiple parameters |
+| `fun() -> Void` | No return value |
+
+## Generic Traits
+
+Traits can have generic type parameters for flexibility:
+
+```dol
+trait Collection<T> {
+    length: fun() -> UInt64
+    is_empty: fun() -> Bool
+    contains: fun(item: T) -> Bool
+    add: fun(item: T) -> Void
+    remove: fun(item: T) -> Bool
+}
+```
+
+The `<T>` declares a type parameter that gets substituted when the trait is used:
+
+```dol
+-- A type implementing Collection<String>
+pub type StringList uses Collection<String> {
+    items: List<String>
+}
+
+-- A type implementing Collection<UInt64>
+pub type IdSet uses Collection<UInt64> {
+    ids: Set<UInt64>
+}
+```
+
+## Default Implementations
+
+Traits can provide default implementations for methods:
+
+```dol
+trait Collection<T> {
+    length: fun() -> UInt64
+
+    -- Default implementation using length()
+    is_empty: fun() -> Bool = { self.length() == 0 }
+}
+```
+
+The `= { expression }` syntax provides a default. Types can override this or use the default.
+
+<Tip type="success">
+Default implementations reduce boilerplate. Define them for methods that can be derived from other trait methods.
+</Tip>
+
+## Multiple Default Implementations
+
+Here is a more complete example with several defaults:
+
+```dol
+trait Comparable<T> {
+    -- Required: must be implemented
+    compare: fun(other: T) -> Int64
+
+    -- Defaults: derived from compare()
+    equals: fun(other: T) -> Bool = { self.compare(other) == 0 }
+    less_than: fun(other: T) -> Bool = { self.compare(other) < 0 }
+    greater_than: fun(other: T) -> Bool = { self.compare(other) > 0 }
+    less_or_equal: fun(other: T) -> Bool = { self.compare(other) <= 0 }
+    greater_or_equal: fun(other: T) -> Bool = { self.compare(other) >= 0 }
+}
+```
+
+Implementers only need to provide `compare`, and get all comparison operations for free.
+
+## Trait Inheritance
+
+Traits can extend other traits using `extends`:
+
+```dol
+trait Entity {
+    get_id: fun() -> UInt64
+    get_created_at: fun() -> Timestamp
+}
+
+trait Auditable extends Entity {
+    get_updated_at: fun() -> Timestamp
+    get_updated_by: fun() -> String
+}
+
+trait Versionable extends Auditable {
+    get_version: fun() -> UInt64
+    increment_version: fun() -> Void
+}
+```
+
+A type implementing `Versionable` must provide all methods from:
+- `Entity` (get_id, get_created_at)
+- `Auditable` (get_updated_at, get_updated_by)
+- `Versionable` (get_version, increment_version)
+
+## Container Traits Example
+
+Here is a complete example modeling container behavior:
+
+```dol
+mod container.traits @ 0.3.0
+
+-- Base trait for anything with an ID
+trait Identifiable {
+    get_id: fun() -> UInt64
+}
+
+-- Lifecycle management
+trait Lifecycle {
+    start: fun() -> Result<Void, Error>
+    stop: fun() -> Result<Void, Error>
+    restart: fun() -> Result<Void, Error> = {
+        self.stop()?
+        self.start()
+    }
+}
+
+-- Health checking
+trait HealthCheckable {
+    is_healthy: fun() -> Bool
+    get_health_status: fun() -> HealthStatus
+    run_health_check: fun() -> Result<HealthStatus, Error>
+}
+
+-- Resource management
+trait ResourceManaged {
+    get_cpu_usage: fun() -> Float64
+    get_memory_usage: fun() -> UInt64
+    set_cpu_limit: fun(limit: Float64) -> Void
+    set_memory_limit: fun(limit: UInt64) -> Void
+}
+
+-- Complete container trait combining all behaviors
+trait Container extends Identifiable, Lifecycle, HealthCheckable, ResourceManaged {
+    get_name: fun() -> String
+    get_image: fun() -> String
+    get_labels: fun() -> Map<String, String>
+}
+```
+
+## Repository Pattern Example
+
+Traits are ideal for defining data access patterns:
+
+```dol
+mod repository @ 0.3.0
+
+trait Repository<T, ID> {
+    find_by_id: fun(id: ID) -> Option<T>
+    find_all: fun() -> List<T>
+    save: fun(entity: T) -> Result<T, Error>
+    delete: fun(id: ID) -> Result<Void, Error>
+    exists: fun(id: ID) -> Bool = {
+        self.find_by_id(id).is_some()
+    }
+}
+
+trait PagedRepository<T, ID> extends Repository<T, ID> {
+    find_page: fun(page: UInt64, size: UInt64) -> Page<T>
+    count: fun() -> UInt64
+}
+
+pub type Page<T> {
+    items: List<T>
+    page_number: UInt64
+    page_size: UInt64
+    total_items: UInt64
+    total_pages: UInt64
+}
+```
+
+## Event-Driven Traits
+
+Traits can model event-driven patterns:
+
+```dol
+mod events @ 0.3.0
+
+trait EventEmitter<E> {
+    emit: fun(event: E) -> Void
+    on: fun(handler: fun(E) -> Void) -> Void
+    once: fun(handler: fun(E) -> Void) -> Void
+    remove_listener: fun(handler: fun(E) -> Void) -> Void
+}
+
+trait EventHandler<E> {
+    handle: fun(event: E) -> Result<Void, Error>
+    can_handle: fun(event: E) -> Bool
+}
+```
+
+## Practice Exercise
+
+Define traits for a notification system:
+1. `Notifiable` - can receive notifications
+2. `NotificationSender` - can send notifications
+3. `NotificationChannel` - extends both with channel-specific methods
+
+<Collapsible title="Solution">
+```dol
+mod notifications @ 0.3.0
+
+pub type Notification {
+    id: UInt64
+    title: String
+    body: String
+    sent_at: Timestamp
+    priority: Priority
+}
+
+pub type Priority {
+    kind: enum { Low, Normal, High, Urgent }
+}
+
+trait Notifiable {
+    receive: fun(notification: Notification) -> Result<Void, Error>
+    get_unread_count: fun() -> UInt64
+    mark_as_read: fun(notification_id: UInt64) -> Void
+}
+
+trait NotificationSender {
+    send: fun(notification: Notification, recipient: Notifiable) -> Result<Void, Error>
+    send_bulk: fun(notification: Notification, recipients: List<Notifiable>) -> Result<UInt64, Error>
+}
+
+trait NotificationChannel extends Notifiable, NotificationSender {
+    get_channel_name: fun() -> String
+    is_available: fun() -> Bool
+    get_delivery_status: fun(notification_id: UInt64) -> DeliveryStatus
+}
+
+pub type DeliveryStatus {
+    kind: enum {
+        Pending,
+        Delivered { delivered_at: Timestamp },
+        Failed { reason: String }
+    }
+}
+```
+</Collapsible>
+
+## Summary
+
+In this lesson, you learned:
+
+- **Trait definition** with method signatures
+- **Generic parameters** for flexible, reusable traits
+- **Default implementations** to reduce boilerplate
+- **Trait inheritance** with `extends` for composition
+- **Real-world patterns** like Repository and EventEmitter
+
+## Next Steps
+
+<NextTutorial
+  title="Defining Systems"
+  href="/tutorials/dol-syntax/003-systems"
+  description="Learn to model complete systems with components and connections"
+/>

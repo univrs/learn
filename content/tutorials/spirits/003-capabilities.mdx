@@ -1,0 +1,717 @@
+---
+title: "Capabilities System"
+description: "Master all 14 capability types across network, storage, compute, sensors, and actuators"
+track: "spirits"
+tutorial: 3
+duration: "35 min"
+level: "intermediate"
+prerequisites:
+  - "Spirit Manifests tutorial"
+concepts:
+  - "14 capability types"
+  - "Permission enforcement"
+  - "Minimal capability principle"
+  - "CapabilitySet API"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+
+# Capabilities System
+
+The VUDO capability system provides fine-grained control over what Spirits can do. Every interaction with the outside world requires an explicitly declared capability, ensuring security through the principle of least privilege.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Understand all 14 capability types
+- Know how permissions are enforced at runtime
+- Apply the minimal capability principle
+- Use the CapabilitySet API effectively
+
+## The 14 Capabilities
+
+VUDO defines exactly 14 capabilities organized into 5 categories:
+
+```
++------------------------------------------------------------------+
+|                      VUDO CAPABILITIES                            |
++------------------------------------------------------------------+
+|                                                                   |
+|  NETWORK (3)           STORAGE (3)          COMPUTE (2)          |
+|  +---------------+     +---------------+     +---------------+    |
+|  | network_listen|     | storage_read  |     | spawn_sandbox |    |
+|  | network_connect|    | storage_write |     | cross_sandbox |    |
+|  | network_broadcast|  | storage_delete|     |    _call      |    |
+|  +---------------+     +---------------+     +---------------+    |
+|                                                                   |
+|  SENSORS (3)           ACTUATORS (3)                             |
+|  +---------------+     +---------------+                          |
+|  | sensor_time   |     | actuator_log  |                          |
+|  | sensor_random |     | actuator_notify|                         |
+|  | sensor_environment| | actuator_credit|                         |
+|  +---------------+     +---------------+                          |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+## Network Capabilities
+
+Network capabilities control how Spirits communicate over networks.
+
+### network_listen
+
+**Purpose**: Accept incoming network connections
+
+```rust
+use vudo_spirit::network;
+
+// Requires: network_listen capability
+
+// Listen on a port for incoming connections
+let listener = network::listen("0.0.0.0:8080")?;
+
+// Accept connections
+loop {
+    let connection = listener.accept()?;
+    handle_connection(connection)?;
+}
+```
+
+**Use cases:**
+- Running a server
+- Accepting WebSocket connections
+- Implementing network services
+
+### network_connect
+
+**Purpose**: Establish outgoing network connections
+
+```rust
+use vudo_spirit::network;
+
+// Requires: network_connect capability
+
+// Connect to a remote server
+let connection = network::connect("api.example.com:443")?;
+
+// Send data
+connection.write(b"GET /data HTTP/1.1\r\n\r\n")?;
+
+// Read response
+let response = connection.read()?;
+```
+
+**Use cases:**
+- API clients
+- Fetching remote data
+- Webhooks and notifications
+
+### network_broadcast
+
+**Purpose**: Send messages to multiple recipients
+
+```rust
+use vudo_spirit::network;
+
+// Requires: network_broadcast capability
+
+// Broadcast to all listeners on a channel
+network::broadcast("events", &message)?;
+
+// Subscribe to broadcasts
+let subscription = network::subscribe("events")?;
+for message in subscription {
+    handle_event(message)?;
+}
+```
+
+**Use cases:**
+- Pub/sub messaging
+- Event distribution
+- Multi-Spirit coordination
+
+## Storage Capabilities
+
+Storage capabilities control access to persistent data.
+
+### storage_read
+
+**Purpose**: Read data from persistent storage
+
+```rust
+use vudo_spirit::storage;
+
+// Requires: storage_read capability
+
+// Read a value by key
+let data: Option<Vec<u8>> = storage::read("user:123")?;
+
+// List keys with prefix
+let keys: Vec<String> = storage::list("user:")?;
+
+// Check if key exists
+let exists: bool = storage::exists("user:123")?;
+```
+
+**Use cases:**
+- Loading saved state
+- Reading configuration
+- Querying stored data
+
+### storage_write
+
+**Purpose**: Write data to persistent storage
+
+```rust
+use vudo_spirit::storage;
+
+// Requires: storage_write capability
+
+// Write a value
+storage::write("user:123", &user_data)?;
+
+// Write with expiration (seconds)
+storage::write_with_ttl("session:abc", &session, 3600)?;
+
+// Atomic compare-and-swap
+storage::cas("counter", old_value, new_value)?;
+```
+
+**Use cases:**
+- Saving state
+- Caching data
+- Storing user data
+
+### storage_delete
+
+**Purpose**: Remove data from persistent storage
+
+```rust
+use vudo_spirit::storage;
+
+// Requires: storage_delete capability
+
+// Delete a single key
+storage::delete("user:123")?;
+
+// Delete multiple keys with prefix
+storage::delete_prefix("temp:")?;
+
+// Clear all storage (use carefully!)
+storage::clear()?;
+```
+
+**Use cases:**
+- Cleanup operations
+- Expiring data
+- User data deletion
+
+<Callout type="warning" title="Storage Separation">
+Each Spirit has isolated storage. A Spirit cannot access another Spirit's storage, even with all storage capabilities.
+</Callout>
+
+## Compute Capabilities
+
+Compute capabilities enable multi-Spirit execution.
+
+### spawn_sandbox
+
+**Purpose**: Create isolated child execution environments
+
+```rust
+use vudo_spirit::compute;
+
+// Requires: spawn_sandbox capability
+
+// Spawn a new sandbox with limited capabilities
+let sandbox = compute::spawn_sandbox(SandboxConfig {
+    fuel_limit: 100_000,
+    memory_limit_mb: 16,
+    capabilities: vec!["sensor_time", "actuator_log"],
+})?;
+
+// Execute code in the sandbox
+let result = sandbox.execute(wasm_bytes, input)?;
+
+// Sandbox is automatically cleaned up when dropped
+```
+
+**Use cases:**
+- Executing untrusted code
+- Parallel computation
+- Resource isolation
+
+### cross_sandbox_call
+
+**Purpose**: Invoke functions in other Spirits
+
+```rust
+use vudo_spirit::compute;
+
+// Requires: cross_sandbox_call capability
+
+// Call another Spirit by name
+let result = compute::call_spirit(
+    "json-parser",           // Spirit name
+    "parse",                 // Function name
+    &json_bytes,             // Input
+)?;
+
+// Call with specific version
+let result = compute::call_spirit_version(
+    "json-parser",
+    "^1.0.0",               // Version requirement
+    "parse",
+    &json_bytes,
+)?;
+```
+
+**Use cases:**
+- Spirit composition
+- Reusing functionality
+- Microservice patterns
+
+## Sensor Capabilities
+
+Sensors provide read-only access to environment information.
+
+### sensor_time
+
+**Purpose**: Access the current time
+
+```rust
+use vudo_spirit::sensors;
+
+// Requires: sensor_time capability
+
+// Get current Unix timestamp (seconds)
+let now: u64 = sensors::time_now()?;
+
+// Get high-precision timestamp (nanoseconds)
+let now_ns: u128 = sensors::time_now_nanos()?;
+
+// Get monotonic time for duration measurement
+let start = sensors::time_monotonic()?;
+// ... do work ...
+let elapsed = sensors::time_monotonic()? - start;
+```
+
+**Use cases:**
+- Timestamps
+- Rate limiting
+- Timeouts and deadlines
+
+### sensor_random
+
+**Purpose**: Generate random numbers
+
+```rust
+use vudo_spirit::sensors;
+
+// Requires: sensor_random capability
+
+// Get random bytes
+let bytes: [u8; 32] = sensors::random_bytes()?;
+
+// Get random integer in range
+let roll: u32 = sensors::random_range(1, 7)?;  // 1-6 dice roll
+
+// Get random float [0.0, 1.0)
+let probability: f64 = sensors::random_float()?;
+```
+
+**Use cases:**
+- Cryptographic operations
+- Games and simulations
+- Random sampling
+
+<Callout type="info" title="Secure Randomness">
+Random numbers are provided by a cryptographically secure random number generator (CSRNG) from the host system.
+</Callout>
+
+### sensor_environment
+
+**Purpose**: Read environment metadata
+
+```rust
+use vudo_spirit::sensors;
+
+// Requires: sensor_environment capability
+
+// Get Spirit's own identity
+let spirit_id: String = sensors::spirit_id()?;
+
+// Get runtime version
+let runtime_version: String = sensors::runtime_version()?;
+
+// Get available fuel
+let fuel_remaining: u64 = sensors::fuel_remaining()?;
+
+// Get memory usage
+let memory_used: usize = sensors::memory_used()?;
+```
+
+**Use cases:**
+- Debugging
+- Resource monitoring
+- Conditional behavior
+
+## Actuator Capabilities
+
+Actuators perform actions that affect the outside world.
+
+### actuator_log
+
+**Purpose**: Write to the logging system
+
+```rust
+use vudo_spirit::actuators;
+
+// Requires: actuator_log capability
+
+// Log at different levels
+actuators::log_debug("Debug details")?;
+actuators::log_info("Information message")?;
+actuators::log_warn("Warning message")?;
+actuators::log_error("Error message")?;
+
+// Structured logging
+actuators::log_structured(LogEntry {
+    level: LogLevel::Info,
+    message: "User logged in",
+    fields: vec![
+        ("user_id", "123"),
+        ("ip", "192.168.1.1"),
+    ],
+})?;
+```
+
+**Use cases:**
+- Debugging
+- Audit trails
+- Monitoring
+
+### actuator_notify
+
+**Purpose**: Send notifications to external systems
+
+```rust
+use vudo_spirit::actuators;
+
+// Requires: actuator_notify capability
+
+// Send a notification
+actuators::notify(Notification {
+    channel: "alerts",
+    title: "Task Complete",
+    body: "Processing finished successfully",
+    priority: Priority::Normal,
+})?;
+
+// Send to specific recipient
+actuators::notify_user("user:123", &notification)?;
+```
+
+**Use cases:**
+- User alerts
+- System notifications
+- Event triggers
+
+### actuator_credit
+
+**Purpose**: Transfer credits between accounts
+
+```rust
+use vudo_spirit::actuators;
+
+// Requires: actuator_credit capability
+
+// Transfer credits to another Spirit
+actuators::transfer_credits(
+    "recipient-spirit",      // Recipient
+    1000,                    // Amount
+    "Payment for service",   // Memo
+)?;
+
+// Reserve credits for later use
+let reservation = actuators::reserve_credits(5000)?;
+
+// Release unused reserved credits
+reservation.release()?;
+```
+
+**Use cases:**
+- Payments
+- Resource allocation
+- Incentive systems
+
+## Permission Enforcement
+
+The runtime enforces capabilities at multiple levels:
+
+### Load-Time Verification
+
+```rust
+// When loading a Spirit, verify manifest capabilities
+fn verify_capabilities(manifest: &Manifest) -> Result<(), Error> {
+    for cap in &manifest.capabilities {
+        // Check capability is recognized
+        if !KNOWN_CAPABILITIES.contains(cap) {
+            return Err(Error::UnknownCapability(cap.clone()));
+        }
+
+        // Check capability is allowed by policy
+        if !policy.allows(cap) {
+            return Err(Error::CapabilityDenied(cap.clone()));
+        }
+    }
+    Ok(())
+}
+```
+
+### Runtime Enforcement
+
+```rust
+// Every host function checks capabilities
+fn handle_storage_read(spirit_id: SpiritId, key: &str) -> Result<Vec<u8>, Error> {
+    let caps = get_capabilities(spirit_id)?;
+
+    // Check capability before execution
+    if !caps.has(Capability::StorageRead) {
+        return Err(Error::CapabilityDenied("storage_read"));
+    }
+
+    // Capability verified - perform operation
+    storage::read(spirit_id, key)
+}
+```
+
+### Enforcement Diagram
+
+```
++------------------------------------------------------------------+
+|                    CAPABILITY ENFORCEMENT                         |
++------------------------------------------------------------------+
+|                                                                   |
+|  Spirit Code                                                      |
+|       |                                                           |
+|       | storage::read("key")                                      |
+|       v                                                           |
+|  +------------------------------------------+                     |
+|  |           Host Function Entry            |                     |
+|  +------------------------------------------+                     |
+|       |                                                           |
+|       v                                                           |
+|  +------------------------------------------+                     |
+|  |         Capability Check                 |                     |
+|  |  caps.has(StorageRead) ?                |                     |
+|  +----+-----------------------------+-------+                     |
+|       |                             |                             |
+|       | YES                         | NO                          |
+|       v                             v                             |
+|  +----------------+           +-------------------+               |
+|  | Execute        |           | Return Error      |               |
+|  | Operation      |           | CapabilityDenied  |               |
+|  +----------------+           +-------------------+               |
+|       |                                                           |
+|       v                                                           |
+|  +------------------------------------------+                     |
+|  |         Return Result to Spirit          |                     |
+|  +------------------------------------------+                     |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+## The CapabilitySet API
+
+Spirits can query their own capabilities at runtime:
+
+```rust
+use vudo_spirit::CapabilitySet;
+
+// Get the Spirit's capability set
+let caps = CapabilitySet::current()?;
+
+// Check individual capabilities
+if caps.has(Capability::NetworkConnect) {
+    // Can make network requests
+    fetch_remote_data()?;
+} else {
+    // Use cached data instead
+    use_cached_data()?;
+}
+
+// Iterate over all capabilities
+for cap in caps.iter() {
+    println!("Have capability: {:?}", cap);
+}
+
+// Check multiple capabilities
+if caps.has_all(&[Capability::StorageRead, Capability::StorageWrite]) {
+    // Can do read-write storage operations
+}
+
+// Check for any of a set
+if caps.has_any(&[Capability::NetworkConnect, Capability::NetworkListen]) {
+    // Can do some form of networking
+}
+```
+
+### CapabilitySet Methods
+
+| Method | Purpose |
+|--------|---------|
+| `current()` | Get Spirit's capability set |
+| `has(cap)` | Check single capability |
+| `has_all(caps)` | Check all capabilities present |
+| `has_any(caps)` | Check any capability present |
+| `iter()` | Iterate over capabilities |
+| `len()` | Count of capabilities |
+| `is_empty()` | Check if no capabilities |
+
+## Minimal Capability Principle
+
+Always request the minimum capabilities needed:
+
+### Why Minimal?
+
+1. **Trust**: Users are more likely to run Spirits with fewer capabilities
+2. **Security**: Limits damage if Spirit has bugs
+3. **Clarity**: Makes Spirit's purpose clear
+4. **Performance**: Fewer capability checks at runtime
+
+### Examples
+
+**Bad: Request everything**
+```toml
+# DON'T DO THIS
+capabilities = [
+    "network_listen", "network_connect", "network_broadcast",
+    "storage_read", "storage_write", "storage_delete",
+    "spawn_sandbox", "cross_sandbox_call",
+    "sensor_time", "sensor_random", "sensor_environment",
+    "actuator_log", "actuator_notify", "actuator_credit",
+]
+```
+
+**Good: Request only what's needed**
+```toml
+# A simple time-logging Spirit
+capabilities = ["sensor_time", "actuator_log"]
+```
+
+### Capability Decision Tree
+
+```
+Do you need to...
+
+Access the network?
+├── Accept connections? --> network_listen
+├── Make requests?      --> network_connect
+└── Broadcast?          --> network_broadcast
+
+Store data?
+├── Read data?          --> storage_read
+├── Write data?         --> storage_write
+└── Delete data?        --> storage_delete
+
+Run other code?
+├── Isolated sandbox?   --> spawn_sandbox
+└── Call other Spirit?  --> cross_sandbox_call
+
+Read environment?
+├── Current time?       --> sensor_time
+├── Random numbers?     --> sensor_random
+└── Runtime info?       --> sensor_environment
+
+Affect outside world?
+├── Write logs?         --> actuator_log
+├── Send notifications? --> actuator_notify
+└── Transfer credits?   --> actuator_credit
+```
+
+## Capability Combinations
+
+Common capability combinations for different Spirit types:
+
+### Pure Computation
+```toml
+# No capabilities needed for pure functions
+capabilities = []
+```
+
+### Logger
+```toml
+capabilities = ["sensor_time", "actuator_log"]
+```
+
+### Data Processor
+```toml
+capabilities = ["storage_read", "storage_write", "actuator_log"]
+```
+
+### API Client
+```toml
+capabilities = ["network_connect", "sensor_time", "actuator_log"]
+```
+
+### Server
+```toml
+capabilities = ["network_listen", "storage_read", "storage_write", "sensor_time", "actuator_log"]
+```
+
+### Orchestrator
+```toml
+capabilities = ["cross_sandbox_call", "sensor_time", "actuator_log"]
+```
+
+## Key Takeaways
+
+1. **14 Capabilities**: Network (3), Storage (3), Compute (2), Sensors (3), Actuators (3)
+
+2. **Explicit Declaration**: All capabilities must be declared in the manifest
+
+3. **Runtime Enforcement**: Every host function call verifies capabilities
+
+4. **Minimal Principle**: Request only what you need for security and trust
+
+5. **CapabilitySet API**: Query capabilities at runtime for conditional behavior
+
+## What's Next?
+
+Now that you understand capabilities, learn about the runtime modules that power Spirit package management.
+
+Continue to [Spirit Runtime Modules](/tutorials/spirits/004-runtime-modules).
+
+## Quick Reference
+
+```
+CAPABILITY QUICK REFERENCE
+==========================
+
+NETWORK
+  network_listen     Accept incoming connections
+  network_connect    Make outgoing connections
+  network_broadcast  Send to multiple recipients
+
+STORAGE
+  storage_read       Read from persistent storage
+  storage_write      Write to persistent storage
+  storage_delete     Remove from persistent storage
+
+COMPUTE
+  spawn_sandbox      Create child sandboxes
+  cross_sandbox_call Call other Spirits
+
+SENSORS
+  sensor_time        Read current time
+  sensor_random      Generate random numbers
+  sensor_environment Read runtime metadata
+
+ACTUATORS
+  actuator_log       Write to logs
+  actuator_notify    Send notifications
+  actuator_credit    Transfer credits
+```

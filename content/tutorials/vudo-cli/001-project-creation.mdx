@@ -1,0 +1,481 @@
+---
+title: "Project Creation"
+description: "Create Spirit projects with vudo new and understand project structure"
+track: "vudo-cli"
+tutorial: 1
+duration: "20 min"
+objectives:
+  - "Create new Spirit projects with vudo new"
+  - "Understand available project templates"
+  - "Navigate the Spirit project structure"
+  - "Configure project settings"
+tags:
+  - "cli"
+  - "vudo"
+  - "projects"
+  - "templates"
+  - "getting-started"
+---
+
+# Project Creation
+
+In this tutorial, you will learn to create Spirit projects using the `vudo new` command. By the end, you will understand the available templates and the structure of a Spirit project.
+
+## The vudo new Command
+
+The `vudo new` command scaffolds a new Spirit project from a template:
+
+```bash
+vudo new <name> --template <template>
+```
+
+<Terminal title="vudo new --help">
+```
+$ vudo new --help
+Create a new Spirit project from template
+
+USAGE:
+    vudo new <NAME> [OPTIONS]
+
+ARGS:
+    <NAME>    Project name (will be used as directory name)
+
+OPTIONS:
+    -t, --template <TEMPLATE>    Project template to use [default: basic]
+    -d, --directory <DIR>        Parent directory for project [default: .]
+        --no-git                 Skip git repository initialization
+        --no-install             Skip dependency installation
+    -h, --help                   Print help information
+
+TEMPLATES:
+    basic       Minimal Spirit project
+    ai-image    Spirit for AI image generation
+    ai-text     Spirit for AI text generation
+    web-api     Spirit for web API integration
+    data        Spirit for data processing
+```
+</Terminal>
+
+## Creating Your First Spirit
+
+Let's create a basic Spirit project:
+
+<Terminal title="Creating a basic Spirit">
+```
+$ vudo new my-spirit --template basic
+Creating Spirit project 'my-spirit'...
+  Using template: basic
+  Creating directory structure...
+  Writing manifest.json...
+  Writing src/lib.rs...
+  Writing src/main.dol...
+  Initializing git repository...
+
+Project created successfully!
+
+Next steps:
+  cd my-spirit
+  vudo build
+  vudo run .
+```
+</Terminal>
+
+## Available Templates
+
+VUDO provides several templates for different Spirit use cases:
+
+### Basic Template
+
+The minimal Spirit template for general-purpose development.
+
+```bash
+vudo new my-spirit --template basic
+```
+
+<Terminal title="Basic template structure">
+```
+my-spirit/
+├── manifest.json        # Spirit manifest (name, version, author)
+├── src/
+│   ├── lib.rs          # Rust source for WASM compilation
+│   └── main.dol        # DOL specification
+├── tests/
+│   └── test_main.dol   # DOL test specifications
+├── .dolrc              # VUDO configuration
+└── .gitignore
+```
+</Terminal>
+
+### AI Image Template
+
+For Spirits that interact with AI image generation services.
+
+```bash
+vudo new image-spirit --template ai-image
+```
+
+<Terminal title="AI Image template structure">
+```
+image-spirit/
+├── manifest.json
+├── src/
+│   ├── lib.rs
+│   ├── main.dol
+│   ├── prompts.dol      # Image prompt definitions
+│   └── models.dol       # Model configurations
+├── tests/
+│   └── test_prompts.dol
+├── assets/
+│   └── .gitkeep
+├── .dolrc
+└── .gitignore
+```
+</Terminal>
+
+### AI Text Template
+
+For Spirits that interact with AI text generation services.
+
+```bash
+vudo new text-spirit --template ai-text
+```
+
+<Terminal title="AI Text template structure">
+```
+text-spirit/
+├── manifest.json
+├── src/
+│   ├── lib.rs
+│   ├── main.dol
+│   ├── prompts.dol      # Text prompt definitions
+│   ├── chains.dol       # Prompt chains
+│   └── memory.dol       # Context management
+├── tests/
+│   └── test_chains.dol
+├── .dolrc
+└── .gitignore
+```
+</Terminal>
+
+### Web API Template
+
+For Spirits that provide or consume web APIs.
+
+```bash
+vudo new api-spirit --template web-api
+```
+
+<Terminal title="Web API template structure">
+```
+api-spirit/
+├── manifest.json
+├── src/
+│   ├── lib.rs
+│   ├── main.dol
+│   ├── routes.dol       # API route definitions
+│   ├── handlers.dol     # Request handlers
+│   └── schemas.dol      # Data schemas
+├── tests/
+│   └── test_routes.dol
+├── .dolrc
+└── .gitignore
+```
+</Terminal>
+
+### Data Template
+
+For Spirits that process and transform data.
+
+```bash
+vudo new data-spirit --template data
+```
+
+<Terminal title="Data template structure">
+```
+data-spirit/
+├── manifest.json
+├── src/
+│   ├── lib.rs
+│   ├── main.dol
+│   ├── pipeline.dol     # Data pipeline definitions
+│   ├── transforms.dol   # Data transformations
+│   └── schemas.dol      # Data schemas
+├── tests/
+│   └── test_pipeline.dol
+├── .dolrc
+└── .gitignore
+```
+</Terminal>
+
+## Project Structure Deep Dive
+
+### The Manifest File
+
+The `manifest.json` file defines your Spirit's identity and configuration:
+
+<CodeBlock title="manifest.json" language="json">
+```json
+{
+  "name": "my-spirit",
+  "version": "1.0.0",
+  "description": "A basic Spirit for demonstration",
+  "author": {
+    "name": "Your Name",
+    "email": "you@example.com",
+    "public_key": null
+  },
+  "license": "MIT",
+  "repository": "https://github.com/you/my-spirit",
+  "keywords": ["spirit", "example"],
+  "capabilities": {
+    "network": false,
+    "filesystem": false,
+    "env": false
+  },
+  "entry_point": "src/lib.rs",
+  "dol_entry": "src/main.dol",
+  "dependencies": {},
+  "signature": null
+}
+```
+</CodeBlock>
+
+### The Source Files
+
+The `src/` directory contains your Spirit's implementation:
+
+<CodeBlock title="src/lib.rs" language="rust">
+```rust
+//! My Spirit - A basic Spirit implementation
+
+use spirit_sdk::prelude::*;
+
+#[spirit_main]
+pub fn main() -> SpiritResult<()> {
+    // Spirit initialization
+    let config = SpiritConfig::from_manifest()?;
+
+    // Your Spirit logic here
+    println!("Spirit '{}' v{} initialized",
+             config.name,
+             config.version);
+
+    Ok(())
+}
+
+#[spirit_export]
+pub fn greet(name: &str) -> String {
+    format!("Hello, {}!", name)
+}
+```
+</CodeBlock>
+
+<CodeBlock title="src/main.dol" language="dol">
+```dol
+module my-spirit @ 1.0.0
+
+exegesis {
+    A basic Spirit for demonstration purposes.
+    This Spirit provides greeting functionality.
+}
+
+gene Greeting {
+    name: String
+    message: String
+
+    constraint name_not_empty {
+        name.len() > 0
+    }
+
+    exegesis {
+        Represents a greeting with a name and generated message.
+    }
+}
+
+trait Greeter {
+    greet: fn(name: String) -> Greeting
+
+    exegesis {
+        Trait for entities that can generate greetings.
+    }
+}
+
+system GreetingSystem {
+    uses Greeter
+
+    exegesis {
+        Main system for greeting operations.
+    }
+}
+```
+</CodeBlock>
+
+### The Configuration File
+
+The `.dolrc` file configures VUDO behavior for your project:
+
+<CodeBlock title=".dolrc" language="toml">
+```toml
+[project]
+name = "my-spirit"
+version = "1.0.0"
+
+[build]
+target = "wasm32-wasi"
+optimize = true
+strip = true
+
+[run]
+sandbox = true
+memory_limit = "256MB"
+timeout = "30s"
+
+[test]
+parallel = true
+coverage = true
+
+[signing]
+key_path = "~/.vudo/keys/default.key"
+auto_sign = false
+```
+</CodeBlock>
+
+## Project Initialization Options
+
+### Without Git
+
+Skip git repository initialization:
+
+```bash
+vudo new my-spirit --template basic --no-git
+```
+
+### Without Dependency Installation
+
+Skip automatic dependency installation:
+
+```bash
+vudo new my-spirit --template basic --no-install
+```
+
+### In a Specific Directory
+
+Create the project in a specific parent directory:
+
+```bash
+vudo new my-spirit --template basic --directory ~/projects
+```
+
+<Terminal title="Custom directory">
+```
+$ vudo new my-spirit --template basic --directory ~/projects
+Creating Spirit project 'my-spirit'...
+  Location: /home/user/projects/my-spirit
+  Using template: basic
+  Creating directory structure...
+  Writing manifest.json...
+  Writing src/lib.rs...
+  Writing src/main.dol...
+  Initializing git repository...
+
+Project created successfully!
+
+Next steps:
+  cd ~/projects/my-spirit
+  vudo build
+  vudo run .
+```
+</Terminal>
+
+## Tips and Best Practices
+
+<Tip type="info">
+**Choose the right template**: Start with the template closest to your use case. It's easier to remove unused features than to add missing ones.
+</Tip>
+
+<Tip type="success">
+**Version from the start**: Set a meaningful version in your `manifest.json` before publishing. Follow semantic versioning (major.minor.patch).
+</Tip>
+
+<Tip type="warning">
+**Review capabilities**: Before building, review the `capabilities` section in your manifest. Only enable what your Spirit actually needs.
+</Tip>
+
+## Common Issues
+
+### Template Not Found
+
+<Terminal title="Template error">
+```
+$ vudo new my-spirit --template unknown
+Error: Template 'unknown' not found
+
+Available templates:
+  basic       Minimal Spirit project
+  ai-image    Spirit for AI image generation
+  ai-text     Spirit for AI text generation
+  web-api     Spirit for web API integration
+  data        Spirit for data processing
+
+Use 'vudo new --help' for more information.
+```
+</Terminal>
+
+### Directory Already Exists
+
+<Terminal title="Directory conflict">
+```
+$ vudo new my-spirit --template basic
+Error: Directory 'my-spirit' already exists
+
+Options:
+  Use a different name: vudo new my-spirit-2 --template basic
+  Use --force to overwrite (destructive): vudo new my-spirit --template basic --force
+  Delete existing directory first: rm -rf my-spirit
+```
+</Terminal>
+
+## Summary
+
+You have learned to:
+
+1. Create Spirit projects with `vudo new`
+2. Use different **templates** for various use cases
+3. Understand the **project structure**
+4. Configure projects with **manifest.json** and **.dolrc**
+
+## Next Steps
+
+<NextTutorial
+  title="Build and Run"
+  href="/tutorials/vudo-cli/002-build-run"
+  description="Compile your Spirit to WASM, execute in sandbox, and run tests"
+/>
+
+## Quick Reference
+
+```
+Project Creation Quick Reference
+================================
+
+CREATE PROJECT
+  vudo new <name>                      Basic template
+  vudo new <name> --template <t>       Specific template
+  vudo new <name> --directory <dir>    Custom location
+  vudo new <name> --no-git             Skip git init
+  vudo new <name> --no-install         Skip dependencies
+
+TEMPLATES
+  basic       Minimal Spirit project
+  ai-image    AI image generation
+  ai-text     AI text generation
+  web-api     Web API integration
+  data        Data processing
+
+PROJECT FILES
+  manifest.json     Spirit identity and config
+  src/lib.rs        Rust WASM implementation
+  src/main.dol      DOL specification
+  tests/            Test specifications
+  .dolrc            VUDO configuration
+```

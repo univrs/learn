@@ -1,0 +1,470 @@
+---
+title: "Defining Constraints"
+description: "Enforce invariants with constraint declarations, forall quantifiers, and validation rules"
+track: "dol-syntax"
+tutorial: 4
+duration: "20 min"
+objectives:
+  - "Define constraints for business rules"
+  - "Use forall quantifiers for collection validation"
+  - "Write compound constraint expressions"
+  - "Apply constraints to types and systems"
+tags:
+  - "constraints"
+  - "validation"
+  - "invariants"
+  - "forall"
+---
+
+# Defining Constraints
+
+Constraints in DOL define **invariants** - rules that must always hold true. They enable specification-driven validation, ensuring your domain model enforces business rules at the specification level.
+
+## Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+- Define constraints with business rules
+- Use `forall` quantifiers for collection validation
+- Write compound constraint expressions
+- Apply constraints to types and systems
+
+## Basic Constraint Syntax
+
+Constraints declare rules that must hold:
+
+```dol
+constraint ValidOrder {
+    forall order in orders {
+        order.items.length > 0
+        order.total == calculate_total(order.items)
+    }
+}
+```
+
+This constraint specifies:
+- **Name**: `ValidOrder`
+- **Quantifier**: `forall order in orders` - applies to every order
+- **Rules**: Each order must have items and a correct total
+
+<Tip type="info">
+Constraints are declarative assertions. They describe *what must be true*, not *how to make it true*.
+</Tip>
+
+## The forall Quantifier
+
+The `forall` keyword iterates over collections to validate each element:
+
+```dol
+constraint AllItemsPositive {
+    forall item in items {
+        item.quantity > 0
+        item.price >= 0
+    }
+}
+```
+
+Nested quantifiers are also supported:
+
+```dol
+constraint UniqueEmails {
+    forall user1 in users {
+        forall user2 in users {
+            user1.id != user2.id implies user1.email != user2.email
+        }
+    }
+}
+```
+
+## Constraint Expressions
+
+Constraints support rich expressions:
+
+### Comparison Operators
+
+```dol
+constraint AgeRestrictions {
+    forall user in users {
+        user.age >= 0
+        user.age <= 150
+    }
+}
+```
+
+### Logical Operators
+
+```dol
+constraint ValidAccount {
+    forall account in accounts {
+        -- AND (implicit with multiple lines)
+        account.balance >= 0
+        account.created_at <= Timestamp.now()
+
+        -- OR using 'or' keyword
+        account.status == "active" or account.status == "suspended"
+
+        -- Implication
+        account.is_premium implies account.credit_limit > 1000
+    }
+}
+```
+
+### Collection Expressions
+
+```dol
+constraint NonEmptyCollections {
+    forall order in orders {
+        order.items.length > 0
+        order.items.length <= 100
+    }
+}
+```
+
+## Order Validation Example
+
+Here is a complete order validation specification:
+
+```dol
+mod ecommerce.constraints @ 0.3.0
+
+constraint ValidOrder {
+    forall order in orders {
+        -- Must have items
+        order.items.length > 0
+
+        -- Total must be calculated correctly
+        order.total == calculate_total(order.items)
+
+        -- Status constraints
+        order.status != "shipped" or order.shipping_address.is_some()
+
+        -- Date constraints
+        order.created_at <= Timestamp.now()
+    }
+}
+
+constraint ValidOrderItem {
+    forall item in order_items {
+        -- Quantity must be positive
+        item.quantity > 0
+
+        -- Price must be non-negative
+        item.unit_price >= 0
+
+        -- Subtotal calculation
+        item.subtotal == item.quantity * item.unit_price
+    }
+}
+
+constraint ValidDiscount {
+    forall order in orders {
+        -- Discount cannot exceed total
+        order.discount <= order.subtotal
+
+        -- Final total calculation
+        order.total == order.subtotal - order.discount + order.shipping_cost
+    }
+}
+```
+
+## User Constraints Example
+
+Constraints for user management:
+
+```dol
+mod users.constraints @ 0.3.0
+
+constraint ValidUser {
+    forall user in users {
+        -- Required fields
+        user.email.length > 0
+        user.name.length > 0
+
+        -- Email format (simplified)
+        user.email.contains("@")
+
+        -- Age restrictions
+        user.age >= 13
+    }
+}
+
+constraint UniqueConstraints {
+    forall user1 in users {
+        forall user2 in users {
+            -- Unique email
+            user1.id != user2.id implies user1.email != user2.email
+
+            -- Unique username
+            user1.id != user2.id implies user1.username != user2.username
+        }
+    }
+}
+
+constraint PasswordPolicy {
+    forall user in users {
+        -- Minimum length
+        user.password_hash.length >= 60
+
+        -- Must have set password (no empty hash)
+        user.password_hash != ""
+    }
+}
+
+constraint RoleConstraints {
+    forall user in users {
+        -- Must have at least one role
+        user.roles.length > 0
+
+        -- Admin requires verification
+        user.roles.contains("admin") implies user.is_verified
+
+        -- Premium requires active subscription
+        user.roles.contains("premium") implies user.subscription.is_active
+    }
+}
+```
+
+## Inventory Constraints
+
+Constraints for inventory management:
+
+```dol
+mod inventory.constraints @ 0.3.0
+
+constraint ValidStock {
+    forall product in products {
+        -- Stock cannot be negative
+        product.stock_quantity >= 0
+
+        -- Reorder threshold
+        product.reorder_point >= 0
+        product.reorder_point < product.max_stock
+    }
+}
+
+constraint StockAlert {
+    forall product in products {
+        -- Low stock warning
+        product.stock_quantity < product.reorder_point implies product.needs_reorder
+    }
+}
+
+constraint WarehouseCapacity {
+    forall warehouse in warehouses {
+        -- Total inventory cannot exceed capacity
+        sum(warehouse.inventory.values) <= warehouse.capacity
+    }
+}
+
+constraint ValidTransfer {
+    forall transfer in transfers {
+        -- Cannot transfer more than available
+        transfer.quantity <= transfer.source.available_quantity
+
+        -- Source and destination must differ
+        transfer.source.id != transfer.destination.id
+
+        -- Quantity must be positive
+        transfer.quantity > 0
+    }
+}
+```
+
+## Financial Constraints
+
+Constraints for financial operations:
+
+```dol
+mod finance.constraints @ 0.3.0
+
+constraint ValidTransaction {
+    forall txn in transactions {
+        -- Amount must be positive
+        txn.amount > 0
+
+        -- Currency must be valid
+        txn.currency.length == 3
+
+        -- Cannot be in the future
+        txn.timestamp <= Timestamp.now()
+    }
+}
+
+constraint BalanceInvariant {
+    forall account in accounts {
+        -- Balance must match transaction sum
+        account.balance == sum(account.credits) - sum(account.debits)
+    }
+}
+
+constraint TransferConstraint {
+    forall transfer in transfers {
+        -- Zero-sum transfer
+        transfer.from_amount == transfer.to_amount * transfer.exchange_rate
+
+        -- Sufficient funds
+        transfer.from_account.balance >= transfer.from_amount
+    }
+}
+
+constraint AuditTrail {
+    forall account in accounts {
+        -- Every balance change must have a transaction
+        forall snapshot1, snapshot2 in account.history.adjacent_pairs {
+            snapshot1.balance != snapshot2.balance implies
+                exists txn in transactions where
+                    txn.account_id == account.id and
+                    txn.timestamp > snapshot1.timestamp and
+                    txn.timestamp <= snapshot2.timestamp
+        }
+    }
+}
+```
+
+## System-Level Constraints
+
+Constraints can apply to entire systems:
+
+```dol
+mod system.constraints @ 0.3.0
+
+constraint ServiceHealth {
+    forall service in system.services {
+        -- All services must be healthy in production
+        system.environment == "production" implies service.is_healthy
+    }
+}
+
+constraint HighAvailability {
+    forall service in critical_services {
+        -- Critical services need multiple replicas
+        service.replicas >= 3
+
+        -- Must be distributed across zones
+        service.availability_zones.length >= 2
+    }
+}
+
+constraint SecurityConstraints {
+    forall endpoint in public_endpoints {
+        -- All public endpoints require TLS
+        endpoint.tls_enabled
+
+        -- Rate limiting required
+        endpoint.rate_limit > 0
+
+        -- Authentication for non-public resources
+        endpoint.path.starts_with("/api/") implies endpoint.auth_required
+    }
+}
+```
+
+## Temporal Constraints
+
+Constraints involving time:
+
+```dol
+mod temporal.constraints @ 0.3.0
+
+constraint ValidDateRange {
+    forall event in events {
+        event.start_time < event.end_time
+    }
+}
+
+constraint NoOverlap {
+    forall event1 in events {
+        forall event2 in events {
+            event1.id != event2.id and
+            event1.resource_id == event2.resource_id implies
+                event1.end_time <= event2.start_time or
+                event2.end_time <= event1.start_time
+        }
+    }
+}
+
+constraint RetentionPolicy {
+    forall record in records {
+        record.created_at + record.retention_period >= Timestamp.now() or record.is_archived
+    }
+}
+```
+
+## Practice Exercise
+
+Define constraints for a library system:
+1. Books must have ISBN, title, and at least one author
+2. Loans cannot exceed 30 days
+3. A member cannot have more than 5 active loans
+4. Overdue books must be marked as overdue
+
+<Collapsible title="Solution">
+```dol
+mod library.constraints @ 0.3.0
+
+constraint ValidBook {
+    forall book in books {
+        -- ISBN must be valid length
+        book.isbn.length == 13 or book.isbn.length == 10
+
+        -- Required fields
+        book.title.length > 0
+        book.authors.length > 0
+    }
+}
+
+constraint ValidLoan {
+    forall loan in loans {
+        -- Loan duration constraint
+        loan.due_date <= loan.borrowed_at + Duration.days(30)
+
+        -- Due date in future or already returned
+        loan.due_date > Timestamp.now() or loan.returned_at.is_some()
+
+        -- Return date after borrow date
+        loan.returned_at.is_some() implies loan.returned_at.unwrap() >= loan.borrowed_at
+    }
+}
+
+constraint MemberLoanLimit {
+    forall member in members {
+        -- Count active loans
+        count(loans where loan.member_id == member.id and loan.returned_at.is_none()) <= 5
+    }
+}
+
+constraint OverdueTracking {
+    forall loan in loans {
+        -- Mark as overdue when past due
+        loan.due_date < Timestamp.now() and loan.returned_at.is_none() implies loan.is_overdue
+    }
+}
+
+constraint BookAvailability {
+    forall book in books {
+        -- Available if not on active loan
+        book.is_available implies
+            not exists loan in loans where
+                loan.book_isbn == book.isbn and loan.returned_at.is_none()
+    }
+}
+```
+</Collapsible>
+
+## Summary
+
+In this lesson, you learned:
+
+- **Constraint declaration** with named rules
+- **forall quantifiers** for collection validation
+- **Logical operators** for compound conditions
+- **Domain-specific constraints** for orders, users, inventory
+- **System-level constraints** for architecture validation
+
+## Next Steps
+
+<NextTutorial
+  title="Version Evolution"
+  href="/tutorials/dol-syntax/005-evolution"
+  description="Learn to manage type changes across versions with evolves declarations"
+/>

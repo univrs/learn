@@ -1,0 +1,572 @@
+---
+title: "Create Spirit Project"
+description: "Scaffold the Lion & Swan Creator project with vudo new and configure capabilities"
+track: "capstone"
+tutorial: 2
+duration: "30 min"
+level: "advanced"
+prerequisites:
+  - "Step 1: Define the Ontology"
+concepts:
+  - "Project scaffolding"
+  - "Manifest configuration"
+  - "Capability declarations"
+  - "Module structure"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+
+# Create Spirit Project
+
+With our DOL specification complete, it is time to scaffold the Spirit project. We will use the `vudo new` command with the AI image template and configure all necessary capabilities.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Create a new Spirit project using templates
+- Configure the manifest with required capabilities
+- Set up the modular project structure
+- Integrate the DOL specification
+
+## Scaffolding the Project
+
+Use the `ai-image` template to create a project pre-configured for AI image generation:
+
+```bash
+vudo new lion-swan-creator --template ai-image
+```
+
+You should see output like:
+
+```
+Creating new Spirit: lion-swan-creator
+  Template: ai-image
+  Location: ./lion-swan-creator
+
+Setting up project structure...
+  Created: spirit.toml
+  Created: src/lib.rs
+  Created: src/image_gen.rs
+  Created: Cargo.toml
+  Created: tests/integration.rs
+
+Spirit 'lion-swan-creator' created successfully!
+
+Next steps:
+  cd lion-swan-creator
+  vudo build
+  vudo run
+```
+
+Now enter the project directory:
+
+```bash
+cd lion-swan-creator
+```
+
+## Project Structure
+
+The template creates this initial structure:
+
+```
+lion-swan-creator/
++-- spirit.toml           # Spirit manifest (we will modify this)
++-- Cargo.toml            # Rust dependencies
++-- src/
+|   +-- lib.rs            # Main entry point
+|   +-- image_gen.rs      # Image generation module
++-- tests/
+    +-- integration.rs    # Integration tests
+```
+
+We need to expand this for our complete implementation:
+
+```bash
+# Create additional modules
+touch src/ontology.rs
+touch src/narrative.rs
+touch src/credits.rs
+
+# Create prompts directory
+mkdir -p src/prompts
+touch src/prompts/mod.rs
+touch src/prompts/lion_prompts.rs
+touch src/prompts/swan_prompts.rs
+
+# Create assets directory
+mkdir -p assets/templates
+```
+
+## Configuring the Manifest
+
+Open `spirit.toml` and replace its contents with our complete configuration:
+
+```toml
+# spirit.toml - Lion & Swan Creator Manifest
+
+[spirit]
+name = "lion-swan-creator"
+version = "0.1.0"
+description = "AI-powered mythological content creator from the Lion & Swan mythology"
+author = "Your Name <your.email@example.com>"
+license = "MIT"
+repository = "https://github.com/yourusername/lion-swan-creator"
+
+# Entry point function
+entry = "generate"
+
+# DOL specification
+ontology = "lion_swan.dol"
+
+[capabilities]
+# Network access for AI image generation
+[capabilities.network]
+http = true
+allowed_hosts = [
+  "api.openai.com",
+  "api.stability.ai",
+  "api.replicate.com"
+]
+
+# Storage for caching and state
+[capabilities.storage]
+read = true
+write = true
+namespace = "lion-swan"
+max_size = "50MB"
+
+# Time access for timestamps
+[capabilities.time]
+now = true
+
+# Logging for debugging
+[capabilities.logging]
+enabled = true
+level = "info"
+
+# Random for prompt variation
+[capabilities.random]
+enabled = true
+
+# Credit system for economics
+[capabilities.credits]
+balance = true
+reserve = true
+transfer = true
+
+[build]
+target = "wasm32-unknown-unknown"
+opt_level = "z"
+lto = true
+
+[pricing]
+# Credit costs for operations
+image_generation = 100
+narrative_generation = 25
+combined_artifact = 150
+
+[metadata]
+tags = ["ai", "image-generation", "mythology", "lion-swan", "narrative"]
+category = "creative"
+```
+
+<Callout type="warning" title="Capability Security">
+Only request capabilities you actually need. The VUDO runtime will reject Spirits that request excessive capabilities. Users will see all requested capabilities before running your Spirit.
+</Callout>
+
+## Understanding the Capabilities
+
+Let us break down each capability we are requesting:
+
+### Network Capability
+
+```toml
+[capabilities.network]
+http = true
+allowed_hosts = [
+  "api.openai.com",
+  "api.stability.ai",
+  "api.replicate.com"
+]
+```
+
+This allows HTTP requests but **only** to the listed hosts. Any request to an unlisted host will fail.
+
+### Storage Capability
+
+```toml
+[capabilities.storage]
+read = true
+write = true
+namespace = "lion-swan"
+max_size = "50MB"
+```
+
+Storage is namespaced - our Spirit can only access keys prefixed with `lion-swan/`. The 50MB limit prevents runaway storage use.
+
+### Credits Capability
+
+```toml
+[capabilities.credits]
+balance = true
+reserve = true
+transfer = true
+```
+
+The credits capability allows our Spirit to:
+- **balance**: Check the user's credit balance
+- **reserve**: Hold credits before an operation
+- **transfer**: Complete credit transfers
+
+## Updating Cargo.toml
+
+Update the Rust dependencies for our Spirit:
+
+```toml
+# Cargo.toml
+
+[package]
+name = "lion-swan-creator"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+vudo-spirit = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+
+[dev-dependencies]
+vudo-spirit-test = "0.3"
+
+[profile.release]
+opt-level = "z"
+lto = true
+```
+
+## Setting Up the Module Structure
+
+Create the main library file with module declarations:
+
+```rust
+// src/lib.rs
+
+mod ontology;
+mod image_gen;
+mod narrative;
+mod credits;
+mod prompts;
+
+use vudo_spirit::{log, time, Error};
+use serde::{Deserialize, Serialize};
+
+pub use ontology::*;
+pub use image_gen::ImageGenerator;
+pub use narrative::NarrativeGenerator;
+pub use credits::CreditManager;
+
+/// Input for the generation function
+#[derive(Deserialize)]
+pub struct GenerateInput {
+    /// Which archetype to generate: "lion" or "swan"
+    pub archetype: String,
+    /// Optional specific scene type
+    pub scene_type: Option<String>,
+    /// Whether to include narrative text
+    pub include_narrative: bool,
+}
+
+/// Output from the generation function
+#[derive(Serialize)]
+pub struct GenerateOutput {
+    pub image_url: String,
+    pub narrative_text: Option<String>,
+    pub archetype: String,
+    pub credits_charged: u64,
+    pub timestamp: u64,
+}
+
+/// Main entry point for the Spirit
+#[vudo_spirit::main]
+pub fn generate(input: GenerateInput) -> Result<GenerateOutput, Error> {
+    log::info!("Generating {} content", input.archetype);
+
+    // Implementation will be added in subsequent steps
+    todo!("Implementation coming in next tutorials")
+}
+
+/// Initialize the Spirit
+#[vudo_spirit::init]
+fn init() {
+    log::info!("Lion & Swan Creator initialized");
+}
+```
+
+## Creating the Ontology Module
+
+This module will contain types derived from our DOL specification:
+
+```rust
+// src/ontology.rs
+
+use serde::{Deserialize, Serialize};
+
+/// Base archetype for all mythic symbols
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Archetype {
+    pub name: String,
+    pub color: String,
+    pub meaning: String,
+    pub power_level: u32,
+}
+
+/// The Black Lion - Keeper of Light
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Lion {
+    #[serde(flatten)]
+    pub base: Archetype,
+    pub allegiance: String,
+    pub pride_name: String,
+    pub generations_served: u32,
+    pub territories: Vec<String>,
+}
+
+impl Default for Lion {
+    fn default() -> Self {
+        Self {
+            base: Archetype {
+                name: String::new(),
+                color: "obsidian".to_string(),
+                meaning: "guardian".to_string(),
+                power_level: 50,
+            },
+            allegiance: "keeper".to_string(),
+            pride_name: String::new(),
+            generations_served: 0,
+            territories: Vec::new(),
+        }
+    }
+}
+
+/// The White Swan - Agent of Transformation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Swan {
+    #[serde(flatten)]
+    pub base: Archetype,
+    pub allegiance: String,
+    pub flock_name: String,
+    pub transformations_witnessed: u32,
+    pub prophecies: Vec<String>,
+}
+
+impl Default for Swan {
+    fn default() -> Self {
+        Self {
+            base: Archetype {
+                name: String::new(),
+                color: "pearl".to_string(),
+                meaning: "transformation".to_string(),
+                power_level: 50,
+            },
+            allegiance: "variable".to_string(),
+            flock_name: String::new(),
+            transformations_witnessed: 0,
+            prophecies: Vec::new(),
+        }
+    }
+}
+
+/// Scene types for narrative generation
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum SceneType {
+    Confrontation,
+    Interrogation,
+    Transformation,
+    Revelation,
+}
+
+impl SceneType {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            SceneType::Confrontation => "confrontation",
+            SceneType::Interrogation => "interrogation",
+            SceneType::Transformation => "transformation",
+            SceneType::Revelation => "revelation",
+        }
+    }
+}
+
+/// Archetype selection
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ArchetypeKind {
+    Lion,
+    Swan,
+}
+
+impl ArchetypeKind {
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s.to_lowercase().as_str() {
+            "lion" => Some(ArchetypeKind::Lion),
+            "swan" => Some(ArchetypeKind::Swan),
+            _ => None,
+        }
+    }
+}
+```
+
+## Creating the Prompts Module
+
+Set up the prompts module structure:
+
+```rust
+// src/prompts/mod.rs
+
+pub mod lion_prompts;
+pub mod swan_prompts;
+
+pub use lion_prompts::*;
+pub use swan_prompts::*;
+```
+
+Add placeholder prompt files:
+
+```rust
+// src/prompts/lion_prompts.rs
+
+/// Get a prompt for Lion image generation
+pub fn get_lion_prompt(scene_type: &str) -> String {
+    // Will be implemented in Step 3
+    format!(
+        "A majestic black lion with obsidian fur, \
+         representing a guardian keeper of light, \
+         scene type: {}, \
+         style: mythological, dramatic lighting, \
+         high detail, symbolic imagery",
+        scene_type
+    )
+}
+```
+
+```rust
+// src/prompts/swan_prompts.rs
+
+/// Get a prompt for Swan image generation
+pub fn get_swan_prompt(scene_type: &str) -> String {
+    // Will be implemented in Step 3
+    format!(
+        "An ethereal white swan with pearl-colored feathers, \
+         representing transformation and change, \
+         scene type: {}, \
+         style: mythological, ethereal lighting, \
+         high detail, symbolic imagery",
+        scene_type
+    )
+}
+```
+
+## Copying the DOL Specification
+
+Copy your DOL file into the project:
+
+```bash
+cp ../lion_swan.dol .
+```
+
+Or create it in the project root if you are starting fresh.
+
+## Building the Project
+
+Verify everything is set up correctly:
+
+```bash
+# Build the Spirit
+vudo build
+
+# Expected output:
+# Compiling lion-swan-creator v0.1.0
+#   Validating spirit.toml...
+#   Checking lion_swan.dol...
+#   Building for wasm32-unknown-unknown...
+#   Optimizing with wasm-opt...
+#
+# Built: target/wasm32-unknown-unknown/release/lion_swan_creator.wasm
+# Size: 45.2 KB
+```
+
+If the build succeeds, your project structure is correct!
+
+## Verifying with VUDO Check
+
+Run the quality checks:
+
+```bash
+vudo check
+
+# Expected output:
+# Checking lion-swan-creator...
+#
+# Manifest: OK
+#   - All capabilities valid
+#   - Pricing defined
+#   - Metadata complete
+#
+# DOL Specification: OK
+#   - Syntax valid
+#   - Constraints defined
+#   - Exegesis present
+#
+# Build: OK
+#   - WASM module valid
+#   - Entry point found
+#
+# All checks passed!
+```
+
+## Project Structure Summary
+
+Your project should now look like this:
+
+```
+lion-swan-creator/
++-- spirit.toml              # Configured manifest
++-- lion_swan.dol            # DOL specification
++-- Cargo.toml               # Rust dependencies
++-- src/
+|   +-- lib.rs               # Main entry with generate()
+|   +-- ontology.rs          # DOL-derived types
+|   +-- image_gen.rs         # Image generation (template)
+|   +-- narrative.rs         # Narrative generation (empty)
+|   +-- credits.rs           # Credit management (empty)
+|   +-- prompts/
+|       +-- mod.rs           # Prompts module
+|       +-- lion_prompts.rs  # Lion prompts
+|       +-- swan_prompts.rs  # Swan prompts
++-- tests/
+|   +-- integration.rs       # Integration tests
++-- assets/
+    +-- templates/           # Narrative templates (empty)
+```
+
+## Key Takeaways
+
+1. **Use templates**: `vudo new --template` saves setup time
+2. **Configure capabilities precisely**: Only request what you need
+3. **Namespace storage**: Keeps your data isolated
+4. **Structure for growth**: Separate modules for each concern
+5. **Validate early**: Run `vudo build` and `vudo check` frequently
+
+## What is Next?
+
+With the project structure in place, we are ready to implement the core functionality. In the next step, you will:
+
+- Build the image generation system
+- Connect to AI image APIs
+- Handle network responses
+- Store generated images
+
+Continue to [Image Generation](/tutorials/capstone/003-image-gen).

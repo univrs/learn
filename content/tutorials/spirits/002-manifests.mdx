@@ -1,0 +1,546 @@
+---
+title: "Spirit Manifests"
+description: "Learn the TOML manifest format with required fields, optional metadata, and capability declarations"
+track: "spirits"
+tutorial: 2
+duration: "25 min"
+level: "intermediate"
+prerequisites:
+  - "VUDO Platform Architecture tutorial"
+concepts:
+  - "TOML manifest format"
+  - "Required fields"
+  - "Optional metadata"
+  - "Capability declarations"
+  - "Version specification"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+
+# Spirit Manifests
+
+Every Spirit package includes a manifest file that describes the package metadata, version information, and capability requirements. This TOML document serves as the contract between the Spirit and the VUDO runtime.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Understand the structure of a Spirit manifest
+- Know all required and optional fields
+- Declare capabilities correctly
+- Specify version information using SemVer
+
+## Manifest Overview
+
+A Spirit manifest is a TOML file that contains:
+
+```toml
+# Required fields
+name = "hello-spirit"
+author = "64-char-hex-public-key"
+
+# Optional metadata
+description = "My first Spirit"
+license = "MIT"
+repository = "https://github.com/example/hello-spirit"
+
+# Version specification
+[version]
+major = 0
+minor = 1
+patch = 0
+
+# Capability declarations
+capabilities = ["sensor_time", "actuator_log"]
+```
+
+## Required Fields
+
+Every manifest must include these fields:
+
+### name
+
+The unique identifier for your Spirit:
+
+```toml
+name = "hello-spirit"
+```
+
+**Requirements:**
+- Lowercase letters, numbers, and hyphens only
+- Must start with a letter
+- Maximum 64 characters
+- Unique within the registry
+
+**Valid examples:**
+```toml
+name = "my-spirit"
+name = "data-processor-v2"
+name = "auth-helper"
+```
+
+**Invalid examples:**
+```toml
+name = "My Spirit"     # No spaces or uppercase
+name = "123-spirit"    # Must start with letter
+name = "_spirit"       # No underscores
+```
+
+### author
+
+The Ed25519 public key of the package author:
+
+```toml
+author = "a1b2c3d4e5f6..."  # 64-character hex string
+```
+
+This 64-character hexadecimal string represents the 32-byte Ed25519 public key used to sign the package. The runtime verifies that the package signature was created with the corresponding private key.
+
+**Example:**
+```toml
+author = "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+```
+
+<Callout type="info" title="Generating Keys">
+Generate an Ed25519 keypair with:
+```bash
+vudo keys generate
+# Output:
+# Public key: d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a
+# Private key saved to: ~/.vudo/keys/default.key
+```
+</Callout>
+
+## Version Specification
+
+Version information uses semantic versioning (SemVer):
+
+```toml
+[version]
+major = 0
+minor = 1
+patch = 0
+```
+
+### Version Components
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `major` | u32 | Breaking changes |
+| `minor` | u32 | New features (backward compatible) |
+| `patch` | u32 | Bug fixes (backward compatible) |
+
+### Version Semantics
+
+```
+MAJOR.MINOR.PATCH
+
+Examples:
+  0.1.0  - Initial development
+  0.2.0  - New feature added
+  0.2.1  - Bug fix
+  1.0.0  - First stable release
+  1.1.0  - New feature (backward compatible)
+  2.0.0  - Breaking change
+```
+
+### Pre-release Versions
+
+For pre-release versions, use an optional `prerelease` field:
+
+```toml
+[version]
+major = 1
+minor = 0
+patch = 0
+prerelease = "alpha.1"
+```
+
+This represents version `1.0.0-alpha.1`.
+
+## Optional Fields
+
+These fields provide additional metadata:
+
+### description
+
+A brief description of what the Spirit does:
+
+```toml
+description = "A Spirit that processes JSON data and validates schemas"
+```
+
+**Best practices:**
+- Keep it under 200 characters
+- Describe the main functionality
+- Avoid marketing language
+
+### license
+
+The SPDX license identifier:
+
+```toml
+license = "MIT"
+```
+
+Common licenses:
+- `MIT` - MIT License
+- `Apache-2.0` - Apache License 2.0
+- `GPL-3.0` - GNU General Public License v3
+- `BSD-3-Clause` - BSD 3-Clause License
+- `UNLICENSED` - Proprietary
+
+### repository
+
+Link to the source code repository:
+
+```toml
+repository = "https://github.com/example/my-spirit"
+```
+
+### homepage
+
+Project homepage URL:
+
+```toml
+homepage = "https://my-spirit.example.com"
+```
+
+### keywords
+
+Tags for registry search:
+
+```toml
+keywords = ["json", "validation", "schema"]
+```
+
+## Capability Declarations
+
+The most important part of the manifest is the capability list:
+
+```toml
+capabilities = ["sensor_time", "actuator_log", "storage_read"]
+```
+
+This array lists all capabilities the Spirit requires. The runtime will:
+1. Show these capabilities to users before running
+2. Enforce these limits at runtime
+3. Deny any undeclared capability requests
+
+### All 14 Capabilities
+
+```toml
+# Network capabilities
+capabilities = [
+    "network_listen",      # Listen for incoming connections
+    "network_connect",     # Make outgoing connections
+    "network_broadcast",   # Broadcast messages
+
+    # Storage capabilities
+    "storage_read",        # Read from persistent storage
+    "storage_write",       # Write to persistent storage
+    "storage_delete",      # Delete from persistent storage
+
+    # Compute capabilities
+    "spawn_sandbox",       # Create child sandboxes
+    "cross_sandbox_call",  # Call other Spirits
+
+    # Sensor capabilities
+    "sensor_time",         # Read current time
+    "sensor_random",       # Generate random numbers
+    "sensor_environment",  # Read environment info
+
+    # Actuator capabilities
+    "actuator_log",        # Write to logs
+    "actuator_notify",     # Send notifications
+    "actuator_credit",     # Transfer credits
+]
+```
+
+<Callout type="warning" title="Minimal Capabilities">
+Only request capabilities you actually need. Users are more likely to trust and run Spirits with minimal capability requirements.
+</Callout>
+
+### Capability Examples by Use Case
+
+**Simple Logger:**
+```toml
+capabilities = ["sensor_time", "actuator_log"]
+```
+
+**Data Processor:**
+```toml
+capabilities = ["storage_read", "storage_write", "actuator_log"]
+```
+
+**API Client:**
+```toml
+capabilities = ["network_connect", "sensor_time", "actuator_log"]
+```
+
+**Server:**
+```toml
+capabilities = ["network_listen", "storage_read", "storage_write", "actuator_log"]
+```
+
+## Complete Manifest Examples
+
+### Minimal Manifest
+
+The smallest valid manifest:
+
+```toml
+name = "minimal-spirit"
+author = "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+
+[version]
+major = 0
+minor = 1
+patch = 0
+
+capabilities = []
+```
+
+### Standard Manifest
+
+A typical Spirit manifest:
+
+```toml
+name = "hello-spirit"
+author = "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+description = "My first Spirit"
+
+[version]
+major = 0
+minor = 1
+patch = 0
+
+capabilities = ["sensor_time", "actuator_log"]
+```
+
+### Full-Featured Manifest
+
+A complete manifest with all optional fields:
+
+```toml
+name = "data-processor"
+author = "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+description = "High-performance JSON data processor with schema validation"
+license = "MIT"
+repository = "https://github.com/example/data-processor"
+homepage = "https://data-processor.example.com"
+keywords = ["json", "validation", "schema", "processing"]
+
+[version]
+major = 1
+minor = 2
+patch = 3
+
+capabilities = [
+    "storage_read",
+    "storage_write",
+    "sensor_time",
+    "actuator_log",
+]
+
+# Dependencies on other Spirits
+[dependencies]
+json-parser = "^1.0.0"
+schema-validator = "^2.1.0"
+
+# Optional metadata
+[metadata]
+min_fuel = 10000
+max_memory_mb = 64
+```
+
+## Manifest Validation
+
+The runtime validates manifests according to these rules:
+
+### Required Field Validation
+
+```
++------------------------------------------+
+|           Manifest Validation             |
++------------------------------------------+
+|                                          |
+|  1. name: present, valid format          |
+|  2. author: present, valid hex (64 char) |
+|  3. version: present, valid semver       |
+|  4. capabilities: present (can be empty) |
+|                                          |
++------------------------------------------+
+```
+
+### Validation Errors
+
+```rust
+// Common validation errors
+enum ManifestError {
+    MissingField(&'static str),      // Required field not present
+    InvalidName(String),             // Name doesn't match pattern
+    InvalidAuthor(String),           // Not valid 64-char hex
+    InvalidVersion(String),          // SemVer parse failure
+    UnknownCapability(String),       // Capability not recognized
+    TooManyCapabilities(usize),      // Exceeds maximum (14)
+}
+```
+
+### Using vudo to Validate
+
+```bash
+# Validate a manifest file
+vudo manifest validate manifest.toml
+
+# Output on success:
+# Manifest validated successfully.
+# Name: hello-spirit
+# Version: 0.1.0
+# Capabilities: sensor_time, actuator_log
+
+# Output on error:
+# Error: Invalid manifest
+#   - Missing required field: author
+#   - Unknown capability: network_access
+```
+
+## Manifest in Package Structure
+
+The manifest is one of three components in a Spirit package:
+
+```
+hello-spirit.spirit
+    |
+    +-- manifest.toml     <-- Manifest file
+    |   {
+    |     name = "hello-spirit"
+    |     author = "d75a..."
+    |     ...
+    |   }
+    |
+    +-- spirit.wasm       <-- Compiled WebAssembly
+    |   (binary bytecode)
+    |
+    +-- signature.ed25519 <-- Package signature
+        (64-byte signature)
+```
+
+### Package Creation Flow
+
+```
+Source Code          Compile           Package
++----------+        +-------+        +----------+
+| lib.rs   |  --->  | .wasm |  --->  | .spirit  |
++----------+        +-------+        +----------+
+                        +
++----------+            |
+| manifest |  ----------+
+| .toml    |            |
++----------+            |
+                        +
++----------+            |
+| private  |  --sign--> |
+| key      |            |
++----------+        +---v------+
+                    | signature|
+                    +----------+
+```
+
+## Best Practices
+
+### 1. Start with Minimal Capabilities
+
+```toml
+# Start with what you need
+capabilities = ["sensor_time"]
+
+# Add more only as required
+capabilities = ["sensor_time", "actuator_log"]
+```
+
+### 2. Use Descriptive Names
+
+```toml
+# Good: describes what it does
+name = "json-schema-validator"
+
+# Bad: vague or generic
+name = "processor"
+```
+
+### 3. Keep Descriptions Focused
+
+```toml
+# Good: clear and specific
+description = "Validates JSON against JSON Schema Draft 7"
+
+# Bad: too vague
+description = "A useful utility"
+```
+
+### 4. Version Appropriately
+
+```toml
+# During development
+[version]
+major = 0
+minor = x
+patch = y
+
+# When stable
+[version]
+major = 1
+minor = 0
+patch = 0
+```
+
+## Key Takeaways
+
+1. **Required Fields**: `name`, `author`, `version`, and `capabilities` are mandatory
+
+2. **Author Key**: The 64-character hex string is your Ed25519 public key for signing
+
+3. **SemVer Versions**: Use semantic versioning with major.minor.patch structure
+
+4. **Minimal Capabilities**: Only declare capabilities you actually need
+
+5. **Validation**: Use `vudo manifest validate` to check your manifest before packaging
+
+## What's Next?
+
+Now that you understand manifests, dive deeper into the capabilities system to learn what each capability allows and how to use them effectively.
+
+Continue to [Capabilities System](/tutorials/spirits/003-capabilities).
+
+## Quick Reference
+
+```toml
+# Manifest Quick Reference
+
+# REQUIRED
+name = "spirit-name"              # Unique identifier
+author = "64-char-hex"            # Ed25519 public key
+
+[version]
+major = 0                         # Breaking changes
+minor = 1                         # New features
+patch = 0                         # Bug fixes
+
+capabilities = []                 # Required capabilities
+
+# OPTIONAL
+description = "..."               # Brief description
+license = "MIT"                   # SPDX identifier
+repository = "https://..."        # Source repo
+homepage = "https://..."          # Project homepage
+keywords = ["tag1", "tag2"]       # Search tags
+
+[dependencies]
+other-spirit = "^1.0.0"          # Spirit dependencies
+
+[metadata]
+min_fuel = 10000                 # Minimum fuel needed
+max_memory_mb = 64               # Memory limit
+```

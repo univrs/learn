@@ -1,0 +1,610 @@
+---
+title: "Image Generation"
+description: "Implement AI image generation using the network_connect capability"
+track: "capstone"
+tutorial: 3
+duration: "60 min"
+level: "advanced"
+prerequisites:
+  - "Step 2: Create Spirit Project"
+concepts:
+  - "Network requests"
+  - "AI API integration"
+  - "Image storage"
+  - "Error handling"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+
+# Image Generation
+
+Now we implement the heart of our Spirit: AI-powered image generation. We will use the network capability to connect to AI image generation APIs and create mythological artwork.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Make HTTP requests from a Spirit using network capabilities
+- Integrate with AI image generation APIs
+- Handle API responses and errors gracefully
+- Store generated images for caching
+
+## Architecture Overview
+
+The image generation flow:
+
+```
++------------------+     +------------------+     +------------------+
+|  Generate        | --> | Build Prompt     | --> | API Request      |
+|  Request         |     | (archetype +     |     | (network.http)   |
+|                  |     |  scene type)     |     |                  |
++------------------+     +------------------+     +------------------+
+                                                          |
+                                                          v
++------------------+     +------------------+     +------------------+
+|  Return          | <-- | Store Image      | <-- | Parse Response   |
+|  Image URL       |     | (storage.write)  |     | (extract URL)    |
++------------------+     +------------------+     +------------------+
+```
+
+## Implementing the Prompts
+
+First, let us create detailed prompts for each archetype. Update `src/prompts/lion_prompts.rs`:
+
+```rust
+// src/prompts/lion_prompts.rs
+
+use crate::ontology::SceneType;
+
+/// Base style elements for all Lion images
+const LION_STYLE: &str = "majestic black lion with obsidian fur, \
+    glowing amber eyes, mythological art style, \
+    dramatic chiaroscuro lighting, intricate symbolic details, \
+    digital painting, 8k resolution";
+
+/// Get the image generation prompt for a Lion
+pub fn get_lion_prompt(scene_type: SceneType) -> String {
+    let scene_description = match scene_type {
+        SceneType::Confrontation => {
+            "standing at the threshold between light and shadow, \
+             mane flowing like dark fire, protective stance, \
+             ancient ruins in background, tension in the air"
+        }
+        SceneType::Interrogation => {
+            "seated on a stone throne of mycelium networks, \
+             piercing gaze questioning the viewer, \
+             surrounded by ethereal light particles, \
+             wisdom and doubt in equal measure"
+        }
+        SceneType::Transformation => {
+            "mid-transformation with obsidian fragments \
+             swirling around its form, becoming one with \
+             the mycelial network, transcendent moment, \
+             breaking free from old patterns"
+        }
+        SceneType::Revelation => {
+            "illuminated by inner light, standing before \
+             a great mirror that shows both protector and oppressor, \
+             moment of truth, duality revealed, \
+             the eternal question made visible"
+        }
+    };
+
+    format!("{}, {}", LION_STYLE, scene_description)
+}
+
+/// Get prompt variations for diversity
+pub fn get_lion_prompt_variations() -> Vec<&'static str> {
+    vec![
+        "in a forest of glowing mycelium",
+        "under a fractured obsidian sky",
+        "guarding the gates of the Imaginarium",
+        "emerging from shadow into light",
+        "reflected in still waters showing dual nature",
+    ]
+}
+```
+
+Now update `src/prompts/swan_prompts.rs`:
+
+```rust
+// src/prompts/swan_prompts.rs
+
+use crate::ontology::SceneType;
+
+/// Base style elements for all Swan images
+const SWAN_STYLE: &str = "ethereal white swan with iridescent pearl feathers, \
+    luminous aura, mythological art style, \
+    soft ethereal lighting with dramatic accents, \
+    intricate symbolic details, digital painting, 8k resolution";
+
+/// Get the image generation prompt for a Swan
+pub fn get_swan_prompt(scene_type: SceneType) -> String {
+    let scene_description = match scene_type {
+        SceneType::Confrontation => {
+            "wings spread wide in defiance, \
+             standing on still waters that ripple with change, \
+             storm clouds gathering, \
+             the moment before transformation"
+        }
+        SceneType::Interrogation => {
+            "neck curved in contemplation, \
+             reflected in waters that show possible futures, \
+             prophecy scrolls floating around, \
+             seeking truth in uncertainty"
+        }
+        SceneType::Transformation => {
+            "mid-metamorphosis with pearl fragments \
+             crystallizing into new forms, \
+             liberation and destruction both possible, \
+             the pivot point of change"
+        }
+        SceneType::Revelation => {
+            "glowing with inner light, \
+             transformation complete, \
+             showing both the beauty and danger of change, \
+             prophecy fulfilled or denied"
+        }
+    };
+
+    format!("{}, {}", SWAN_STYLE, scene_description)
+}
+
+/// Get prompt variations for diversity
+pub fn get_swan_prompt_variations() -> Vec<&'static str> {
+    vec![
+        "on a lake of liquid starlight",
+        "emerging from a cocoon of prophecies",
+        "dancing with the Black Lion in eternal balance",
+        "shattering the mirror of the old world",
+        "carrying the seeds of transformation",
+    ]
+}
+```
+
+## The Image Generator Module
+
+Now implement the main image generation logic in `src/image_gen.rs`:
+
+```rust
+// src/image_gen.rs
+
+use serde::{Deserialize, Serialize};
+use vudo_spirit::{network, storage, random, log, Error};
+
+use crate::ontology::{ArchetypeKind, SceneType};
+use crate::prompts::{get_lion_prompt, get_swan_prompt};
+
+/// Configuration for image generation
+#[derive(Debug, Clone)]
+pub struct ImageConfig {
+    pub api_endpoint: String,
+    pub model: String,
+    pub size: String,
+    pub quality: String,
+}
+
+impl Default for ImageConfig {
+    fn default() -> Self {
+        Self {
+            api_endpoint: "https://api.openai.com/v1/images/generations".to_string(),
+            model: "dall-e-3".to_string(),
+            size: "1024x1024".to_string(),
+            quality: "hd".to_string(),
+        }
+    }
+}
+
+/// Request body for image generation API
+#[derive(Serialize)]
+struct ImageRequest {
+    model: String,
+    prompt: String,
+    n: u32,
+    size: String,
+    quality: String,
+}
+
+/// Response from image generation API
+#[derive(Deserialize)]
+struct ImageResponse {
+    data: Vec<ImageData>,
+}
+
+#[derive(Deserialize)]
+struct ImageData {
+    url: String,
+    revised_prompt: Option<String>,
+}
+
+/// The image generator service
+pub struct ImageGenerator {
+    config: ImageConfig,
+}
+
+impl ImageGenerator {
+    /// Create a new image generator with default config
+    pub fn new() -> Self {
+        Self {
+            config: ImageConfig::default(),
+        }
+    }
+
+    /// Create with custom configuration
+    pub fn with_config(config: ImageConfig) -> Self {
+        Self { config }
+    }
+
+    /// Generate an image for the specified archetype and scene
+    pub fn generate(
+        &self,
+        archetype: ArchetypeKind,
+        scene_type: SceneType,
+    ) -> Result<GeneratedImage, Error> {
+        // Build the prompt
+        let prompt = self.build_prompt(archetype, scene_type)?;
+        log::info!("Generating image with prompt: {}...", &prompt[..50.min(prompt.len())]);
+
+        // Check cache first
+        let cache_key = self.cache_key(archetype, scene_type);
+        if let Some(cached) = self.get_cached(&cache_key)? {
+            log::info!("Returning cached image");
+            return Ok(cached);
+        }
+
+        // Make the API request
+        let image = self.request_image(&prompt)?;
+
+        // Cache the result
+        self.cache_image(&cache_key, &image)?;
+
+        Ok(image)
+    }
+
+    /// Build the prompt for image generation
+    fn build_prompt(
+        &self,
+        archetype: ArchetypeKind,
+        scene_type: SceneType,
+    ) -> Result<String, Error> {
+        let base_prompt = match archetype {
+            ArchetypeKind::Lion => get_lion_prompt(scene_type),
+            ArchetypeKind::Swan => get_swan_prompt(scene_type),
+        };
+
+        // Add variation for uniqueness
+        let variation = self.get_random_variation(archetype)?;
+
+        Ok(format!("{}, {}", base_prompt, variation))
+    }
+
+    /// Get a random variation to add diversity
+    fn get_random_variation(&self, archetype: ArchetypeKind) -> Result<&'static str, Error> {
+        use crate::prompts::{get_lion_prompt_variations, get_swan_prompt_variations};
+
+        let variations = match archetype {
+            ArchetypeKind::Lion => get_lion_prompt_variations(),
+            ArchetypeKind::Swan => get_swan_prompt_variations(),
+        };
+
+        let index = random::u64()? as usize % variations.len();
+        Ok(variations[index])
+    }
+
+    /// Make the actual API request
+    fn request_image(&self, prompt: &str) -> Result<GeneratedImage, Error> {
+        let request_body = ImageRequest {
+            model: self.config.model.clone(),
+            prompt: prompt.to_string(),
+            n: 1,
+            size: self.config.size.clone(),
+            quality: self.config.quality.clone(),
+        };
+
+        let body = serde_json::to_vec(&request_body)
+            .map_err(|e| Error::Serialization(e.to_string()))?;
+
+        // Make HTTP request using network capability
+        let response = network::request(network::Request {
+            method: network::Method::Post,
+            url: &self.config.api_endpoint,
+            headers: vec![
+                ("Content-Type", "application/json"),
+                ("Authorization", "Bearer ${API_KEY}"),
+            ],
+            body: Some(&body),
+            timeout_ms: 60000, // 60 second timeout for image generation
+        })?;
+
+        // Check response status
+        if response.status != 200 {
+            log::error!("API error: {} - {}", response.status, String::from_utf8_lossy(&response.body));
+            return Err(Error::Network(format!(
+                "Image API returned status {}",
+                response.status
+            )));
+        }
+
+        // Parse response
+        let api_response: ImageResponse = serde_json::from_slice(&response.body)
+            .map_err(|e| Error::Deserialization(e.to_string()))?;
+
+        let image_data = api_response
+            .data
+            .into_iter()
+            .next()
+            .ok_or_else(|| Error::Network("No image in response".to_string()))?;
+
+        Ok(GeneratedImage {
+            url: image_data.url,
+            prompt: prompt.to_string(),
+            revised_prompt: image_data.revised_prompt,
+        })
+    }
+
+    /// Generate a cache key for an image
+    fn cache_key(&self, archetype: ArchetypeKind, scene_type: SceneType) -> String {
+        format!(
+            "images/{}/{}",
+            match archetype {
+                ArchetypeKind::Lion => "lion",
+                ArchetypeKind::Swan => "swan",
+            },
+            scene_type.as_str()
+        )
+    }
+
+    /// Get a cached image if available
+    fn get_cached(&self, key: &str) -> Result<Option<GeneratedImage>, Error> {
+        match storage::read(key)? {
+            Some(data) => {
+                let image: GeneratedImage = serde_json::from_slice(&data)
+                    .map_err(|e| Error::Deserialization(e.to_string()))?;
+                Ok(Some(image))
+            }
+            None => Ok(None),
+        }
+    }
+
+    /// Cache a generated image
+    fn cache_image(&self, key: &str, image: &GeneratedImage) -> Result<(), Error> {
+        let data = serde_json::to_vec(image)
+            .map_err(|e| Error::Serialization(e.to_string()))?;
+        storage::write(key, &data)?;
+        log::info!("Cached image at {}", key);
+        Ok(())
+    }
+}
+
+/// A generated image result
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GeneratedImage {
+    pub url: String,
+    pub prompt: String,
+    pub revised_prompt: Option<String>,
+}
+```
+
+<Callout type="warning" title="API Keys">
+The `${API_KEY}` placeholder will be replaced by the VUDO runtime with the user's configured API key. Never hardcode API keys in Spirit code.
+</Callout>
+
+## Error Handling
+
+Create a custom error type for better error handling. Add to `src/lib.rs`:
+
+```rust
+// Add to src/lib.rs
+
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum LionSwanError {
+    #[error("Invalid archetype: {0}")]
+    InvalidArchetype(String),
+
+    #[error("Image generation failed: {0}")]
+    ImageGeneration(String),
+
+    #[error("Narrative generation failed: {0}")]
+    NarrativeGeneration(String),
+
+    #[error("Insufficient credits: need {needed}, have {available}")]
+    InsufficientCredits { needed: u64, available: u64 },
+
+    #[error("Network error: {0}")]
+    Network(String),
+
+    #[error("Storage error: {0}")]
+    Storage(String),
+}
+
+impl From<vudo_spirit::Error> for LionSwanError {
+    fn from(e: vudo_spirit::Error) -> Self {
+        match e {
+            vudo_spirit::Error::Network(msg) => LionSwanError::Network(msg),
+            vudo_spirit::Error::Storage(msg) => LionSwanError::Storage(msg),
+            _ => LionSwanError::Network(e.to_string()),
+        }
+    }
+}
+```
+
+## Integrating Into Main Entry Point
+
+Update `src/lib.rs` to use the image generator:
+
+```rust
+// Update the generate function in src/lib.rs
+
+use crate::image_gen::ImageGenerator;
+use crate::ontology::{ArchetypeKind, SceneType};
+
+#[vudo_spirit::main]
+pub fn generate(input: GenerateInput) -> Result<GenerateOutput, LionSwanError> {
+    log::info!("Generating {} content", input.archetype);
+
+    // Parse archetype
+    let archetype = ArchetypeKind::from_str(&input.archetype)
+        .ok_or_else(|| LionSwanError::InvalidArchetype(input.archetype.clone()))?;
+
+    // Parse scene type (default to Revelation)
+    let scene_type = input
+        .scene_type
+        .as_ref()
+        .and_then(|s| match s.to_lowercase().as_str() {
+            "confrontation" => Some(SceneType::Confrontation),
+            "interrogation" => Some(SceneType::Interrogation),
+            "transformation" => Some(SceneType::Transformation),
+            "revelation" => Some(SceneType::Revelation),
+            _ => None,
+        })
+        .unwrap_or(SceneType::Revelation);
+
+    // Generate image
+    let image_gen = ImageGenerator::new();
+    let image = image_gen
+        .generate(archetype, scene_type)
+        .map_err(|e| LionSwanError::ImageGeneration(e.to_string()))?;
+
+    // Get current timestamp
+    let timestamp = time::now()?;
+
+    // Calculate credits (will be implemented in Step 5)
+    let credits_charged = 100; // Placeholder
+
+    Ok(GenerateOutput {
+        image_url: image.url,
+        narrative_text: None, // Will be added in Step 4
+        archetype: input.archetype,
+        credits_charged,
+        timestamp,
+    })
+}
+```
+
+## Testing the Image Generator
+
+Create a test in `tests/integration.rs`:
+
+```rust
+// tests/integration.rs
+
+use vudo_spirit_test::mock;
+use lion_swan_creator::{GenerateInput, generate};
+
+#[test]
+fn test_lion_image_generation() {
+    // Set up mocks
+    mock::network::expect_request()
+        .with_url_containing("openai.com")
+        .returning(|_| mock::network::response(200, r#"{
+            "data": [{"url": "https://example.com/lion.png"}]
+        }"#));
+
+    mock::random::seed(42);
+
+    // Generate
+    let input = GenerateInput {
+        archetype: "lion".to_string(),
+        scene_type: Some("confrontation".to_string()),
+        include_narrative: false,
+    };
+
+    let result = generate(input).unwrap();
+
+    assert!(result.image_url.contains("lion.png"));
+    assert_eq!(result.archetype, "lion");
+}
+
+#[test]
+fn test_swan_image_generation() {
+    mock::network::expect_request()
+        .returning(|_| mock::network::response(200, r#"{
+            "data": [{"url": "https://example.com/swan.png"}]
+        }"#));
+
+    mock::random::seed(123);
+
+    let input = GenerateInput {
+        archetype: "swan".to_string(),
+        scene_type: Some("transformation".to_string()),
+        include_narrative: false,
+    };
+
+    let result = generate(input).unwrap();
+
+    assert!(result.image_url.contains("swan.png"));
+}
+
+#[test]
+fn test_invalid_archetype() {
+    let input = GenerateInput {
+        archetype: "dragon".to_string(),
+        scene_type: None,
+        include_narrative: false,
+    };
+
+    let result = generate(input);
+    assert!(result.is_err());
+}
+```
+
+Run the tests:
+
+```bash
+vudo test
+
+# Expected output:
+# Running tests...
+#   test_lion_image_generation ... ok
+#   test_swan_image_generation ... ok
+#   test_invalid_archetype ... ok
+#
+# 3 tests passed
+```
+
+## Manual Testing with REPL
+
+Test interactively with the VUDO REPL:
+
+```bash
+vudo repl
+
+# In the REPL:
+> .load lion-swan-creator
+Loaded Spirit: lion-swan-creator v0.1.0
+
+> .mock network https://api.openai.com/* {"data":[{"url":"https://test.com/image.png"}]}
+Mocked network for: https://api.openai.com/*
+
+> generate({"archetype": "lion", "scene_type": "revelation", "include_narrative": false})
+{
+  "image_url": "https://test.com/image.png",
+  "narrative_text": null,
+  "archetype": "lion",
+  "credits_charged": 100,
+  "timestamp": 1703721600
+}
+
+> .exit
+```
+
+## Key Takeaways
+
+1. **Structured prompts**: Build prompts programmatically for consistency
+2. **Caching**: Store generated images to avoid redundant API calls
+3. **Error handling**: Create specific error types for better debugging
+4. **Mocking**: Test network calls without hitting real APIs
+5. **Timeout handling**: Image generation is slow; set appropriate timeouts
+
+## What is Next?
+
+With image generation working, we will add narrative generation to create complete mythological artifacts. In the next step, you will:
+
+- Build a narrative generation system
+- Create story templates
+- Combine images and text
+
+Continue to [Narrative Generation](/tutorials/capstone/004-narrative).

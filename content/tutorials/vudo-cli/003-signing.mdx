@@ -1,0 +1,602 @@
+---
+title: "Signing and Publishing"
+description: "Generate Ed25519 keypairs, sign manifests, and publish Spirits to the registry"
+track: "vudo-cli"
+tutorial: 3
+duration: "30 min"
+objectives:
+  - "Generate Ed25519 keypairs for Spirit signing"
+  - "Understand the cryptographic signing workflow"
+  - "Package Spirits for distribution"
+  - "Publish Spirits to the registry"
+tags:
+  - "cli"
+  - "vudo"
+  - "signing"
+  - "ed25519"
+  - "publishing"
+  - "security"
+---
+
+# Signing and Publishing
+
+In this tutorial, you will learn the cryptographic signing workflow for Spirits. By the end, you will be able to generate keypairs, sign manifests, package Spirits, and publish them to the registry.
+
+## Why Sign Spirits?
+
+Signing provides:
+
+- **Authenticity** - Verify the Spirit comes from the claimed author
+- **Integrity** - Detect tampering after publication
+- **Trust** - Build reputation through your public key identity
+
+```
+     Author                              User
+   ┌─────────┐                       ┌─────────┐
+   │ Private │──── Signs ───────────>│ Public  │
+   │   Key   │     Manifest          │   Key   │
+   └─────────┘                       └─────────┘
+                                          │
+                                     Verifies
+                                          │
+                                          v
+                                    ┌─────────┐
+                                    │ Spirit  │
+                                    │ Install │
+                                    └─────────┘
+```
+
+## Ed25519 Cryptography
+
+VUDO uses Ed25519 signatures, a modern elliptic curve algorithm that provides:
+
+- **Fast signing and verification**
+- **Small signatures** (64 bytes)
+- **Small keys** (32 bytes each)
+- **High security** (128-bit security level)
+
+## Generating Keypairs
+
+The `vudo sign --generate-key` command creates a new Ed25519 keypair:
+
+<Terminal title="vudo sign --generate-key">
+```
+$ vudo sign --generate-key
+Generating Ed25519 keypair...
+
+  Private key: ~/.vudo/keys/default.key
+  Public key:  ~/.vudo/keys/default.pub
+
+IMPORTANT: Keep your private key secure!
+  - Never share your private key
+  - Back it up in a secure location
+  - Use --key-name for multiple identities
+
+Your public key (for manifest.json):
+  ed25519:5Kd2bRg9X7...truncated...YmE3NzQ1
+
+Add to your manifest.json:
+  "author": {
+    "public_key": "ed25519:5Kd2bRg9X7...truncated...YmE3NzQ1"
+  }
+```
+</Terminal>
+
+### Named Keys
+
+Create multiple key identities for different purposes:
+
+<Terminal title="Named keys">
+```
+$ vudo sign --generate-key --key-name work
+Generating Ed25519 keypair...
+
+  Private key: ~/.vudo/keys/work.key
+  Public key:  ~/.vudo/keys/work.pub
+
+$ vudo sign --generate-key --key-name personal
+Generating Ed25519 keypair...
+
+  Private key: ~/.vudo/keys/personal.key
+  Public key:  ~/.vudo/keys/personal.pub
+
+$ ls ~/.vudo/keys/
+default.key  default.pub
+work.key     work.pub
+personal.key personal.pub
+```
+</Terminal>
+
+### Key Directory Structure
+
+<Terminal title="Key storage">
+```
+~/.vudo/
+└── keys/
+    ├── default.key      # Private key (keep secret!)
+    ├── default.pub      # Public key (share freely)
+    ├── work.key
+    ├── work.pub
+    └── keyring.json     # Key metadata
+```
+</Terminal>
+
+<CodeBlock title="~/.vudo/keys/keyring.json" language="json">
+```json
+{
+  "keys": [
+    {
+      "name": "default",
+      "public_key": "ed25519:5Kd2bRg9X7...",
+      "created": "2024-12-26T10:00:00Z",
+      "default": true
+    },
+    {
+      "name": "work",
+      "public_key": "ed25519:8Hj4mNpQ2R...",
+      "created": "2024-12-26T10:05:00Z",
+      "default": false
+    }
+  ]
+}
+```
+</CodeBlock>
+
+## The Signing Workflow
+
+The complete signing workflow has four steps:
+
+```
+   ┌────────────┐     ┌────────────┐     ┌────────────┐     ┌────────────┐
+   │  Generate  │ --> │   Update   │ --> │    Pack    │ --> │  Publish   │
+   │   Keypair  │     │  Manifest  │     │   Spirit   │     │ to Registry│
+   └────────────┘     └────────────┘     └────────────┘     └────────────┘
+```
+
+### Step 1: Generate Keypair
+
+```bash
+vudo sign --generate-key
+```
+
+### Step 2: Update Manifest
+
+Add your public key to `manifest.json`:
+
+<CodeBlock title="manifest.json with public key" language="json">
+```json
+{
+  "name": "my-spirit",
+  "version": "1.0.0",
+  "description": "A signed Spirit example",
+  "author": {
+    "name": "Your Name",
+    "email": "you@example.com",
+    "public_key": "ed25519:5Kd2bRg9X7...YmE3NzQ1"
+  },
+  "license": "MIT"
+}
+```
+</CodeBlock>
+
+### Step 3: Pack the Spirit
+
+The `vudo pack` command creates a signed, distributable package:
+
+<Terminal title="vudo pack --help">
+```
+$ vudo pack --help
+Package Spirit for distribution
+
+USAGE:
+    vudo pack [OPTIONS]
+
+OPTIONS:
+    -k, --key <NAME>       Key to use for signing [default: default]
+        --no-sign          Create unsigned package
+    -o, --output <PATH>    Output path [default: ./target/pack/]
+    -v, --verbose          Verbose output
+    -h, --help             Print help information
+```
+</Terminal>
+
+<Terminal title="Packing a Spirit">
+```
+$ vudo pack
+   Packing my-spirit v1.0.0...
+   Building release binary...
+    Compiled: target/wasm32-wasi/release/my-spirit.wasm (256 KB)
+   Creating package...
+    - Including manifest.json
+    - Including spirit.wasm
+    - Including README.md
+   Signing with key 'default'...
+    Manifest hash: sha256:abc123def456...
+    Signature: ed25519:sig789xyz...
+
+Package created: target/pack/my-spirit-1.0.0.spirit
+
+Package contents:
+  manifest.json     (signed)
+  spirit.wasm       (256 KB)
+  README.md
+
+To publish: vudo publish
+```
+</Terminal>
+
+### Package Structure
+
+<Terminal title="Package contents">
+```
+$ tar -tvf target/pack/my-spirit-1.0.0.spirit
+-rw-r--r-- manifest.json      (1.2 KB)
+-rw-r--r-- spirit.wasm        (256 KB)
+-rw-r--r-- README.md          (2.1 KB)
+
+$ # View signed manifest
+$ tar -xOf target/pack/my-spirit-1.0.0.spirit manifest.json | jq .
+{
+  "name": "my-spirit",
+  "version": "1.0.0",
+  "author": {
+    "name": "Your Name",
+    "email": "you@example.com",
+    "public_key": "ed25519:5Kd2bRg9X7...YmE3NzQ1"
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "value": "ed25519:sig789xyz...",
+    "signed_at": "2024-12-26T10:30:00Z",
+    "manifest_hash": "sha256:abc123def456..."
+  }
+}
+```
+</Terminal>
+
+### Step 4: Publish
+
+The `vudo publish` command uploads your Spirit to the registry:
+
+<Terminal title="vudo publish --help">
+```
+$ vudo publish --help
+Publish Spirit to registry
+
+USAGE:
+    vudo publish [OPTIONS]
+
+OPTIONS:
+    -r, --registry <NAME>   Target registry [default: default]
+        --dry-run           Validate without publishing
+        --access <LEVEL>    Access level: public|private [default: public]
+    -h, --help              Print help information
+```
+</Terminal>
+
+<Terminal title="Publishing a Spirit">
+```
+$ vudo publish
+   Publishing my-spirit v1.0.0...
+   Verifying package signature...
+    Signature valid
+   Checking registry...
+    Version 1.0.0 not yet published
+   Uploading to registry.dol.dev...
+    [========================================] 100%
+   Processing...
+    Package indexed
+    Documentation generated
+    Checksums verified
+
+Published successfully!
+
+  Package: my-spirit@1.0.0
+  URL: https://registry.dol.dev/spirits/my-spirit
+
+Install with: vudo install my-spirit
+```
+</Terminal>
+
+### Dry Run
+
+Validate your package without publishing:
+
+<Terminal title="Dry run">
+```
+$ vudo publish --dry-run
+   Validating my-spirit v1.0.0...
+
+Checks:
+  [OK] Manifest valid
+  [OK] Signature verified
+  [OK] WASM binary valid
+  [OK] README.md present
+  [OK] License specified (MIT)
+  [OK] Version not yet published
+
+Ready to publish!
+Run 'vudo publish' to upload.
+```
+</Terminal>
+
+## Signature Verification
+
+VUDO automatically verifies signatures when:
+
+1. Installing from registry
+2. Running external Spirits
+3. Importing dependencies
+
+<Terminal title="Verification on install">
+```
+$ vudo install my-spirit
+Installing my-spirit@1.0.0...
+   Downloading...
+   Verifying signature...
+    Author: Your Name <you@example.com>
+    Public key: ed25519:5Kd2bRg9X7...
+    Signature: VALID
+
+Installed successfully.
+```
+</Terminal>
+
+### Manual Verification
+
+<Terminal title="Manual verify">
+```
+$ vudo verify my-spirit-1.0.0.spirit
+Verifying package...
+
+  Manifest hash: sha256:abc123def456...
+  Expected:      sha256:abc123def456...
+  Status:        MATCH
+
+  Author: Your Name <you@example.com>
+  Public key: ed25519:5Kd2bRg9X7...
+
+  Signature verification: PASSED
+
+Package is authentic and unmodified.
+```
+</Terminal>
+
+## Advanced Signing
+
+### Using Specific Keys
+
+<Terminal title="Signing with specific key">
+```
+$ vudo pack --key work
+   Packing my-spirit v1.0.0...
+   Signing with key 'work'...
+    Public key: ed25519:8Hj4mNpQ2R...
+
+Package created with 'work' key signature.
+```
+</Terminal>
+
+### Setting Default Key
+
+<Terminal title="Default key">
+```
+$ vudo sign --set-default work
+Default signing key set to 'work'
+
+$ vudo sign --list
+Available keys:
+  - default     ed25519:5Kd2bRg9X7...  (created 2024-12-26)
+  * work        ed25519:8Hj4mNpQ2R...  (created 2024-12-26) [DEFAULT]
+  - personal    ed25519:3Lm8pQrS4T...  (created 2024-12-26)
+```
+</Terminal>
+
+### Exporting Public Key
+
+<Terminal title="Export public key">
+```
+$ vudo sign --export default
+Public key for 'default':
+
+ed25519:5Kd2bRg9X7p8mNqR2sT4uV6wX8yZ0aB3cD5eF7gH9iJ1kL2mN4oP6qR8sT0uV2wX4yZ
+
+Base64: NUtkMmJSZzlYNy4uLnRydW5jYXRlZC4uLlltRTNOelExCg==
+
+Add to manifest.json:
+  "author": {
+    "public_key": "ed25519:5Kd2bRg9X7..."
+  }
+```
+</Terminal>
+
+### Key Backup
+
+<Terminal title="Backup keys">
+```
+$ vudo sign --backup
+Creating encrypted key backup...
+
+Enter backup password: ********
+Confirm password: ********
+
+Backup created: ~/.vudo/backups/keys-2024-12-26.enc
+
+IMPORTANT:
+  - Store this backup securely
+  - You'll need the password to restore
+  - Losing your private keys means losing your author identity
+```
+</Terminal>
+
+## Publishing Options
+
+### Private Spirits
+
+<Terminal title="Private publishing">
+```
+$ vudo publish --access private
+   Publishing my-spirit v1.0.0 (private)...
+
+Published successfully!
+
+  Access: PRIVATE
+  Visible to: Only you and authorized users
+
+To grant access: vudo grant my-spirit user@example.com
+```
+</Terminal>
+
+### Publishing to Private Registry
+
+<Terminal title="Private registry">
+```
+$ vudo publish --registry company-internal
+   Publishing to company-internal...
+   Authenticating...
+   Uploading...
+
+Published to company internal registry.
+  URL: https://dol.internal.company.com/spirits/my-spirit
+```
+</Terminal>
+
+### Republishing
+
+<Terminal title="Republish with new version">
+```
+$ # Update version in manifest.json first
+$ vudo publish
+   Publishing my-spirit v1.1.0...
+   Note: v1.0.0 already published
+   Publishing as new version...
+
+Published successfully!
+  v1.0.0 remains available
+  v1.1.0 is now latest
+```
+</Terminal>
+
+## Tips and Best Practices
+
+<Tip type="info">
+**One key per identity**: Use separate keys for personal and work projects. This keeps your identities distinct.
+</Tip>
+
+<Tip type="success">
+**Always backup keys**: Your private key IS your author identity. Back it up securely and never lose it.
+</Tip>
+
+<Tip type="warning">
+**Never share private keys**: Your private key should never leave your machine. If compromised, generate new keys immediately.
+</Tip>
+
+## Common Issues
+
+### Key Not Found
+
+<Terminal title="Missing key">
+```
+$ vudo pack
+Error: No signing key found
+
+Generate a key first:
+  vudo sign --generate-key
+
+Or specify an existing key:
+  vudo pack --key <name>
+```
+</Terminal>
+
+### Signature Mismatch
+
+<Terminal title="Signature mismatch">
+```
+$ vudo verify external-spirit.spirit
+Verifying package...
+
+Error: Signature verification FAILED
+
+  Expected author: alice@example.com (ed25519:abc123...)
+  Manifest hash mismatch:
+    Expected: sha256:abc123...
+    Actual:   sha256:xyz789...
+
+Package may have been tampered with.
+Do NOT install this package.
+```
+</Terminal>
+
+### Version Already Published
+
+<Terminal title="Version exists">
+```
+$ vudo publish
+Error: Version 1.0.0 already published
+
+Options:
+  - Update version in manifest.json and publish new version
+  - Use 'vudo unpublish --version 1.0.0' to remove (within 24h)
+  - Contact registry support for older packages
+```
+</Terminal>
+
+## Summary
+
+You have learned to:
+
+1. Generate **Ed25519 keypairs** with `vudo sign --generate-key`
+2. Understand the **cryptographic signing workflow**
+3. Package Spirits with `vudo pack`
+4. Publish Spirits with `vudo publish`
+5. Verify signatures with `vudo verify`
+
+## Next Steps
+
+<NextTutorial
+  title="Registry Operations"
+  href="/tutorials/vudo-cli/004-registry"
+  description="Install, search, and summon Spirits from the registry"
+/>
+
+## Quick Reference
+
+```
+Signing and Publishing Quick Reference
+======================================
+
+KEY MANAGEMENT
+  vudo sign --generate-key           Generate default keypair
+  vudo sign --generate-key --key-name <n>  Named keypair
+  vudo sign --list                   List all keys
+  vudo sign --set-default <name>     Set default key
+  vudo sign --export <name>          Export public key
+  vudo sign --backup                 Encrypted backup
+
+PACKING
+  vudo pack                          Pack with default key
+  vudo pack --key <name>             Pack with specific key
+  vudo pack --no-sign                Unsigned package
+  vudo pack --output <path>          Custom output path
+
+PUBLISHING
+  vudo publish                       Publish to default registry
+  vudo publish --registry <name>     Publish to specific registry
+  vudo publish --dry-run             Validate without publishing
+  vudo publish --access private      Private publication
+
+VERIFICATION
+  vudo verify <package>              Verify package signature
+
+ED25519 WORKFLOW
+  1. vudo sign --generate-key        Create keypair
+  2. Add public_key to manifest.json Update author info
+  3. vudo pack                        Create signed package
+  4. vudo publish                     Upload to registry
+
+KEY STORAGE
+  ~/.vudo/keys/
+    default.key     Private key (SECRET!)
+    default.pub     Public key
+    keyring.json    Key metadata
+```

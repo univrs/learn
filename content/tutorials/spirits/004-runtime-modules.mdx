@@ -1,0 +1,850 @@
+---
+title: "Spirit Runtime Modules"
+description: "Explore the 6 runtime modules: manifest, signature, registry, version, dependency, and pricing"
+track: "spirits"
+tutorial: 4
+duration: "30 min"
+level: "intermediate"
+prerequisites:
+  - "Capabilities System tutorial"
+concepts:
+  - "Manifest module"
+  - "Signature module (Ed25519)"
+  - "Registry module"
+  - "Version module (SemVer)"
+  - "Dependency module"
+  - "Pricing module"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+
+# Spirit Runtime Modules
+
+The `spirit_runtime` crate provides six specialized modules for managing Spirit packages. These modules handle everything from manifest parsing to credit economics, forming the backbone of Spirit lifecycle management.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Understand all 6 runtime modules and their responsibilities
+- Know how Ed25519 signatures secure packages
+- Work with semantic versioning and dependency resolution
+- Understand the credit pricing system
+
+## Runtime Modules Overview
+
+```
++------------------------------------------------------------------+
+|                      spirit_runtime                               |
++------------------------------------------------------------------+
+|                                                                   |
+|  +----------+  +----------+  +----------+                         |
+|  | manifest |  | signature|  | registry |                         |
+|  |          |  |          |  |          |                         |
+|  | - parse  |  | - sign   |  | - store  |                         |
+|  | - validate| | - verify |  | - lookup |                         |
+|  | - serialize| | - keys  |  | - list   |                         |
+|  +----------+  +----------+  +----------+                         |
+|                                                                   |
+|  +----------+  +----------+  +----------+                         |
+|  | version  |  |dependency|  | pricing  |                         |
+|  |          |  |          |  |          |                         |
+|  | - parse  |  | - resolve|  | - estimate|                        |
+|  | - compare|  | - graph  |  | - charge |                         |
+|  | - range  |  | - lock   |  | - balance|                         |
+|  +----------+  +----------+  +----------+                         |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+## 1. Manifest Module
+
+The manifest module parses, validates, and serializes Spirit manifests.
+
+### Parsing Manifests
+
+```rust
+use spirit_runtime::manifest;
+
+// Parse manifest from TOML string
+let manifest = manifest::parse(r#"
+    name = "hello-spirit"
+    author = "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+    description = "My first Spirit"
+
+    [version]
+    major = 0
+    minor = 1
+    patch = 0
+
+    capabilities = ["sensor_time", "actuator_log"]
+"#)?;
+
+// Access manifest fields
+println!("Name: {}", manifest.name);
+println!("Version: {}", manifest.version);
+println!("Capabilities: {:?}", manifest.capabilities);
+```
+
+### Manifest Struct
+
+```rust
+/// Complete manifest structure
+pub struct Manifest {
+    // Required fields
+    pub name: String,
+    pub author: PublicKey,
+    pub version: Version,
+    pub capabilities: Vec<Capability>,
+
+    // Optional fields
+    pub description: Option<String>,
+    pub license: Option<String>,
+    pub repository: Option<String>,
+    pub homepage: Option<String>,
+    pub keywords: Vec<String>,
+    pub dependencies: HashMap<String, VersionReq>,
+    pub metadata: HashMap<String, Value>,
+}
+```
+
+### Validation
+
+```rust
+use spirit_runtime::manifest;
+
+// Validate manifest structure
+manifest::validate(&manifest)?;
+
+// Validation checks:
+// - name format (lowercase, alphanumeric, hyphens)
+// - author is valid Ed25519 public key
+// - version is valid semver
+// - all capabilities are recognized
+// - dependencies have valid version requirements
+```
+
+### Serialization
+
+```rust
+use spirit_runtime::manifest;
+
+// Serialize manifest back to TOML
+let toml_string = manifest::serialize(&manifest)?;
+
+// Write to file
+std::fs::write("manifest.toml", toml_string)?;
+```
+
+### Manifest Module API
+
+| Function | Purpose |
+|----------|---------|
+| `parse(toml: &str)` | Parse TOML string to Manifest |
+| `parse_file(path: &Path)` | Parse manifest from file |
+| `validate(manifest: &Manifest)` | Validate manifest structure |
+| `serialize(manifest: &Manifest)` | Convert to TOML string |
+| `merge(base: &Manifest, overlay: &Manifest)` | Merge manifests |
+
+## 2. Signature Module
+
+The signature module provides Ed25519 cryptographic operations for package authenticity.
+
+### Ed25519 Overview
+
+```
++------------------------------------------------------------------+
+|                     Ed25519 SIGNATURE SYSTEM                      |
++------------------------------------------------------------------+
+|                                                                   |
+|  Key Pair Generation                                              |
+|  +----------------+     +----------------+                        |
+|  | Private Key    |     | Public Key     |                        |
+|  | (32 bytes)     | --> | (32 bytes)     |                        |
+|  | KEEP SECRET    |     | SHARE FREELY   |                        |
+|  +----------------+     +----------------+                        |
+|                                                                   |
+|  Signing                                                          |
+|  +----------+  +-------------+     +------------+                 |
+|  | Message  |  | Private Key | --> | Signature  |                 |
+|  +----------+  +-------------+     | (64 bytes) |                 |
+|                                    +------------+                 |
+|                                                                   |
+|  Verification                                                     |
+|  +----------+  +------------+  +------------+     +-------+       |
+|  | Message  |  | Signature  |  | Public Key | --> | Valid |       |
+|  +----------+  +------------+  +------------+     | or    |       |
+|                                                   | Invalid|       |
+|                                                   +-------+       |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+### Key Generation
+
+```rust
+use spirit_runtime::signature;
+
+// Generate a new keypair
+let keypair = signature::generate_keypair()?;
+
+// Access components
+let public_key = keypair.public_key();   // 32 bytes
+let private_key = keypair.private_key(); // 32 bytes
+
+// Export as hex strings
+let public_hex = signature::public_key_to_hex(&public_key);
+// "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+
+// Save private key (encrypted)
+signature::save_private_key(&keypair, "~/.vudo/keys/default.key", "password")?;
+
+// Load private key
+let keypair = signature::load_private_key("~/.vudo/keys/default.key", "password")?;
+```
+
+### Signing Packages
+
+```rust
+use spirit_runtime::signature;
+
+// Sign a Spirit package
+let package_bytes = read_package_bytes()?;
+let signature = signature::sign(&package_bytes, &private_key)?;
+
+// Signature is 64 bytes
+assert_eq!(signature.len(), 64);
+
+// Create signed package
+let signed_package = SignedPackage {
+    manifest: manifest_bytes,
+    wasm: wasm_bytes,
+    signature: signature,
+};
+```
+
+### Verifying Signatures
+
+```rust
+use spirit_runtime::signature;
+
+// Verify a package signature
+let is_valid = signature::verify(
+    &package_bytes,
+    &signature,
+    &public_key,
+)?;
+
+if is_valid {
+    println!("Package signature is valid");
+} else {
+    return Err(Error::InvalidSignature);
+}
+
+// Parse public key from manifest author field
+let public_key = signature::parse_public_key(&manifest.author)?;
+```
+
+### Signature Module API
+
+| Function | Purpose |
+|----------|---------|
+| `generate_keypair()` | Create new Ed25519 keypair |
+| `sign(data, private_key)` | Sign bytes with private key |
+| `verify(data, signature, public_key)` | Verify signature |
+| `parse_public_key(hex)` | Parse 64-char hex to key |
+| `public_key_to_hex(key)` | Convert key to hex string |
+| `save_private_key(key, path, password)` | Encrypted key storage |
+| `load_private_key(path, password)` | Load encrypted key |
+
+<Callout type="security" title="Private Key Safety">
+Never share your private key. It should only exist in encrypted form on your local machine. The public key (64-char hex) is safe to share and goes in manifest `author` field.
+</Callout>
+
+## 3. Registry Module
+
+The registry module manages local storage of installed Spirit packages.
+
+### Registry Structure
+
+```
+~/.vudo/registry/
+    |
+    +-- packages/
+    |   +-- hello-spirit/
+    |   |   +-- 0.1.0/
+    |   |   |   +-- manifest.toml
+    |   |   |   +-- spirit.wasm
+    |   |   |   +-- signature.ed25519
+    |   |   +-- 0.2.0/
+    |   |       +-- ...
+    |   +-- json-parser/
+    |       +-- 1.0.0/
+    |           +-- ...
+    |
+    +-- index.json        # Package index
+    +-- lockfile.json     # Dependency locks
+```
+
+### Installing Packages
+
+```rust
+use spirit_runtime::registry;
+
+// Install a package from bytes
+registry::install(&package_bytes)?;
+
+// Install from file
+registry::install_file("hello-spirit.spirit")?;
+
+// Install with custom registry path
+let custom_registry = Registry::new("./my-registry")?;
+custom_registry.install(&package_bytes)?;
+```
+
+### Querying the Registry
+
+```rust
+use spirit_runtime::registry;
+
+// Look up a specific package and version
+let package = registry::lookup("hello-spirit", "0.1.0")?;
+
+// Get latest version
+let latest = registry::latest("hello-spirit")?;
+
+// List all versions
+let versions = registry::versions("hello-spirit")?;
+// ["0.1.0", "0.2.0", "0.2.1"]
+
+// List all packages
+let packages = registry::list()?;
+// ["hello-spirit", "json-parser", ...]
+
+// Check if package exists
+let exists = registry::exists("hello-spirit", "0.1.0")?;
+```
+
+### Removing Packages
+
+```rust
+use spirit_runtime::registry;
+
+// Remove a specific version
+registry::remove("hello-spirit", "0.1.0")?;
+
+// Remove all versions
+registry::remove_all("hello-spirit")?;
+
+// Cleanup unused packages
+registry::gc()?;  // Garbage collection
+```
+
+### Registry Module API
+
+| Function | Purpose |
+|----------|---------|
+| `install(bytes)` | Install package from bytes |
+| `install_file(path)` | Install package from file |
+| `lookup(name, version)` | Get specific package |
+| `latest(name)` | Get latest version |
+| `versions(name)` | List all versions |
+| `list()` | List all packages |
+| `exists(name, version)` | Check if installed |
+| `remove(name, version)` | Remove specific version |
+| `remove_all(name)` | Remove all versions |
+| `gc()` | Remove orphaned packages |
+
+## 4. Version Module
+
+The version module implements semantic versioning (SemVer) for Spirit packages.
+
+### Semantic Versioning
+
+```
+MAJOR.MINOR.PATCH[-PRERELEASE][+BUILD]
+
+Examples:
+  0.1.0         Initial development
+  1.0.0         First stable release
+  1.2.3         Major 1, minor 2, patch 3
+  2.0.0-alpha.1 Pre-release
+  1.0.0+build.1 Build metadata
+```
+
+### Version Struct
+
+```rust
+use spirit_runtime::version::Version;
+
+// Parse version from string
+let v = Version::parse("1.2.3")?;
+
+// Create version directly
+let v = Version::new(1, 2, 3);
+
+// With prerelease
+let v = Version::new(1, 0, 0).with_prerelease("alpha.1");
+
+// Access components
+println!("Major: {}", v.major);  // 1
+println!("Minor: {}", v.minor);  // 2
+println!("Patch: {}", v.patch);  // 3
+```
+
+### Version Comparison
+
+```rust
+use spirit_runtime::version::Version;
+
+let v1 = Version::parse("1.0.0")?;
+let v2 = Version::parse("1.2.0")?;
+let v3 = Version::parse("2.0.0")?;
+
+// Comparison operators
+assert!(v1 < v2);
+assert!(v2 < v3);
+assert!(v1 <= v1);
+
+// Equality
+assert_eq!(Version::parse("1.0.0")?, Version::new(1, 0, 0));
+
+// Ordering
+let mut versions = vec![v3, v1, v2];
+versions.sort();
+// [1.0.0, 1.2.0, 2.0.0]
+```
+
+### Version Requirements
+
+```rust
+use spirit_runtime::version::VersionReq;
+
+// Exact version
+let req = VersionReq::parse("=1.2.3")?;
+assert!(req.matches(&Version::parse("1.2.3")?));
+
+// Caret (compatible updates)
+let req = VersionReq::parse("^1.2.0")?;
+assert!(req.matches(&Version::parse("1.3.0")?));
+assert!(!req.matches(&Version::parse("2.0.0")?));
+
+// Tilde (patch updates only)
+let req = VersionReq::parse("~1.2.0")?;
+assert!(req.matches(&Version::parse("1.2.5")?));
+assert!(!req.matches(&Version::parse("1.3.0")?));
+
+// Range
+let req = VersionReq::parse(">=1.0.0, <2.0.0")?;
+
+// Wildcard
+let req = VersionReq::parse("1.*")?;
+```
+
+### Version Requirement Operators
+
+| Operator | Example | Meaning |
+|----------|---------|---------|
+| `=` | `=1.2.3` | Exactly 1.2.3 |
+| `^` | `^1.2.0` | >=1.2.0, <2.0.0 |
+| `~` | `~1.2.0` | >=1.2.0, <1.3.0 |
+| `>` | `>1.0.0` | Greater than 1.0.0 |
+| `>=` | `>=1.0.0` | Greater than or equal |
+| `<` | `<2.0.0` | Less than 2.0.0 |
+| `<=` | `<=2.0.0` | Less than or equal |
+| `*` | `1.*` | Any 1.x.x version |
+
+### Version Module API
+
+| Function | Purpose |
+|----------|---------|
+| `Version::parse(str)` | Parse version string |
+| `Version::new(maj, min, patch)` | Create version |
+| `VersionReq::parse(str)` | Parse requirement |
+| `VersionReq::matches(version)` | Check if matches |
+| `compare(v1, v2)` | Compare versions |
+| `select_best(versions, req)` | Find best match |
+
+## 5. Dependency Module
+
+The dependency module resolves Spirit dependencies and builds dependency graphs.
+
+### Dependency Resolution
+
+```
++------------------------------------------------------------------+
+|                    DEPENDENCY RESOLUTION                          |
++------------------------------------------------------------------+
+|                                                                   |
+|  my-app                                                           |
+|    +-- json-parser ^1.0.0                                         |
+|    |     +-- utils ^2.0.0                                         |
+|    +-- validator ^1.5.0                                           |
+|          +-- utils ^2.1.0   <-- Version conflict!                |
+|                                                                   |
+|  Resolution Strategy:                                             |
+|  1. Build full dependency graph                                   |
+|  2. Find compatible version range for each package                |
+|  3. Select highest compatible version                             |
+|                                                                   |
+|  Result: utils@2.1.0 (satisfies both ^2.0.0 and ^2.1.0)          |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+### Resolving Dependencies
+
+```rust
+use spirit_runtime::dependency;
+
+// Define dependencies
+let deps = vec![
+    Dependency::new("json-parser", "^1.0.0"),
+    Dependency::new("validator", "^1.5.0"),
+];
+
+// Resolve to concrete versions
+let resolved = dependency::resolve(&deps, &registry)?;
+
+// resolved: HashMap<String, Version>
+// {
+//   "json-parser": 1.2.0,
+//   "validator": 1.5.3,
+//   "utils": 2.1.0
+// }
+```
+
+### Dependency Graph
+
+```rust
+use spirit_runtime::dependency;
+
+// Build dependency graph
+let graph = dependency::build_graph(&manifest, &registry)?;
+
+// Traverse graph
+for (name, node) in graph.nodes() {
+    println!("{} {} depends on:", name, node.version);
+    for dep in &node.dependencies {
+        println!("  - {} {}", dep.name, dep.version);
+    }
+}
+
+// Check for cycles
+if let Some(cycle) = graph.find_cycle() {
+    return Err(Error::DependencyCycle(cycle));
+}
+
+// Topological sort (dependency order)
+let order = graph.topological_sort()?;
+// [utils, json-parser, validator, my-app]
+```
+
+### Lock Files
+
+```rust
+use spirit_runtime::dependency;
+
+// Create lock file from resolved dependencies
+let lockfile = dependency::create_lockfile(&resolved)?;
+
+// Save lock file
+lockfile.save("lockfile.json")?;
+
+// Load lock file
+let lockfile = Lockfile::load("lockfile.json")?;
+
+// Resolve using lock file (deterministic builds)
+let resolved = dependency::resolve_with_lockfile(&deps, &lockfile, &registry)?;
+```
+
+### Lock File Format
+
+```json
+{
+  "version": 1,
+  "packages": {
+    "json-parser": {
+      "version": "1.2.0",
+      "checksum": "sha256:abc123...",
+      "dependencies": {
+        "utils": "^2.0.0"
+      }
+    },
+    "utils": {
+      "version": "2.1.0",
+      "checksum": "sha256:def456...",
+      "dependencies": {}
+    }
+  }
+}
+```
+
+### Dependency Module API
+
+| Function | Purpose |
+|----------|---------|
+| `resolve(deps, registry)` | Resolve to versions |
+| `resolve_with_lockfile(deps, lock, registry)` | Deterministic resolve |
+| `build_graph(manifest, registry)` | Build dependency graph |
+| `topological_sort(graph)` | Get install order |
+| `find_cycle(graph)` | Detect circular deps |
+| `create_lockfile(resolved)` | Create lock file |
+| `update(deps, registry)` | Update to latest |
+
+## 6. Pricing Module
+
+The pricing module manages credit economics for Spirit execution.
+
+### Credit System Overview
+
+```
++------------------------------------------------------------------+
+|                       CREDIT ECONOMICS                            |
++------------------------------------------------------------------+
+|                                                                   |
+|  Credits are the unit of resource consumption                     |
+|                                                                   |
+|  Sources:                    Uses:                                |
+|  +------------------+        +------------------+                 |
+|  | Initial grant    |        | Fuel consumption |                 |
+|  | Purchases        |  --->  | Host function calls|               |
+|  | Earnings         |        | Storage usage    |                 |
+|  +------------------+        | Network bandwidth|                 |
+|                              +------------------+                 |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+### Estimating Costs
+
+```rust
+use spirit_runtime::pricing;
+
+// Estimate cost before execution
+let estimate = pricing::estimate(&manifest, &input)?;
+
+println!("Estimated cost: {} credits", estimate.total);
+println!("  Fuel: {} credits", estimate.fuel);
+println!("  Storage: {} credits", estimate.storage);
+println!("  Network: {} credits", estimate.network);
+
+// Check if sufficient balance
+let balance = pricing::balance(&spirit_id)?;
+if balance < estimate.total {
+    return Err(Error::InsufficientCredits);
+}
+```
+
+### Credit Rates
+
+```rust
+use spirit_runtime::pricing;
+
+// Get current pricing rates
+let rates = pricing::rates()?;
+
+// Fuel rate (credits per million instructions)
+println!("Fuel: {} credits/M instructions", rates.fuel);
+
+// Storage rate (credits per KB per day)
+println!("Storage: {} credits/KB/day", rates.storage);
+
+// Network rate (credits per KB transferred)
+println!("Network: {} credits/KB", rates.network);
+
+// Host function rates
+for (capability, rate) in &rates.host_functions {
+    println!("{}: {} credits/call", capability, rate);
+}
+```
+
+### Charging Credits
+
+```rust
+use spirit_runtime::pricing;
+
+// Reserve credits before execution
+let reservation = pricing::reserve(&spirit_id, estimated_cost)?;
+
+// Execute Spirit...
+let result = execute_spirit(&spirit)?;
+
+// Charge actual usage
+let actual_cost = pricing::calculate_actual(&usage_stats)?;
+pricing::charge(&reservation, actual_cost)?;
+
+// Release unused reserved credits
+// (happens automatically when reservation is dropped)
+```
+
+### Balance Management
+
+```rust
+use spirit_runtime::pricing;
+
+// Check balance
+let balance = pricing::balance(&spirit_id)?;
+
+// Transfer credits between Spirits
+pricing::transfer(
+    &from_spirit_id,
+    &to_spirit_id,
+    amount,
+    "Payment for service",
+)?;
+
+// Get transaction history
+let history = pricing::history(&spirit_id, 100)?;  // Last 100 transactions
+for tx in history {
+    println!("{}: {} credits ({})", tx.timestamp, tx.amount, tx.memo);
+}
+```
+
+### Pricing Module API
+
+| Function | Purpose |
+|----------|---------|
+| `estimate(manifest, input)` | Estimate execution cost |
+| `rates()` | Get current pricing rates |
+| `balance(spirit_id)` | Get credit balance |
+| `reserve(spirit_id, amount)` | Reserve credits |
+| `charge(reservation, amount)` | Charge actual usage |
+| `transfer(from, to, amount, memo)` | Transfer credits |
+| `history(spirit_id, limit)` | Transaction history |
+| `calculate_actual(stats)` | Calculate from usage |
+
+## Module Integration
+
+The six modules work together in the Spirit lifecycle:
+
+```
++------------------------------------------------------------------+
+|                    MODULE INTEGRATION                             |
++------------------------------------------------------------------+
+|                                                                   |
+|  1. LOAD                                                          |
+|     manifest::parse() --> signature::verify()                     |
+|                              |                                    |
+|  2. RESOLVE                  v                                    |
+|     version::parse() <-- dependency::resolve()                    |
+|                              |                                    |
+|  3. INSTALL                  v                                    |
+|     registry::install() <----+                                    |
+|                              |                                    |
+|  4. EXECUTE                  v                                    |
+|     pricing::reserve() --> execute --> pricing::charge()          |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+### Complete Example
+
+```rust
+use spirit_runtime::{manifest, signature, registry, version, dependency, pricing};
+
+fn install_and_run_spirit(package_path: &Path, input: &[u8]) -> Result<Vec<u8>, Error> {
+    // 1. Load and parse manifest
+    let package = read_package(package_path)?;
+    let manifest = manifest::parse(&package.manifest)?;
+    manifest::validate(&manifest)?;
+
+    // 2. Verify signature
+    let author_key = signature::parse_public_key(&manifest.author)?;
+    signature::verify(&package.bytes(), &package.signature, &author_key)?;
+
+    // 3. Resolve dependencies
+    let deps = dependency::resolve(&manifest.dependencies, &registry)?;
+
+    // 4. Install to registry
+    registry::install(&package)?;
+    for (name, version) in &deps {
+        if !registry::exists(name, version)? {
+            let dep_package = fetch_package(name, version)?;
+            registry::install(&dep_package)?;
+        }
+    }
+
+    // 5. Estimate pricing
+    let estimate = pricing::estimate(&manifest, input)?;
+    let reservation = pricing::reserve(&manifest.name, estimate.total)?;
+
+    // 6. Execute (in vudo_vm)
+    let result = execute(&manifest, input)?;
+
+    // 7. Charge actual usage
+    let actual = pricing::calculate_actual(&result.usage)?;
+    pricing::charge(&reservation, actual)?;
+
+    Ok(result.output)
+}
+```
+
+## Key Takeaways
+
+1. **Manifest Module**: Parses, validates, and serializes TOML manifests
+
+2. **Signature Module**: Ed25519 cryptography for package authenticity
+
+3. **Registry Module**: Local storage and lookup of installed packages
+
+4. **Version Module**: Semantic versioning with flexible requirements
+
+5. **Dependency Module**: Resolves transitive dependencies with lock files
+
+6. **Pricing Module**: Credit economics for fair resource allocation
+
+## Track Complete
+
+Congratulations! You've completed the Spirit Development track. You now understand:
+
+- The two-crate VUDO architecture
+- Spirit manifest format and structure
+- All 14 capabilities and their uses
+- The 6 runtime modules and their integration
+
+### Next Steps
+
+- Build your first Spirit with `vudo new spirit my-spirit`
+- Explore the [Spirit Examples Repository](https://github.com/univrs/spirit-examples)
+- Continue to the [Capstone Project](/tutorials/capstone) to build a complete application
+
+## Quick Reference
+
+```
+RUNTIME MODULE QUICK REFERENCE
+==============================
+
+MANIFEST
+  parse(toml)          Parse TOML to Manifest
+  validate(manifest)   Validate structure
+  serialize(manifest)  Convert to TOML
+
+SIGNATURE
+  generate_keypair()   Create Ed25519 keys
+  sign(data, key)      Sign with private key
+  verify(data, sig, key) Verify signature
+
+REGISTRY
+  install(package)     Install package
+  lookup(name, ver)    Get package
+  latest(name)         Get latest version
+  list()               List all packages
+
+VERSION
+  Version::parse(str)  Parse version
+  VersionReq::parse(str) Parse requirement
+  req.matches(ver)     Check compatibility
+
+DEPENDENCY
+  resolve(deps, reg)   Resolve versions
+  build_graph(manifest) Build dep graph
+  create_lockfile(res) Create lock file
+
+PRICING
+  estimate(manifest, input) Cost estimate
+  balance(spirit_id)   Check balance
+  reserve(id, amount)  Reserve credits
+  charge(res, amount)  Charge usage
+```

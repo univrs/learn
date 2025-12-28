@@ -1,0 +1,487 @@
+---
+title: "Defining Systems"
+description: "Model complete systems with components, connections, and architectural patterns"
+track: "dol-syntax"
+tutorial: 3
+duration: "25 min"
+objectives:
+  - "Define systems with components"
+  - "Specify connections between components"
+  - "Model different communication protocols"
+  - "Create layered architectures"
+tags:
+  - "systems"
+  - "architecture"
+  - "components"
+  - "connections"
+---
+
+# Defining Systems
+
+Systems in DOL represent **complete architectures** - collections of components working together. The `system` keyword lets you declaratively specify components, their types, and how they communicate.
+
+## Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+- Define systems with named components
+- Specify connections between components
+- Model different communication protocols
+- Create layered and modular architectures
+
+## Basic System Definition
+
+A system declares components and their connections:
+
+```dol
+system OrderProcessing {
+    components {
+        api_gateway: ApiGateway
+        order_service: OrderService
+        inventory_service: InventoryService
+    }
+    connections {
+        api_gateway -> order_service: HTTP
+        order_service -> inventory_service: gRPC
+    }
+}
+```
+
+This system defines:
+- **Three components**: api_gateway, order_service, inventory_service
+- **Two connections**: with specified protocols
+
+<Tip type="info">
+Systems are declarative architecture diagrams in code. They describe *what exists* and *how it connects*, not implementation details.
+</Tip>
+
+## Component Declaration
+
+Components are declared in the `components` block:
+
+```dol
+system EcommercePlatform {
+    components {
+        -- Web layer
+        web_frontend: WebApplication
+        mobile_app: MobileApplication
+
+        -- API layer
+        api_gateway: ApiGateway
+        auth_service: AuthService
+
+        -- Business logic
+        catalog_service: CatalogService
+        order_service: OrderService
+        payment_service: PaymentService
+
+        -- Data layer
+        product_db: PostgresDatabase
+        order_db: PostgresDatabase
+        cache: RedisCache
+    }
+}
+```
+
+Each component has:
+- **Name**: Identifier in snake_case
+- **Type**: The type or service it represents
+
+## Connection Syntax
+
+Connections specify how components communicate:
+
+```dol
+connections {
+    -- Direction: source -> destination
+    frontend -> api_gateway: HTTPS
+
+    -- Protocol specification
+    api_gateway -> auth_service: gRPC
+    api_gateway -> catalog_service: REST
+
+    -- Async messaging
+    order_service -> notification_service: AMQP
+
+    -- Database connections
+    catalog_service -> product_db: PostgreSQL
+    order_service -> cache: Redis
+}
+```
+
+### Connection Protocols
+
+Common protocols to specify:
+
+| Protocol | Use Case |
+|----------|----------|
+| `HTTP` / `HTTPS` | Web traffic, REST APIs |
+| `gRPC` | High-performance RPC |
+| `REST` | RESTful API calls |
+| `GraphQL` | GraphQL queries |
+| `WebSocket` | Real-time bidirectional |
+| `AMQP` | Message queuing (RabbitMQ) |
+| `Kafka` | Event streaming |
+| `PostgreSQL` | Database connection |
+| `Redis` | Cache/pub-sub |
+
+## Complete E-Commerce System
+
+Here is a comprehensive e-commerce system specification:
+
+```dol
+mod ecommerce.architecture @ 0.3.0
+
+system EcommercePlatform {
+    components {
+        -- Client Applications
+        web_app: WebApplication
+        mobile_ios: MobileApplication
+        mobile_android: MobileApplication
+
+        -- Edge Layer
+        cdn: ContentDeliveryNetwork
+        load_balancer: LoadBalancer
+        api_gateway: ApiGateway
+
+        -- Core Services
+        auth_service: AuthService
+        user_service: UserService
+        catalog_service: CatalogService
+        cart_service: CartService
+        order_service: OrderService
+        payment_service: PaymentService
+        shipping_service: ShippingService
+        notification_service: NotificationService
+
+        -- Data Stores
+        user_db: PostgresDatabase
+        catalog_db: PostgresDatabase
+        order_db: PostgresDatabase
+        session_cache: RedisCache
+        product_cache: RedisCache
+
+        -- Messaging
+        event_bus: KafkaCluster
+        notification_queue: RabbitMQ
+
+        -- Observability
+        metrics: PrometheusServer
+        logs: ElasticsearchCluster
+        traces: JaegerCollector
+    }
+
+    connections {
+        -- Client to Edge
+        web_app -> cdn: HTTPS
+        mobile_ios -> load_balancer: HTTPS
+        mobile_android -> load_balancer: HTTPS
+        cdn -> load_balancer: HTTP
+        load_balancer -> api_gateway: HTTP
+
+        -- Gateway to Services
+        api_gateway -> auth_service: gRPC
+        api_gateway -> user_service: gRPC
+        api_gateway -> catalog_service: gRPC
+        api_gateway -> cart_service: gRPC
+        api_gateway -> order_service: gRPC
+
+        -- Inter-service Communication
+        order_service -> payment_service: gRPC
+        order_service -> shipping_service: gRPC
+        order_service -> notification_service: AMQP
+        cart_service -> catalog_service: gRPC
+
+        -- Event Streaming
+        order_service -> event_bus: Kafka
+        payment_service -> event_bus: Kafka
+        shipping_service -> event_bus: Kafka
+        notification_service -> notification_queue: AMQP
+
+        -- Data Access
+        user_service -> user_db: PostgreSQL
+        catalog_service -> catalog_db: PostgreSQL
+        order_service -> order_db: PostgreSQL
+        auth_service -> session_cache: Redis
+        catalog_service -> product_cache: Redis
+
+        -- Observability
+        api_gateway -> metrics: Prometheus
+        api_gateway -> logs: HTTP
+        api_gateway -> traces: Jaeger
+    }
+}
+```
+
+## Layered Architecture Pattern
+
+Systems can represent architectural layers:
+
+```dol
+system ThreeTierArchitecture {
+    components {
+        -- Presentation Layer
+        web_ui: ReactApplication
+        admin_ui: ReactApplication
+
+        -- Application Layer
+        api_server: ExpressServer
+        background_worker: NodeWorker
+        scheduler: CronScheduler
+
+        -- Data Layer
+        primary_db: PostgresDatabase
+        replica_db: PostgresDatabase
+        cache: RedisCluster
+        search: ElasticsearchCluster
+    }
+
+    connections {
+        -- Presentation to Application
+        web_ui -> api_server: REST
+        admin_ui -> api_server: REST
+
+        -- Application to Data
+        api_server -> primary_db: PostgreSQL
+        api_server -> cache: Redis
+        api_server -> search: HTTP
+        background_worker -> primary_db: PostgreSQL
+        scheduler -> background_worker: AMQP
+
+        -- Data Layer Replication
+        primary_db -> replica_db: PostgreSQL_Streaming
+    }
+}
+```
+
+## Microservices Pattern
+
+Model a microservices architecture:
+
+```dol
+system MicroservicesArchitecture {
+    components {
+        -- Gateway
+        gateway: KongGateway
+
+        -- Services (each owns its data)
+        user_service: UserMicroservice
+        user_db: MongoDB
+
+        product_service: ProductMicroservice
+        product_db: PostgresDatabase
+
+        order_service: OrderMicroservice
+        order_db: PostgresDatabase
+
+        inventory_service: InventoryMicroservice
+        inventory_db: PostgresDatabase
+
+        -- Shared Infrastructure
+        service_mesh: IstioMesh
+        config_server: ConsulServer
+        secret_manager: VaultServer
+    }
+
+    connections {
+        -- All services through mesh
+        gateway -> service_mesh: HTTP
+        service_mesh -> user_service: gRPC
+        service_mesh -> product_service: gRPC
+        service_mesh -> order_service: gRPC
+        service_mesh -> inventory_service: gRPC
+
+        -- Each service to its database
+        user_service -> user_db: MongoDB
+        product_service -> product_db: PostgreSQL
+        order_service -> order_db: PostgreSQL
+        inventory_service -> inventory_db: PostgreSQL
+
+        -- Configuration
+        user_service -> config_server: HTTP
+        product_service -> config_server: HTTP
+        order_service -> config_server: HTTP
+        inventory_service -> config_server: HTTP
+    }
+}
+```
+
+## Event-Driven System
+
+Model an event-driven architecture:
+
+```dol
+system EventDrivenPlatform {
+    components {
+        -- Event Sources
+        web_api: WebApi
+        webhook_receiver: WebhookHandler
+        file_watcher: FileWatcher
+
+        -- Event Backbone
+        event_store: EventStoreDB
+        message_broker: KafkaCluster
+
+        -- Event Processors
+        order_processor: OrderEventProcessor
+        inventory_processor: InventoryEventProcessor
+        analytics_processor: AnalyticsProcessor
+
+        -- Read Models
+        order_view_db: PostgresDatabase
+        analytics_db: ClickHouseDatabase
+        search_index: ElasticsearchCluster
+    }
+
+    connections {
+        -- Event Publishing
+        web_api -> message_broker: Kafka
+        webhook_receiver -> message_broker: Kafka
+        file_watcher -> message_broker: Kafka
+
+        -- Event Storage
+        message_broker -> event_store: EventStore
+
+        -- Event Processing
+        message_broker -> order_processor: Kafka
+        message_broker -> inventory_processor: Kafka
+        message_broker -> analytics_processor: Kafka
+
+        -- Read Model Updates
+        order_processor -> order_view_db: PostgreSQL
+        analytics_processor -> analytics_db: ClickHouse
+        order_processor -> search_index: HTTP
+    }
+}
+```
+
+## Component Types
+
+Define the types that components reference:
+
+```dol
+mod services @ 0.3.0
+
+pub type ApiGateway {
+    host: String
+    port: UInt64
+    ssl_enabled: Bool
+    rate_limit: UInt64
+    routes: List<Route>
+}
+
+pub type Route {
+    path: String
+    method: HttpMethod
+    service: String
+    auth_required: Bool
+}
+
+pub type HttpMethod {
+    kind: enum { GET, POST, PUT, DELETE, PATCH }
+}
+
+pub type OrderService {
+    name: String
+    version: String
+    replicas: UInt64
+    health_endpoint: String
+}
+
+pub type InventoryService {
+    name: String
+    version: String
+    replicas: UInt64
+    stock_sync_interval: UInt64
+}
+```
+
+## Practice Exercise
+
+Define a system for a blog platform with:
+1. Web frontend and admin panel
+2. API gateway and auth service
+3. Post service, comment service, and user service
+4. PostgreSQL for posts/users, MongoDB for comments
+5. Redis for caching, Elasticsearch for search
+
+<Collapsible title="Solution">
+```dol
+mod blog.architecture @ 0.3.0
+
+system BlogPlatform {
+    components {
+        -- Frontends
+        blog_frontend: ReactApplication
+        admin_panel: ReactApplication
+
+        -- Edge
+        api_gateway: ApiGateway
+
+        -- Services
+        auth_service: AuthService
+        user_service: UserService
+        post_service: PostService
+        comment_service: CommentService
+        search_service: SearchService
+        media_service: MediaService
+
+        -- Data Stores
+        user_db: PostgresDatabase
+        post_db: PostgresDatabase
+        comment_db: MongoDatabase
+        media_storage: S3Bucket
+
+        -- Caching and Search
+        cache: RedisCluster
+        search_index: ElasticsearchCluster
+    }
+
+    connections {
+        -- Frontend to Gateway
+        blog_frontend -> api_gateway: HTTPS
+        admin_panel -> api_gateway: HTTPS
+
+        -- Gateway to Services
+        api_gateway -> auth_service: gRPC
+        api_gateway -> user_service: gRPC
+        api_gateway -> post_service: gRPC
+        api_gateway -> comment_service: gRPC
+        api_gateway -> search_service: gRPC
+        api_gateway -> media_service: gRPC
+
+        -- Service to Data
+        user_service -> user_db: PostgreSQL
+        post_service -> post_db: PostgreSQL
+        comment_service -> comment_db: MongoDB
+        media_service -> media_storage: S3
+
+        -- Caching
+        post_service -> cache: Redis
+        user_service -> cache: Redis
+
+        -- Search Indexing
+        post_service -> search_index: HTTP
+        search_service -> search_index: HTTP
+    }
+}
+```
+</Collapsible>
+
+## Summary
+
+In this lesson, you learned:
+
+- **System declaration** with components and connections
+- **Component naming** with types
+- **Connection protocols** for different communication patterns
+- **Architectural patterns**: layered, microservices, event-driven
+- **Complete system modeling** for real-world applications
+
+## Next Steps
+
+<NextTutorial
+  title="Defining Constraints"
+  href="/tutorials/dol-syntax/004-constraints"
+  description="Learn to enforce invariants with forall quantifiers and validation rules"
+/>

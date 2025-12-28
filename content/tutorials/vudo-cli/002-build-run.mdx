@@ -1,0 +1,624 @@
+---
+title: "Build and Run"
+description: "Compile Spirits to WASM, execute in sandbox, and run tests"
+track: "vudo-cli"
+tutorial: 2
+duration: "25 min"
+objectives:
+  - "Compile Spirits to WASM with vudo build"
+  - "Execute Spirits in sandboxed environments with vudo run"
+  - "Run Spirit tests with vudo test"
+  - "Understand build artifacts and output"
+tags:
+  - "cli"
+  - "vudo"
+  - "build"
+  - "run"
+  - "test"
+  - "wasm"
+---
+
+# Build and Run
+
+In this tutorial, you will learn to compile, execute, and test Spirits using the VUDO CLI. By the end, you will understand the complete build-run-test workflow.
+
+## The Build-Run-Test Cycle
+
+Spirit development follows a familiar cycle:
+
+```
+   ┌─────────┐     ┌─────────┐     ┌─────────┐
+   │  Build  │ --> │   Run   │ --> │  Test   │
+   └─────────┘     └─────────┘     └─────────┘
+        │                               │
+        └───────────── Fix ─────────────┘
+```
+
+## Building Spirits
+
+The `vudo build` command compiles your Spirit to WebAssembly (WASM):
+
+```bash
+vudo build
+```
+
+<Terminal title="vudo build --help">
+```
+$ vudo build --help
+Compile Spirit to WebAssembly
+
+USAGE:
+    vudo build [OPTIONS]
+
+OPTIONS:
+    -r, --release           Build with optimizations
+        --target <TARGET>   Target architecture [default: wasm32-wasi]
+    -o, --output <DIR>      Output directory [default: target/]
+        --no-optimize       Skip WASM optimization pass
+        --strip             Strip debug symbols
+    -v, --verbose           Verbose build output
+    -h, --help              Print help information
+```
+</Terminal>
+
+### Basic Build
+
+<Terminal title="Building a Spirit">
+```
+$ cd my-spirit
+$ vudo build
+   Compiling my-spirit v1.0.0
+    Building src/lib.rs...
+    Validating src/main.dol...
+   Optimizing WASM output...
+    Finished in 2.34s
+
+Build artifacts:
+  target/wasm32-wasi/debug/my-spirit.wasm (1.2 MB)
+  target/manifest.json (validated)
+```
+</Terminal>
+
+### Release Build
+
+For production, use the `--release` flag for optimizations:
+
+<Terminal title="Release build">
+```
+$ vudo build --release
+   Compiling my-spirit v1.0.0 (release)
+    Building src/lib.rs with optimizations...
+    Validating src/main.dol...
+   Optimizing WASM output (aggressive)...
+   Stripping debug symbols...
+    Finished in 8.67s
+
+Build artifacts:
+  target/wasm32-wasi/release/my-spirit.wasm (256 KB)
+  target/manifest.json (validated)
+
+Size comparison:
+  Debug:   1.2 MB
+  Release: 256 KB (79% smaller)
+```
+</Terminal>
+
+### Build Artifacts
+
+The build process produces several artifacts in the `target/` directory:
+
+<Terminal title="Build artifacts">
+```
+$ tree target/
+target/
+├── wasm32-wasi/
+│   ├── debug/
+│   │   ├── my-spirit.wasm      # Debug WASM binary
+│   │   ├── my-spirit.wasm.map  # Source map
+│   │   └── deps/               # Dependencies
+│   └── release/
+│       └── my-spirit.wasm      # Optimized WASM binary
+├── manifest.json               # Validated manifest
+├── build.log                   # Build log
+└── .fingerprint/               # Build cache
+```
+</Terminal>
+
+### Build Options
+
+#### Verbose Output
+
+<Terminal title="Verbose build">
+```
+$ vudo build --verbose
+[INFO ] Loading project configuration from .dolrc
+[DEBUG] Target: wasm32-wasi
+[DEBUG] Optimization level: 0 (debug)
+[INFO ] Compiling Rust source...
+[DEBUG]   rustc src/lib.rs --target wasm32-wasi
+[DEBUG]   Linking dependencies...
+[INFO ] Validating DOL specification...
+[DEBUG]   Parsing src/main.dol
+[DEBUG]   Type checking 3 genes, 1 trait, 1 system
+[INFO ] Optimizing WASM...
+[DEBUG]   Running wasm-opt with -O1
+[INFO ] Build complete
+
+Build artifacts:
+  target/wasm32-wasi/debug/my-spirit.wasm (1.2 MB)
+```
+</Terminal>
+
+#### Custom Output Directory
+
+<Terminal title="Custom output">
+```
+$ vudo build --output dist/
+   Compiling my-spirit v1.0.0
+    Finished in 2.34s
+
+Build artifacts:
+  dist/my-spirit.wasm
+  dist/manifest.json
+```
+</Terminal>
+
+## Running Spirits
+
+The `vudo run` command executes your Spirit in a sandboxed environment:
+
+```bash
+vudo run .
+```
+
+<Terminal title="vudo run --help">
+```
+$ vudo run --help
+Execute Spirit in sandboxed environment
+
+USAGE:
+    vudo run <PATH> [OPTIONS] [-- <ARGS>...]
+
+ARGS:
+    <PATH>       Path to Spirit directory or WASM file
+    <ARGS>...    Arguments to pass to Spirit
+
+OPTIONS:
+        --sandbox <LEVEL>    Sandbox level: strict|standard|permissive [default: standard]
+        --memory <LIMIT>     Memory limit [default: 256MB]
+        --timeout <SECS>     Execution timeout [default: 30]
+        --env <KEY=VALUE>    Pass environment variable
+        --allow-network      Allow network access
+        --allow-fs <PATH>    Allow filesystem access to path
+    -v, --verbose            Verbose execution output
+    -h, --help               Print help information
+```
+</Terminal>
+
+### Basic Execution
+
+<Terminal title="Running a Spirit">
+```
+$ vudo run .
+   Loading my-spirit v1.0.0
+   Sandbox: standard mode
+  Starting execution...
+
+Spirit 'my-spirit' v1.0.0 initialized
+Hello from my-spirit!
+
+   Finished in 0.12s
+   Memory used: 12.4 MB
+```
+</Terminal>
+
+### Passing Arguments
+
+<Terminal title="With arguments">
+```
+$ vudo run . -- --name "World" --count 3
+   Loading my-spirit v1.0.0
+   Sandbox: standard mode
+  Starting execution...
+
+Spirit 'my-spirit' v1.0.0 initialized
+Hello, World!
+Hello, World!
+Hello, World!
+
+   Finished in 0.15s
+```
+</Terminal>
+
+### Sandbox Levels
+
+Spirits run in isolated sandboxes with configurable security levels:
+
+#### Strict Sandbox
+
+No external access. Maximum isolation.
+
+<Terminal title="Strict sandbox">
+```
+$ vudo run . --sandbox strict
+   Loading my-spirit v1.0.0
+   Sandbox: strict mode
+     - No network access
+     - No filesystem access
+     - No environment variables
+     - Memory limit: 128 MB
+  Starting execution...
+
+Spirit 'my-spirit' v1.0.0 initialized
+```
+</Terminal>
+
+#### Standard Sandbox (Default)
+
+Limited access with explicit permissions.
+
+<Terminal title="Standard sandbox">
+```
+$ vudo run . --sandbox standard
+   Loading my-spirit v1.0.0
+   Sandbox: standard mode
+     - Network: disabled (use --allow-network)
+     - Filesystem: disabled (use --allow-fs)
+     - Environment: disabled (use --env)
+     - Memory limit: 256 MB
+  Starting execution...
+```
+</Terminal>
+
+#### Permissive Sandbox
+
+For development and debugging only.
+
+<Terminal title="Permissive sandbox">
+```
+$ vudo run . --sandbox permissive
+   Loading my-spirit v1.0.0
+   Sandbox: permissive mode (DEVELOPMENT ONLY)
+     WARNING: Reduced isolation for debugging
+     - Network: enabled
+     - Filesystem: read-only
+     - Environment: inherited
+     - Memory limit: 1 GB
+  Starting execution...
+```
+</Terminal>
+
+### Granting Permissions
+
+<Terminal title="With permissions">
+```
+$ vudo run . --allow-network --allow-fs ./data --env API_KEY=secret
+   Loading my-spirit v1.0.0
+   Sandbox: standard mode
+     - Network: ENABLED
+     - Filesystem: ./data (read/write)
+     - Environment: API_KEY (set)
+     - Memory limit: 256 MB
+  Starting execution...
+
+Spirit 'my-spirit' v1.0.0 initialized
+Connected to API successfully
+Read 42 records from ./data/input.json
+```
+</Terminal>
+
+### Resource Limits
+
+<Terminal title="Resource limits">
+```
+$ vudo run . --memory 512MB --timeout 60
+   Loading my-spirit v1.0.0
+   Sandbox: standard mode
+     - Memory limit: 512 MB
+     - Timeout: 60 seconds
+  Starting execution...
+
+$ # When limits are exceeded:
+$ vudo run . --memory 32MB
+   Loading my-spirit v1.0.0
+  Starting execution...
+
+Error: Memory limit exceeded
+  Limit: 32 MB
+  Used:  34.5 MB
+
+Spirit terminated.
+```
+</Terminal>
+
+## Testing Spirits
+
+The `vudo test` command runs your Spirit's test suite:
+
+```bash
+vudo test
+```
+
+<Terminal title="vudo test --help">
+```
+$ vudo test --help
+Run Spirit tests
+
+USAGE:
+    vudo test [OPTIONS] [FILTER]
+
+ARGS:
+    [FILTER]    Filter tests by name pattern
+
+OPTIONS:
+        --parallel           Run tests in parallel [default]
+        --serial             Run tests sequentially
+        --coverage           Generate coverage report
+        --timeout <SECS>     Test timeout [default: 30]
+    -v, --verbose            Verbose test output
+        --fail-fast          Stop on first failure
+    -h, --help               Print help information
+```
+</Terminal>
+
+### Running All Tests
+
+<Terminal title="Running tests">
+```
+$ vudo test
+   Testing my-spirit v1.0.0
+   Running 5 tests...
+
+test test_greeting_basic ... ok (0.02s)
+test test_greeting_empty_name ... ok (0.01s)
+test test_greeting_unicode ... ok (0.02s)
+test test_greeting_long_name ... ok (0.01s)
+test test_system_init ... ok (0.03s)
+
+   Results: 5 passed, 0 failed
+   Time: 0.34s
+```
+</Terminal>
+
+### Filtering Tests
+
+<Terminal title="Filtered tests">
+```
+$ vudo test greeting
+   Testing my-spirit v1.0.0
+   Running 4 tests (filtered)...
+
+test test_greeting_basic ... ok (0.02s)
+test test_greeting_empty_name ... ok (0.01s)
+test test_greeting_unicode ... ok (0.02s)
+test test_greeting_long_name ... ok (0.01s)
+
+   Results: 4 passed, 0 failed
+   Time: 0.28s
+```
+</Terminal>
+
+### Verbose Test Output
+
+<Terminal title="Verbose tests">
+```
+$ vudo test --verbose
+   Testing my-spirit v1.0.0
+   Running 5 tests...
+
+test test_greeting_basic ...
+  Input: name = "Alice"
+  Expected: Greeting { name: "Alice", message: "Hello, Alice!" }
+  Actual:   Greeting { name: "Alice", message: "Hello, Alice!" }
+  ... ok (0.02s)
+
+test test_greeting_empty_name ...
+  Input: name = ""
+  Expected: Error(ConstraintViolation)
+  Actual:   Error(ConstraintViolation("name_not_empty"))
+  ... ok (0.01s)
+
+[... more output ...]
+```
+</Terminal>
+
+### Test Coverage
+
+<Terminal title="Coverage report">
+```
+$ vudo test --coverage
+   Testing my-spirit v1.0.0
+   Running 5 tests...
+
+[... test results ...]
+
+   Coverage Report:
+   ┌──────────────────────────────────────────────────┐
+   │ File                  Lines    Covered    %      │
+   ├──────────────────────────────────────────────────┤
+   │ src/lib.rs           45       42         93.3%   │
+   │ src/main.dol         28       25         89.3%   │
+   ├──────────────────────────────────────────────────┤
+   │ Total                 73       67         91.8%   │
+   └──────────────────────────────────────────────────┘
+
+   Coverage report written to: target/coverage/index.html
+```
+</Terminal>
+
+### Handling Test Failures
+
+<Terminal title="Test failures">
+```
+$ vudo test
+   Testing my-spirit v1.0.0
+   Running 5 tests...
+
+test test_greeting_basic ... ok (0.02s)
+test test_greeting_empty_name ... FAILED (0.01s)
+
+   Failure: test_greeting_empty_name
+   ─────────────────────────────────
+   Expected: Error(ConstraintViolation)
+   Actual:   Ok(Greeting { name: "", message: "Hello, !" })
+
+   The constraint 'name_not_empty' did not trigger.
+
+   Location: tests/test_main.dol:15
+
+test test_greeting_unicode ... ok (0.02s)
+test test_greeting_long_name ... ok (0.01s)
+test test_system_init ... ok (0.03s)
+
+   Results: 4 passed, 1 failed
+   Time: 0.34s
+
+Error: Test suite failed
+```
+</Terminal>
+
+## Combining Commands
+
+Chain build, run, and test commands for efficient development:
+
+<Terminal title="Command chaining">
+```
+$ # Build and run
+$ vudo build && vudo run .
+
+$ # Build, test, then run if tests pass
+$ vudo build && vudo test && vudo run .
+
+$ # Full development cycle
+$ vudo build --release && vudo test --coverage && vudo run . --sandbox strict
+```
+</Terminal>
+
+## Tips and Best Practices
+
+<Tip type="info">
+**Build before run**: Always run `vudo build` before `vudo run` after making changes. VUDO will use the cached build if nothing changed.
+</Tip>
+
+<Tip type="success">
+**Use strict sandbox in production**: When deploying Spirits, always use `--sandbox strict` and grant only necessary permissions explicitly.
+</Tip>
+
+<Tip type="warning">
+**Test coverage matters**: Aim for high test coverage before publishing. The registry displays coverage percentages to users.
+</Tip>
+
+## Common Issues
+
+### Build Failures
+
+<Terminal title="Build error">
+```
+$ vudo build
+   Compiling my-spirit v1.0.0
+    Building src/lib.rs...
+
+error[E0599]: no method named `greets` found for struct `Greeting`
+ --> src/lib.rs:15:14
+   |
+15 |     greeting.greets();
+   |              ^^^^^^ method not found in `Greeting`
+   |
+help: there is a method with a similar name
+   |
+15 |     greeting.greet();
+   |              ~~~~~
+
+Error: Build failed with 1 error
+```
+</Terminal>
+
+### Sandbox Violations
+
+<Terminal title="Sandbox violation">
+```
+$ vudo run .
+   Loading my-spirit v1.0.0
+   Sandbox: standard mode
+  Starting execution...
+
+Error: Sandbox violation
+  Attempted: Network connection to https://api.example.com
+  Status: DENIED (network access not permitted)
+
+Hint: Use --allow-network to permit network access
+      vudo run . --allow-network
+```
+</Terminal>
+
+### Timeout Exceeded
+
+<Terminal title="Timeout">
+```
+$ vudo run . --timeout 5
+   Loading my-spirit v1.0.0
+  Starting execution...
+
+Error: Execution timeout
+  Limit: 5 seconds
+  Spirit did not complete within timeout.
+
+Hint: Increase timeout with --timeout <seconds>
+      Or check for infinite loops in your code
+```
+</Terminal>
+
+## Summary
+
+You have learned to:
+
+1. Build Spirits with `vudo build` (debug and release)
+2. Run Spirits with `vudo run` in sandboxed environments
+3. Test Spirits with `vudo test` including coverage
+4. Configure **sandbox levels** and **permissions**
+5. Handle **resource limits** and **timeouts**
+
+## Next Steps
+
+<NextTutorial
+  title="Signing and Publishing"
+  href="/tutorials/vudo-cli/003-signing"
+  description="Generate Ed25519 keypairs, sign manifests, and publish to registry"
+/>
+
+## Quick Reference
+
+```
+Build and Run Quick Reference
+=============================
+
+BUILD
+  vudo build                    Debug build
+  vudo build --release          Optimized release build
+  vudo build --verbose          Detailed build output
+  vudo build --output <dir>     Custom output directory
+
+RUN
+  vudo run .                    Run current project
+  vudo run <path>               Run specific Spirit
+  vudo run . -- <args>          Pass arguments to Spirit
+
+SANDBOX OPTIONS
+  --sandbox strict              Maximum isolation
+  --sandbox standard            Default, limited access
+  --sandbox permissive          Development only
+
+PERMISSIONS
+  --allow-network               Enable network access
+  --allow-fs <path>             Enable filesystem access
+  --env KEY=VALUE               Pass environment variable
+  --memory <limit>              Set memory limit
+  --timeout <seconds>           Set execution timeout
+
+TEST
+  vudo test                     Run all tests
+  vudo test <filter>            Run matching tests
+  vudo test --coverage          Generate coverage report
+  vudo test --verbose           Detailed test output
+  vudo test --fail-fast         Stop on first failure
+```

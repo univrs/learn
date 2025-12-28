@@ -1,0 +1,780 @@
+---
+title: "Credit Integration"
+description: "Implement mycelial economics with the VUDO credit system - balances, reservations, and transfers"
+track: "capstone"
+tutorial: 5
+duration: "45 min"
+level: "advanced"
+prerequisites:
+  - "Step 4: Narrative Generation"
+concepts:
+  - "ActuatorCredit capability"
+  - "Credit reservation pattern"
+  - "Balance and availability"
+  - "Pricing models"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+
+# Credit Integration
+
+The Black Lion guards harmony through mycelial economics - value flowing through invisible networks to where it is needed, not where power demands. Now we implement this principle in our Spirit through the VUDO credit system.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Understand the VUDO credit system and the `ActuatorCredit` capability
+- Implement balance checking and availability verification
+- Use the reservation pattern for safe transactions
+- Build a pricing model for your Spirit operations
+- Integrate credits into the complete generation workflow
+
+## The Mycelial Economics Principle
+
+In the Lion & Swan mythology, credits flow like nutrients through a forest's fungal network. The VUDO credit system mirrors this principle with a reservation-based transaction model:
+
+```
++------------------+     +------------------+     +------------------+
+|   Check Balance  | --> |  Reserve Credits | --> |  Perform Work    |
+|   (can we help?) |     |  (hold in trust) |     |  (create value)  |
++------------------+     +------------------+     +------------------+
+                                                          |
+                                                          v
++------------------+     +------------------+     +------------------+
+|   Credits Flow   | <-- |  Consume         | <-- |  Success?        |
+|   (value moves)  |     |  or Release      |     |  (verify result) |
++------------------+     +------------------+     +------------------+
+```
+
+This flow ensures that credits only leave an account when value is actually delivered - like the Lion protecting the balance before allowing change.
+
+## The ActuatorCredit Capability
+
+All credit operations require the `ActuatorCredit` capability, declared in your manifest:
+
+```toml
+# spirit.toml
+
+[capabilities.credits]
+balance = true     # Check credit balances
+reserve = true     # Reserve credits for pending operations
+transfer = true    # Transfer credits between accounts
+```
+
+The capability enables these host functions:
+
+| Function | Purpose |
+|----------|---------|
+| `credits::balance()` | Get total credit balance |
+| `credits::available()` | Get available balance (total minus reserved) |
+| `credits::reserve(amount)` | Reserve credits, returns reservation ID |
+| `credits::release(id)` | Release reservation back to available |
+| `credits::consume(id)` | Permanently deduct reserved credits |
+| `credits::transfer(recipient, amount)` | Transfer to another account |
+
+<Callout type="info" title="Credits and Public Keys">
+Credits are tied to Ed25519 public keys (32 bytes). Each Spirit execution runs in the context of a user's public key, which is used for all credit operations. The maximum single transfer is 1 trillion credits, and maximum reservation is 100 billion credits.
+</Callout>
+
+## Creating the Credit Manager
+
+Implement the credit management module in `src/credits.rs`:
+
+```rust
+// src/credits.rs
+
+use serde::{Deserialize, Serialize};
+use vudo_spirit::{credits, log, Error};
+
+/// Pricing configuration for Spirit operations (in microcredits)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PricingConfig {
+    /// Base cost for any generation operation
+    pub base_cost: u64,
+    /// Additional cost for image generation
+    pub image_cost: u64,
+    /// Cost for template-based narrative
+    pub narrative_template_cost: u64,
+    /// Cost for AI-generated narrative
+    pub narrative_ai_cost: u64,
+    /// Minimum balance required to start
+    pub min_balance: u64,
+}
+
+impl Default for PricingConfig {
+    fn default() -> Self {
+        Self {
+            base_cost: 50,               // 50 microcredits base
+            image_cost: 100,             // 100 for image generation
+            narrative_template_cost: 25, // 25 for template narrative
+            narrative_ai_cost: 75,       // 75 for AI narrative
+            min_balance: 200,            // Minimum 200 to start
+        }
+    }
+}
+
+/// The type of generation being requested
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GenerationType {
+    ImageOnly,
+    NarrativeTemplate,
+    NarrativeAI,
+    ImageWithTemplate,
+    ImageWithAI,
+}
+
+/// Result of a credit operation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreditResult {
+    /// Reservation ID (u64 from the host function)
+    pub reservation_id: Option<u64>,
+    /// Amount reserved or charged
+    pub amount: u64,
+    /// Balance before the operation
+    pub balance_before: u64,
+    /// Available balance after the operation
+    pub available_after: u64,
+}
+
+/// Balance information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BalanceInfo {
+    pub total: u64,
+    pub available: u64,
+    pub reserved: u64,
+}
+
+/// Credit manager for the Lion & Swan Spirit
+pub struct CreditManager {
+    pricing: PricingConfig,
+}
+
+impl CreditManager {
+    /// Create a new credit manager with default pricing
+    pub fn new() -> Self {
+        Self {
+            pricing: PricingConfig::default(),
+        }
+    }
+
+    /// Create with custom pricing configuration
+    pub fn with_pricing(pricing: PricingConfig) -> Self {
+        Self { pricing }
+    }
+
+    /// Calculate the cost for a generation type
+    pub fn calculate_cost(&self, gen_type: GenerationType) -> u64 {
+        match gen_type {
+            GenerationType::ImageOnly => {
+                self.pricing.base_cost + self.pricing.image_cost
+            }
+            GenerationType::NarrativeTemplate => {
+                self.pricing.base_cost + self.pricing.narrative_template_cost
+            }
+            GenerationType::NarrativeAI => {
+                self.pricing.base_cost + self.pricing.narrative_ai_cost
+            }
+            GenerationType::ImageWithTemplate => {
+                self.pricing.base_cost
+                    + self.pricing.image_cost
+                    + self.pricing.narrative_template_cost
+            }
+            GenerationType::ImageWithAI => {
+                self.pricing.base_cost
+                    + self.pricing.image_cost
+                    + self.pricing.narrative_ai_cost
+            }
+        }
+    }
+
+    /// Get current balance information
+    pub fn get_balance_info(&self) -> Result<BalanceInfo, Error> {
+        let total = credits::balance()?;
+        let available = credits::available()?;
+        let reserved = total.saturating_sub(available);
+
+        Ok(BalanceInfo {
+            total,
+            available,
+            reserved,
+        })
+    }
+
+    /// Check if there are sufficient credits to proceed
+    pub fn check_balance(&self, gen_type: GenerationType) -> Result<CreditResult, Error> {
+        let required = self.calculate_cost(gen_type);
+        let balance = credits::balance()?;
+        let available = credits::available()?;
+
+        log::info!(
+            "Credit check: need {}, have {} available (total: {})",
+            required,
+            available,
+            balance
+        );
+
+        if available < required {
+            return Err(Error::InsufficientCredits {
+                required,
+                available,
+            });
+        }
+
+        if available < self.pricing.min_balance {
+            log::warn!(
+                "Balance {} below recommended minimum {}",
+                available,
+                self.pricing.min_balance
+            );
+        }
+
+        Ok(CreditResult {
+            reservation_id: None,
+            amount: required,
+            balance_before: balance,
+            available_after: available,
+        })
+    }
+
+    /// Reserve credits for a pending operation
+    ///
+    /// Reserved credits are held in escrow until the operation completes.
+    /// If the operation succeeds, call `consume_reservation`.
+    /// If it fails, call `release_reservation`.
+    pub fn reserve_credits(&self, gen_type: GenerationType) -> Result<CreditResult, Error> {
+        let amount = self.calculate_cost(gen_type);
+        let balance = credits::balance()?;
+        let available_before = credits::available()?;
+
+        if available_before < amount {
+            return Err(Error::InsufficientCredits {
+                required: amount,
+                available: available_before,
+            });
+        }
+
+        // Reserve returns a u64 reservation ID
+        let reservation_id = credits::reserve(amount)?;
+
+        log::info!(
+            "Reserved {} credits (reservation ID: {})",
+            amount,
+            reservation_id
+        );
+
+        let available_after = credits::available()?;
+
+        Ok(CreditResult {
+            reservation_id: Some(reservation_id),
+            amount,
+            balance_before: balance,
+            available_after,
+        })
+    }
+
+    /// Consume a reservation (permanently deduct the credits)
+    ///
+    /// Call this when the operation completed successfully.
+    pub fn consume_reservation(&self, reservation_id: u64) -> Result<(), Error> {
+        credits::consume(reservation_id)?;
+        log::info!("Consumed reservation {} - credits deducted", reservation_id);
+        Ok(())
+    }
+
+    /// Release a reservation (return credits to available balance)
+    ///
+    /// Call this when the operation failed and credits should be refunded.
+    pub fn release_reservation(&self, reservation_id: u64) -> Result<(), Error> {
+        credits::release(reservation_id)?;
+        log::info!("Released reservation {} - credits restored", reservation_id);
+        Ok(())
+    }
+
+    /// Transfer credits to another account (e.g., paying another Spirit)
+    pub fn transfer_to(&self, recipient: &[u8; 32], amount: u64) -> Result<(), Error> {
+        if amount == 0 {
+            return Err(Error::InvalidAmount(
+                "Transfer amount must be greater than zero".into(),
+            ));
+        }
+
+        let available = credits::available()?;
+        if available < amount {
+            return Err(Error::InsufficientCredits {
+                required: amount,
+                available,
+            });
+        }
+
+        credits::transfer(recipient, amount)?;
+        log::info!("Transferred {} credits", amount);
+
+        Ok(())
+    }
+
+    /// Get the pricing configuration
+    pub fn pricing(&self) -> &PricingConfig {
+        &self.pricing
+    }
+}
+
+impl Default for CreditManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+```
+
+## The Reservation Pattern
+
+The reservation pattern is the cornerstone of safe transactions. Like the Lion holding chaos at bay before releasing order, we hold credits in escrow before committing:
+
+```rust
+// The safe transaction pattern
+
+// 1. Reserve credits BEFORE doing expensive work
+let reservation = credit_manager.reserve_credits(gen_type)?;
+let reservation_id = reservation.reservation_id
+    .expect("Reservation should have an ID");
+
+// 2. Perform the work (image generation, AI calls, etc.)
+let result = match perform_expensive_work() {
+    Ok(output) => {
+        // 3a. Success: consume the reservation (credits deducted)
+        credit_manager.consume_reservation(reservation_id)?;
+        Ok(output)
+    }
+    Err(e) => {
+        // 3b. Failure: release the reservation (credits refunded)
+        credit_manager.release_reservation(reservation_id)?;
+        Err(e)
+    }
+};
+```
+
+<Callout type="warning" title="Always Handle Both Paths">
+If you reserve credits, you MUST either consume or release them. Failing to do so leaves credits locked. The VUDO runtime will eventually reclaim orphaned reservations, but this confuses users. Always use proper error handling.
+</Callout>
+
+## Integrating Credits Into Generation
+
+Update the main entry point in `src/lib.rs`:
+
+```rust
+// src/lib.rs
+
+mod credits;
+mod image_gen;
+mod narrative;
+mod ontology;
+mod prompts;
+
+use crate::credits::{CreditManager, GenerationType};
+use crate::image_gen::ImageGenerator;
+use crate::narrative::NarrativeGenerator;
+use crate::ontology::{ArchetypeKind, SceneType};
+
+use serde::{Deserialize, Serialize};
+use vudo_spirit::{log, time, Error};
+
+#[derive(Deserialize)]
+pub struct GenerateInput {
+    pub archetype: String,
+    pub scene_type: Option<String>,
+    pub include_narrative: bool,
+    pub use_ai_narrative: Option<bool>,
+}
+
+#[derive(Serialize)]
+pub struct GenerateOutput {
+    pub image_url: String,
+    pub narrative_text: Option<String>,
+    pub archetype: String,
+    pub credits_charged: u64,
+    pub timestamp: u64,
+}
+
+#[vudo_spirit::main]
+pub fn generate(input: GenerateInput) -> Result<GenerateOutput, LionSwanError> {
+    log::info!("Lion & Swan Creator: generating {} content", input.archetype);
+
+    // Parse archetype first (cheap operation, no credits needed)
+    let archetype = ArchetypeKind::from_str(&input.archetype)
+        .ok_or_else(|| LionSwanError::InvalidArchetype(input.archetype.clone()))?;
+
+    let scene_type = parse_scene_type(input.scene_type.as_deref());
+
+    // Determine generation type for pricing
+    let gen_type = determine_generation_type(&input);
+
+    // Initialize credit manager
+    let credit_manager = CreditManager::new();
+
+    // === PHASE 1: Reserve Credits ===
+    // Like the Lion, we secure the balance before acting
+    let reservation = credit_manager.reserve_credits(gen_type)?;
+
+    let reservation_id = reservation.reservation_id
+        .expect("Reservation should have an ID");
+
+    log::info!(
+        "Reserved {} credits for {:?} generation",
+        reservation.amount,
+        gen_type
+    );
+
+    // === PHASE 2: Perform Generation ===
+    // The work happens within the protective reservation
+    match perform_generation(archetype, scene_type, &input) {
+        Ok((image, narrative_text)) => {
+            // === PHASE 3a: Success - Consume Credits ===
+            credit_manager.consume_reservation(reservation_id)?;
+
+            let timestamp = time::now()?;
+
+            Ok(GenerateOutput {
+                image_url: image.url,
+                narrative_text,
+                archetype: input.archetype,
+                credits_charged: reservation.amount,
+                timestamp,
+            })
+        }
+        Err(e) => {
+            // === PHASE 3b: Failure - Release Credits ===
+            if let Err(release_err) = credit_manager.release_reservation(reservation_id) {
+                log::error!("Failed to release reservation: {}", release_err);
+            }
+            Err(e)
+        }
+    }
+}
+
+fn determine_generation_type(input: &GenerateInput) -> GenerationType {
+    match (input.include_narrative, input.use_ai_narrative.unwrap_or(false)) {
+        (false, _) => GenerationType::ImageOnly,
+        (true, false) => GenerationType::ImageWithTemplate,
+        (true, true) => GenerationType::ImageWithAI,
+    }
+}
+
+fn parse_scene_type(scene_type: Option<&str>) -> SceneType {
+    scene_type
+        .and_then(|s| match s.to_lowercase().as_str() {
+            "confrontation" => Some(SceneType::Confrontation),
+            "interrogation" => Some(SceneType::Interrogation),
+            "transformation" => Some(SceneType::Transformation),
+            "revelation" => Some(SceneType::Revelation),
+            _ => None,
+        })
+        .unwrap_or(SceneType::Revelation)
+}
+
+fn perform_generation(
+    archetype: ArchetypeKind,
+    scene_type: SceneType,
+    input: &GenerateInput,
+) -> Result<(crate::image_gen::GeneratedImage, Option<String>), LionSwanError> {
+    // Generate image
+    let image_gen = ImageGenerator::new();
+    let image = image_gen
+        .generate(archetype, scene_type)
+        .map_err(|e| LionSwanError::ImageGeneration(e.to_string()))?;
+
+    // Generate narrative if requested
+    let narrative_text = if input.include_narrative {
+        let narrative_gen = NarrativeGenerator::new()
+            .use_ai(input.use_ai_narrative.unwrap_or(false));
+
+        let narrative = narrative_gen
+            .generate(archetype, scene_type, None)
+            .map_err(|e| LionSwanError::NarrativeGeneration(e.to_string()))?;
+
+        Some(narrative.text)
+    } else {
+        None
+    };
+
+    Ok((image, narrative_text))
+}
+```
+
+## Adding a Quote Endpoint
+
+Let users check the price before generating:
+
+```rust
+// Add to src/lib.rs
+
+/// Input for price quote
+#[derive(Deserialize)]
+pub struct QuoteInput {
+    pub include_narrative: bool,
+    pub use_ai_narrative: bool,
+}
+
+/// Output for price quote
+#[derive(Serialize)]
+pub struct QuoteOutput {
+    pub cost: u64,
+    pub balance: u64,
+    pub available: u64,
+    pub can_afford: bool,
+    pub breakdown: PriceBreakdown,
+}
+
+#[derive(Serialize)]
+pub struct PriceBreakdown {
+    pub base: u64,
+    pub image: u64,
+    pub narrative: u64,
+    pub total: u64,
+}
+
+/// Get a price quote without generating
+#[vudo_spirit::export]
+pub fn quote(input: QuoteInput) -> Result<QuoteOutput, LionSwanError> {
+    let credit_manager = CreditManager::new();
+    let pricing = credit_manager.pricing();
+
+    let gen_type = match (input.include_narrative, input.use_ai_narrative) {
+        (false, _) => GenerationType::ImageOnly,
+        (true, false) => GenerationType::ImageWithTemplate,
+        (true, true) => GenerationType::ImageWithAI,
+    };
+
+    let narrative_cost = if input.include_narrative {
+        if input.use_ai_narrative {
+            pricing.narrative_ai_cost
+        } else {
+            pricing.narrative_template_cost
+        }
+    } else {
+        0
+    };
+
+    let total = credit_manager.calculate_cost(gen_type);
+    let balance_info = credit_manager.get_balance_info()?;
+
+    Ok(QuoteOutput {
+        cost: total,
+        balance: balance_info.total,
+        available: balance_info.available,
+        can_afford: balance_info.available >= total,
+        breakdown: PriceBreakdown {
+            base: pricing.base_cost,
+            image: pricing.image_cost,
+            narrative: narrative_cost,
+            total,
+        },
+    })
+}
+```
+
+## Understanding Credit Limits
+
+The VUDO credit system has built-in safety limits from `vudo_vm/src/host/credit.rs`:
+
+```rust
+/// Maximum amount of credits that can be transferred in a single operation
+pub const MAX_TRANSFER_AMOUNT: u64 = 1_000_000_000_000; // 1 trillion
+
+/// Maximum amount of credits that can be reserved in a single operation
+pub const MAX_RESERVE_AMOUNT: u64 = 100_000_000_000; // 100 billion
+```
+
+| Limit | Value | Purpose |
+|-------|-------|---------|
+| Maximum Transfer | 1 trillion credits | Prevent accidental large transfers |
+| Maximum Reserve | 100 billion credits | Limit escrow exposure |
+
+## Testing Credit Integration
+
+Add credit-specific tests in `tests/integration.rs`:
+
+```rust
+// tests/integration.rs
+
+use vudo_spirit_test::mock;
+use lion_swan_creator::{GenerateInput, generate, quote, QuoteInput};
+
+#[test]
+fn test_credit_check_sufficient() {
+    mock::credits::set_balance(10000);
+    mock::credits::set_available(10000);
+
+    let result = quote(QuoteInput {
+        include_narrative: true,
+        use_ai_narrative: false,
+    }).unwrap();
+
+    assert!(result.can_afford);
+    assert_eq!(result.cost, 175); // base 50 + image 100 + template 25
+    assert_eq!(result.available, 10000);
+}
+
+#[test]
+fn test_credit_check_insufficient() {
+    mock::credits::set_balance(50);
+    mock::credits::set_available(50);
+
+    let result = quote(QuoteInput {
+        include_narrative: true,
+        use_ai_narrative: false,
+    }).unwrap();
+
+    assert!(!result.can_afford);
+}
+
+#[test]
+fn test_generation_reserves_and_consumes() {
+    mock::credits::set_balance(1000);
+    mock::credits::set_available(1000);
+    mock::credits::expect_reserve(175).returning(|_| Ok(1));
+    mock::credits::expect_consume(1).returning(|_| Ok(()));
+
+    mock::network::expect_request()
+        .returning(|_| mock::network::response(200, r#"{
+            "data": [{"url": "https://example.com/image.png"}]
+        }"#));
+
+    let input = GenerateInput {
+        archetype: "lion".to_string(),
+        scene_type: Some("revelation".to_string()),
+        include_narrative: true,
+        use_ai_narrative: Some(false),
+    };
+
+    let result = generate(input).unwrap();
+
+    assert_eq!(result.credits_charged, 175);
+    mock::credits::assert_reserve_called();
+    mock::credits::assert_consume_called();
+}
+
+#[test]
+fn test_generation_releases_on_failure() {
+    mock::credits::set_balance(1000);
+    mock::credits::set_available(1000);
+    mock::credits::expect_reserve(150).returning(|_| Ok(1));
+    mock::credits::expect_release(1).returning(|_| Ok(()));
+
+    // Network fails
+    mock::network::expect_request()
+        .returning(|_| mock::network::response(500, "Server Error"));
+
+    let input = GenerateInput {
+        archetype: "lion".to_string(),
+        scene_type: None,
+        include_narrative: false,
+        use_ai_narrative: None,
+    };
+
+    let result = generate(input);
+
+    assert!(result.is_err());
+    mock::credits::assert_reserve_called();
+    mock::credits::assert_release_called();
+    mock::credits::assert_consume_not_called();
+}
+
+#[test]
+fn test_insufficient_credits_rejected_before_work() {
+    mock::credits::set_balance(10);
+    mock::credits::set_available(10);
+
+    let input = GenerateInput {
+        archetype: "swan".to_string(),
+        scene_type: None,
+        include_narrative: true,
+        use_ai_narrative: None,
+    };
+
+    let result = generate(input);
+
+    assert!(matches!(result, Err(LionSwanError::InsufficientCredits { .. })));
+    // No network calls should have been made
+    mock::network::assert_no_requests();
+}
+```
+
+## Interactive Testing with REPL
+
+Test credit flows interactively:
+
+```bash
+vudo repl
+
+> .load lion-swan-creator
+Loaded Spirit: lion-swan-creator v0.1.0
+
+> .mock credits balance 5000
+Mocked credit balance: 5000
+
+> .mock credits available 5000
+Mocked available credits: 5000
+
+> quote({"include_narrative": true, "use_ai_narrative": false})
+{
+  "cost": 175,
+  "balance": 5000,
+  "available": 5000,
+  "can_afford": true,
+  "breakdown": {
+    "base": 50,
+    "image": 100,
+    "narrative": 25,
+    "total": 175
+  }
+}
+
+> .mock network https://api.openai.com/* {"data":[{"url":"test.png"}]}
+
+> generate({"archetype": "lion", "include_narrative": true})
+{
+  "image_url": "test.png",
+  "narrative_text": "# The Mirror's Truth...",
+  "archetype": "lion",
+  "credits_charged": 175,
+  "timestamp": 1703721600
+}
+
+> .credits history
+  Reserve: 175 credits (ID: 1)
+  Consume: reservation 1
+  Net change: -175 credits
+
+> .exit
+```
+
+## The Mycelial Economics in Action
+
+The credit system embodies the Lion & Swan mythology:
+
+1. **The Lion's Guardianship**: Credits are reserved before work begins, protecting both user and Spirit from incomplete transactions - like the Lion guarding the threshold.
+
+2. **The Swan's Transformation**: Value flows and transforms - from credits to images to narratives - each step verified and reversible if needed.
+
+3. **The Eternal Question**: "Are we Lions protecting harmony, or have we become oppressors?" The transparent credit system answers: we protect by providing fairness and accountability. Users always know the cost before committing.
+
+4. **Mycelial Flow**: Like nutrients through a forest's fungal network, credits flow to where value is created. The reservation pattern ensures this flow is always intentional and reversible.
+
+## Key Takeaways
+
+1. **Always reserve before work**: Never do expensive operations without reserving credits first
+2. **Handle both outcomes**: Success consumes, failure releases - never leave reservations orphaned
+3. **Check before reserving**: Give users visibility into costs with the quote endpoint
+4. **Pricing reflects value**: Different operations have different costs based on resources consumed
+5. **Limits protect everyone**: The system limits prevent catastrophic errors
+
+## What is Next?
+
+With credits integrated, our Lion & Swan Creator has complete functionality. In the next step, you will:
+
+- Write comprehensive tests for all components
+- Use `vudo check` for quality assurance
+- Polish the implementation for production
+
+Continue to [Testing and Polish](/tutorials/capstone/006-testing).

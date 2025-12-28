@@ -1,0 +1,711 @@
+---
+title: "Testing and Polish"
+description: "Write comprehensive tests, use vudo check, and polish the implementation"
+track: "capstone"
+tutorial: 6
+duration: "45 min"
+level: "advanced"
+prerequisites:
+  - "Step 5: Credit Integration"
+concepts:
+  - "Unit testing"
+  - "Integration testing"
+  - "Quality assurance"
+  - "Mock systems"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+
+# Testing and Polish
+
+A Spirit is only as good as its test coverage. Before publishing to the Imaginarium, we need to ensure our Lion & Swan Creator is robust, well-tested, and polished.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Write comprehensive unit and integration tests
+- Use mocking systems effectively
+- Run quality checks with `vudo check`
+- Polish error messages and edge cases
+
+## Testing Architecture
+
+The Spirit testing pyramid:
+
+```
+                    /\
+                   /  \
+                  / E2E \        <- Full system tests (few)
+                 /------\
+                /        \
+               /Integration\     <- Module interaction tests (some)
+              /--------------\
+             /                \
+            /    Unit Tests    \  <- Individual functions (many)
+           /--------------------\
+```
+
+## Unit Tests
+
+Create `tests/unit.rs` for testing individual components:
+
+```rust
+// tests/unit.rs
+
+use lion_swan_creator::ontology::*;
+use lion_swan_creator::prompts::*;
+use lion_swan_creator::narrative::{NarrativeGenerator, TemplateContext};
+use lion_swan_creator::credits::{CreditManager, Pricing};
+
+mod ontology_tests {
+    use super::*;
+
+    #[test]
+    fn test_lion_defaults() {
+        let lion = Lion::default();
+
+        assert_eq!(lion.base.color, "obsidian");
+        assert_eq!(lion.base.meaning, "guardian");
+        assert_eq!(lion.allegiance, "keeper");
+        assert_eq!(lion.base.power_level, 50);
+    }
+
+    #[test]
+    fn test_swan_defaults() {
+        let swan = Swan::default();
+
+        assert_eq!(swan.base.color, "pearl");
+        assert_eq!(swan.base.meaning, "transformation");
+        assert_eq!(swan.allegiance, "variable");
+    }
+
+    #[test]
+    fn test_archetype_parsing() {
+        assert_eq!(ArchetypeKind::from_str("lion"), Some(ArchetypeKind::Lion));
+        assert_eq!(ArchetypeKind::from_str("LION"), Some(ArchetypeKind::Lion));
+        assert_eq!(ArchetypeKind::from_str("swan"), Some(ArchetypeKind::Swan));
+        assert_eq!(ArchetypeKind::from_str("dragon"), None);
+    }
+
+    #[test]
+    fn test_scene_type_str() {
+        assert_eq!(SceneType::Confrontation.as_str(), "confrontation");
+        assert_eq!(SceneType::Interrogation.as_str(), "interrogation");
+        assert_eq!(SceneType::Transformation.as_str(), "transformation");
+        assert_eq!(SceneType::Revelation.as_str(), "revelation");
+    }
+}
+
+mod prompt_tests {
+    use super::*;
+
+    #[test]
+    fn test_lion_prompts_contain_key_elements() {
+        let prompt = get_lion_prompt(SceneType::Confrontation);
+
+        assert!(prompt.contains("lion") || prompt.contains("Lion"));
+        assert!(prompt.contains("obsidian"));
+        assert!(prompt.contains("guardian") || prompt.contains("protective"));
+    }
+
+    #[test]
+    fn test_swan_prompts_contain_key_elements() {
+        let prompt = get_swan_prompt(SceneType::Transformation);
+
+        assert!(prompt.contains("swan") || prompt.contains("Swan"));
+        assert!(prompt.contains("pearl") || prompt.contains("white"));
+        assert!(prompt.contains("transform") || prompt.contains("change"));
+    }
+
+    #[test]
+    fn test_all_scene_types_produce_unique_prompts() {
+        let scenes = vec![
+            SceneType::Confrontation,
+            SceneType::Interrogation,
+            SceneType::Transformation,
+            SceneType::Revelation,
+        ];
+
+        let prompts: Vec<String> = scenes
+            .iter()
+            .map(|s| get_lion_prompt(*s))
+            .collect();
+
+        // All prompts should be unique
+        for (i, p1) in prompts.iter().enumerate() {
+            for (j, p2) in prompts.iter().enumerate() {
+                if i != j {
+                    assert_ne!(p1, p2, "Prompts for different scenes should differ");
+                }
+            }
+        }
+    }
+}
+
+mod narrative_tests {
+    use super::*;
+
+    #[test]
+    fn test_template_rendering() {
+        let context = TemplateContext {
+            epoch: "Fourth".to_string(),
+            threat: "the Digital Void".to_string(),
+            pride_name: "Shadow Keepers".to_string(),
+            ..Default::default()
+        };
+
+        let generator = NarrativeGenerator::new();
+        // Note: In actual test, we'd mock the generator or test render_template directly
+    }
+
+    #[test]
+    fn test_default_context() {
+        let context = TemplateContext::default();
+
+        assert!(!context.epoch.is_empty());
+        assert!(!context.threat.is_empty());
+        assert!(!context.pride_name.is_empty());
+    }
+}
+
+mod credit_tests {
+    use super::*;
+
+    #[test]
+    fn test_pricing_defaults() {
+        let pricing = Pricing::default();
+
+        assert_eq!(pricing.image_generation, 100);
+        assert_eq!(pricing.narrative_template, 25);
+        assert_eq!(pricing.narrative_ai, 75);
+        assert_eq!(pricing.combined_artifact, 150);
+    }
+
+    #[test]
+    fn test_cost_calculation_image_only() {
+        let manager = CreditManager::new();
+
+        let cost = manager.calculate_cost(true, false, false);
+        assert_eq!(cost, 100);
+    }
+
+    #[test]
+    fn test_cost_calculation_narrative_only() {
+        let manager = CreditManager::new();
+
+        let template_cost = manager.calculate_cost(false, true, false);
+        assert_eq!(template_cost, 25);
+
+        let ai_cost = manager.calculate_cost(false, true, true);
+        assert_eq!(ai_cost, 75);
+    }
+
+    #[test]
+    fn test_cost_calculation_combined() {
+        let manager = CreditManager::new();
+
+        // Combined should use the combined price, not sum
+        let cost = manager.calculate_cost(true, true, false);
+        assert_eq!(cost, 150);
+    }
+
+    #[test]
+    fn test_custom_pricing() {
+        let custom = Pricing {
+            image_generation: 200,
+            narrative_template: 50,
+            narrative_ai: 150,
+            combined_artifact: 300,
+        };
+
+        let manager = CreditManager::with_pricing(custom);
+
+        assert_eq!(manager.calculate_cost(true, false, false), 200);
+        assert_eq!(manager.calculate_cost(true, true, false), 300);
+    }
+}
+```
+
+## Integration Tests
+
+Expand `tests/integration.rs` with comprehensive tests:
+
+```rust
+// tests/integration.rs
+
+use vudo_spirit_test::{mock, TestContext};
+use lion_swan_creator::*;
+
+/// Set up common mocks for integration tests
+fn setup_mocks() {
+    mock::credits::set_balance(1000);
+    mock::random::seed(42);
+    mock::time::set_now(1703721600);
+
+    // Default successful API response
+    mock::network::expect_request()
+        .with_url_containing("openai.com")
+        .returning(|req| {
+            if req.url.contains("images") {
+                mock::network::response(200, r#"{
+                    "data": [{"url": "https://cdn.example.com/generated.png"}]
+                }"#)
+            } else {
+                mock::network::response(200, r#"{
+                    "choices": [{"message": {"content": "AI generated narrative..."}}]
+                }"#)
+            }
+        });
+}
+
+mod happy_path_tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_lion_image_only() {
+        setup_mocks();
+
+        let input = GenerateInput {
+            archetype: "lion".to_string(),
+            scene_type: Some("confrontation".to_string()),
+            include_narrative: false,
+            context: None,
+        };
+
+        let result = generate(input).unwrap();
+
+        assert!(result.image_url.contains("generated.png"));
+        assert!(result.narrative_text.is_none());
+        assert_eq!(result.archetype, "lion");
+        assert_eq!(result.credits_charged, 100);
+    }
+
+    #[test]
+    fn test_generate_swan_with_narrative() {
+        setup_mocks();
+
+        let input = GenerateInput {
+            archetype: "swan".to_string(),
+            scene_type: Some("transformation".to_string()),
+            include_narrative: true,
+            context: None,
+        };
+
+        let result = generate(input).unwrap();
+
+        assert!(result.image_url.contains("generated.png"));
+        assert!(result.narrative_text.is_some());
+        assert!(result.narrative_text.unwrap().contains("Swan"));
+        assert_eq!(result.credits_charged, 150);
+    }
+
+    #[test]
+    fn test_all_scene_types() {
+        setup_mocks();
+
+        let scenes = vec!["confrontation", "interrogation", "transformation", "revelation"];
+
+        for scene in scenes {
+            let input = GenerateInput {
+                archetype: "lion".to_string(),
+                scene_type: Some(scene.to_string()),
+                include_narrative: true,
+                context: None,
+            };
+
+            let result = generate(input);
+            assert!(result.is_ok(), "Failed for scene: {}", scene);
+        }
+    }
+}
+
+mod error_handling_tests {
+    use super::*;
+
+    #[test]
+    fn test_invalid_archetype_error() {
+        setup_mocks();
+
+        let input = GenerateInput {
+            archetype: "phoenix".to_string(),
+            scene_type: None,
+            include_narrative: false,
+            context: None,
+        };
+
+        let result = generate(input);
+
+        assert!(matches!(
+            result,
+            Err(LionSwanError::InvalidArchetype(s)) if s == "phoenix"
+        ));
+    }
+
+    #[test]
+    fn test_insufficient_credits_error() {
+        mock::credits::set_balance(50);
+
+        let input = GenerateInput {
+            archetype: "lion".to_string(),
+            scene_type: None,
+            include_narrative: false,
+            context: None,
+        };
+
+        let result = generate(input);
+
+        assert!(matches!(
+            result,
+            Err(LionSwanError::InsufficientCredits { needed: 100, available: 50 })
+        ));
+    }
+
+    #[test]
+    fn test_network_error_releases_credits() {
+        mock::credits::set_balance(500);
+        mock::network::expect_request()
+            .returning(|_| mock::network::response(503, "Service unavailable"));
+
+        let input = GenerateInput {
+            archetype: "lion".to_string(),
+            scene_type: None,
+            include_narrative: false,
+            context: None,
+        };
+
+        let result = generate(input);
+
+        assert!(result.is_err());
+        // Credits should be restored
+        assert_eq!(mock::credits::get_balance(), 500);
+    }
+
+    #[test]
+    fn test_invalid_api_response() {
+        setup_mocks();
+        mock::network::expect_request()
+            .with_url_containing("images")
+            .returning(|_| mock::network::response(200, r#"{"invalid": "response"}"#));
+
+        let input = GenerateInput {
+            archetype: "lion".to_string(),
+            scene_type: None,
+            include_narrative: false,
+            context: None,
+        };
+
+        let result = generate(input);
+        assert!(result.is_err());
+    }
+}
+
+mod edge_cases {
+    use super::*;
+
+    #[test]
+    fn test_case_insensitive_archetype() {
+        setup_mocks();
+
+        for variant in ["lion", "LION", "Lion", "LiOn"] {
+            let input = GenerateInput {
+                archetype: variant.to_string(),
+                scene_type: None,
+                include_narrative: false,
+                context: None,
+            };
+
+            let result = generate(input);
+            assert!(result.is_ok(), "Failed for variant: {}", variant);
+        }
+    }
+
+    #[test]
+    fn test_unknown_scene_type_defaults_to_revelation() {
+        setup_mocks();
+
+        let input = GenerateInput {
+            archetype: "lion".to_string(),
+            scene_type: Some("unknown_scene".to_string()),
+            include_narrative: true,
+            context: None,
+        };
+
+        let result = generate(input).unwrap();
+
+        // Should still work, defaulting to revelation
+        assert!(result.narrative_text.is_some());
+    }
+
+    #[test]
+    fn test_empty_scene_type() {
+        setup_mocks();
+
+        let input = GenerateInput {
+            archetype: "swan".to_string(),
+            scene_type: Some("".to_string()),
+            include_narrative: false,
+            context: None,
+        };
+
+        let result = generate(input);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_custom_context_applied() {
+        setup_mocks();
+
+        let input = GenerateInput {
+            archetype: "lion".to_string(),
+            scene_type: Some("revelation".to_string()),
+            include_narrative: true,
+            context: Some(TemplateContext {
+                epoch: "Seventh".to_string(),
+                threat: "the Quantum Collapse".to_string(),
+                ..Default::default()
+            }),
+        };
+
+        let result = generate(input).unwrap();
+
+        let narrative = result.narrative_text.unwrap();
+        assert!(narrative.contains("Seventh") || narrative.contains("Quantum"));
+    }
+
+    #[test]
+    fn test_zero_credits_exact() {
+        mock::credits::set_balance(100); // Exactly enough for image only
+
+        mock::network::expect_request()
+            .returning(|_| mock::network::response(200, r#"{
+                "data": [{"url": "test.png"}]
+            }"#));
+
+        let input = GenerateInput {
+            archetype: "lion".to_string(),
+            scene_type: None,
+            include_narrative: false,
+            context: None,
+        };
+
+        let result = generate(input);
+        assert!(result.is_ok());
+        assert_eq!(mock::credits::get_balance(), 0);
+    }
+}
+```
+
+## Running the Tests
+
+Execute all tests:
+
+```bash
+# Run all tests
+vudo test
+
+# Expected output:
+# Running unit tests...
+#   ontology_tests::test_lion_defaults ... ok
+#   ontology_tests::test_swan_defaults ... ok
+#   ontology_tests::test_archetype_parsing ... ok
+#   ...
+#
+# Running integration tests...
+#   happy_path_tests::test_generate_lion_image_only ... ok
+#   happy_path_tests::test_generate_swan_with_narrative ... ok
+#   ...
+#
+# 24 tests passed, 0 failed
+```
+
+Run with coverage:
+
+```bash
+vudo test --coverage
+
+# Expected output:
+# Coverage Report:
+#   src/lib.rs          92.3%
+#   src/ontology.rs     100.0%
+#   src/image_gen.rs    87.5%
+#   src/narrative.rs    95.0%
+#   src/credits.rs      98.2%
+#
+# Overall: 94.6%
+```
+
+## Quality Checks with vudo check
+
+Run comprehensive quality checks:
+
+```bash
+vudo check
+
+# Expected output:
+# Checking lion-swan-creator...
+#
+# [Manifest]
+#   Name: lion-swan-creator
+#   Version: 0.1.0
+#   Capabilities: 6 requested
+#   Status: PASS
+#
+# [DOL Specification]
+#   File: lion_swan.dol
+#   Types: 5 defined
+#   Traits: 1 defined
+#   Constraints: 2 defined
+#   Status: PASS
+#
+# [Build]
+#   Target: wasm32-unknown-unknown
+#   Size: 47.3 KB
+#   Entry point: generate
+#   Exports: 2 functions
+#   Status: PASS
+#
+# [Security]
+#   Capability scope: MINIMAL
+#   No unsafe operations detected
+#   API key handling: SECURE
+#   Status: PASS
+#
+# [Tests]
+#   Unit tests: 12 passed
+#   Integration tests: 12 passed
+#   Coverage: 94.6%
+#   Status: PASS
+#
+# All checks passed!
+```
+
+<Callout type="info" title="Check Flags">
+Use `vudo check --strict` for production-ready validation, which requires 80%+ coverage and zero warnings.
+</Callout>
+
+## Polishing Error Messages
+
+Improve error messages for better user experience:
+
+```rust
+// Update error types in src/lib.rs
+
+#[derive(Error, Debug)]
+pub enum LionSwanError {
+    #[error("Unknown archetype '{0}'. Valid archetypes are: lion, swan")]
+    InvalidArchetype(String),
+
+    #[error("Image generation failed: {0}. Please try again or check your API configuration.")]
+    ImageGeneration(String),
+
+    #[error("Narrative generation failed: {0}")]
+    NarrativeGeneration(String),
+
+    #[error("Insufficient credits: you need {needed} credits but only have {available}. Use the quote() function to check prices before generating.")]
+    InsufficientCredits { needed: u64, available: u64 },
+
+    #[error("Network error: {0}. Check your connection and API key configuration.")]
+    Network(String),
+
+    #[error("Storage error: {0}")]
+    Storage(String),
+}
+```
+
+## Adding Documentation
+
+Add rustdoc comments to all public items:
+
+```rust
+/// Generate mythological content from the Lion & Swan mythology.
+///
+/// # Arguments
+///
+/// * `input` - The generation parameters including archetype and options
+///
+/// # Returns
+///
+/// A `GenerateOutput` containing the image URL, optional narrative text,
+/// and credit information.
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - The archetype is invalid (not "lion" or "swan")
+/// - Insufficient credits are available
+/// - Image or narrative generation fails
+///
+/// # Example
+///
+/// ```
+/// let input = GenerateInput {
+///     archetype: "lion".to_string(),
+///     scene_type: Some("revelation".to_string()),
+///     include_narrative: true,
+///     context: None,
+/// };
+///
+/// let output = generate(input)?;
+/// println!("Generated image: {}", output.image_url);
+/// ```
+#[vudo_spirit::main]
+pub fn generate(input: GenerateInput) -> Result<GenerateOutput, LionSwanError> {
+    // ... implementation
+}
+```
+
+## Final Build Verification
+
+Do a final production build:
+
+```bash
+# Production build with all optimizations
+vudo build --release
+
+# Verify the output
+vudo info target/spirit/lion-swan-creator.spirit
+
+# Expected output:
+# Spirit: lion-swan-creator v0.1.0
+#
+# Metadata:
+#   Author: Your Name
+#   License: MIT
+#   Category: creative
+#   Tags: ai, image-generation, mythology, lion-swan, narrative
+#
+# Capabilities:
+#   network.http: *.openai.com, *.stability.ai, *.replicate.com
+#   storage: read, write (namespace: lion-swan, max: 50MB)
+#   time: now
+#   logging: info
+#   random: enabled
+#   credits: balance, reserve, transfer
+#
+# Entry Points:
+#   generate (main)
+#   quote
+#
+# Size: 47.3 KB (optimized)
+# Checksum: sha256:a1b2c3d4...
+```
+
+## Key Takeaways
+
+1. **Test pyramid**: Many unit tests, some integration tests, few E2E tests
+2. **Mock everything external**: Network, credits, random, time
+3. **Test error paths**: Ensure errors are handled gracefully
+4. **Edge cases matter**: Test boundaries and unusual inputs
+5. **Documentation is testing**: Good docs prevent misuse
+
+## What is Next?
+
+With a well-tested, polished Spirit, you are ready for the final step: publishing to the Imaginarium. In the next step, you will:
+
+- Package your Spirit
+- Sign it for authenticity
+- Publish to the Imaginarium
+
+Continue to [Sign and Publish](/tutorials/capstone/007-publish).

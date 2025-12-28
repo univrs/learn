@@ -1,0 +1,291 @@
+---
+title: "Defining Genes"
+description: "Learn to define types with pub type, structured fields, enums, and module declarations"
+track: "dol-syntax"
+tutorial: 1
+duration: "20 min"
+objectives:
+  - "Understand the module declaration syntax"
+  - "Define types using pub type"
+  - "Create enum variants for state modeling"
+  - "Structure complex nested types"
+tags:
+  - "genes"
+  - "types"
+  - "enums"
+  - "modules"
+  - "fundamentals"
+---
+
+# Defining Genes
+
+In DOL, **genes** are the fundamental building blocks of your ontology. A gene is a type definition that describes the structure of a concept in your domain. In v0.3.0, genes are defined using the `pub type` syntax.
+
+## Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+- Declare modules with versioning
+- Define public types with structured fields
+- Create enums for state representation
+- Compose complex types from simpler ones
+
+## Module Declaration
+
+Every DOL file begins with a module declaration that establishes namespace and version:
+
+```dol
+mod container.runtime @ 0.3.0
+```
+
+This declares:
+- **Namespace**: `container.runtime` - a hierarchical path
+- **Version**: `0.3.0` - semantic versioning
+
+<Tip type="info">
+Module names use dot notation for hierarchy. Version numbers follow semantic versioning (MAJOR.MINOR.PATCH).
+</Tip>
+
+## Basic Type Definition
+
+Types are defined with the `pub type` keyword followed by the type name and its fields:
+
+```dol
+mod container.runtime @ 0.3.0
+
+pub type Container {
+    id: UInt64
+    name: String
+    image: String
+    created_at: Timestamp
+    labels: Map<String, String>
+}
+```
+
+Each field has:
+- **Name**: The field identifier (snake_case convention)
+- **Type**: A built-in or custom type
+
+### Built-in Types
+
+DOL provides these primitive types:
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `String` | Text data | `"hello"` |
+| `UInt64` | Unsigned 64-bit integer | `42` |
+| `Int64` | Signed 64-bit integer | `-17` |
+| `Float64` | 64-bit floating point | `3.14` |
+| `Bool` | Boolean value | `true` |
+| `Timestamp` | Date and time | `Timestamp.now()` |
+
+### Collection Types
+
+DOL supports generic collection types:
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `List<T>` | Ordered collection | `List<String>` |
+| `Map<K, V>` | Key-value mapping | `Map<String, String>` |
+| `Set<T>` | Unique values | `Set<UInt64>` |
+| `Option<T>` | Optional value | `Option<String>` |
+
+## Defining Enums
+
+Enums model discrete states or variants. They can be simple or carry associated data:
+
+```dol
+mod container.runtime @ 0.3.0
+
+pub type ContainerStatus {
+    kind: enum {
+        Created,
+        Running,
+        Paused,
+        Stopped,
+        Failed { reason: String }
+    }
+}
+```
+
+This defines:
+- **Simple variants**: `Created`, `Running`, `Paused`, `Stopped`
+- **Data variant**: `Failed` carries a `reason` string
+
+<Tip type="success">
+Use enums to model finite states. The `Failed` variant with associated data is a pattern for capturing error context.
+</Tip>
+
+## Complete Container Example
+
+Here is a complete module defining container-related types:
+
+```dol
+mod container.runtime @ 0.3.0
+
+pub type ContainerStatus {
+    kind: enum {
+        Created,
+        Running,
+        Paused,
+        Stopped,
+        Failed { reason: String }
+    }
+}
+
+pub type Container {
+    id: UInt64
+    name: String
+    image: String
+    status: ContainerStatus
+    created_at: Timestamp
+    labels: Map<String, String>
+}
+
+pub type ContainerConfig {
+    image: String
+    command: List<String>
+    env: Map<String, String>
+    ports: List<PortMapping>
+    volumes: List<VolumeMount>
+}
+
+pub type PortMapping {
+    container_port: UInt64
+    host_port: UInt64
+    protocol: String
+}
+
+pub type VolumeMount {
+    source: String
+    target: String
+    read_only: Bool
+}
+```
+
+Notice how:
+- Types reference other types (`Container` has `ContainerStatus`)
+- Collections use generics (`List<PortMapping>`)
+- Each type is self-contained and reusable
+
+## Immutable and Mutable Values
+
+DOL v0.3.0 introduces `val` and `var` for bindings:
+
+```dol
+mod config @ 0.3.0
+
+-- Immutable: cannot be changed after initialization
+val MAX_CONTAINERS: UInt64 = 100
+val DEFAULT_IMAGE: String = "alpine:latest"
+
+-- Mutable: can be reassigned
+var active_count: UInt64 = 0
+```
+
+<Tip type="warning">
+Prefer `val` over `var` for most cases. Immutability makes specifications easier to reason about and validate.
+</Tip>
+
+## Type Composition
+
+Types can be composed to model complex domains:
+
+```dol
+mod ecommerce @ 0.3.0
+
+pub type Address {
+    street: String
+    city: String
+    postal_code: String
+    country: String
+}
+
+pub type Customer {
+    id: UInt64
+    name: String
+    email: String
+    shipping_address: Address
+    billing_address: Option<Address>
+}
+
+pub type OrderItem {
+    product_id: UInt64
+    quantity: UInt64
+    unit_price: Float64
+}
+
+pub type Order {
+    id: UInt64
+    customer: Customer
+    items: List<OrderItem>
+    total: Float64
+    status: OrderStatus
+}
+
+pub type OrderStatus {
+    kind: enum {
+        Pending,
+        Confirmed,
+        Shipped { tracking_number: String },
+        Delivered { delivered_at: Timestamp },
+        Cancelled { reason: String }
+    }
+}
+```
+
+## Practice Exercise
+
+Define a `Library` module with types for:
+1. `Book` - with title, author, ISBN, and publication year
+2. `Member` - with ID, name, email, and membership date
+3. `Loan` - connecting a book to a member with due date
+
+<Collapsible title="Solution">
+```dol
+mod library @ 0.3.0
+
+pub type Book {
+    isbn: String
+    title: String
+    author: String
+    publication_year: UInt64
+    available: Bool
+}
+
+pub type Member {
+    id: UInt64
+    name: String
+    email: String
+    membership_date: Timestamp
+    active: Bool
+}
+
+pub type Loan {
+    id: UInt64
+    book_isbn: String
+    member_id: UInt64
+    borrowed_at: Timestamp
+    due_date: Timestamp
+    returned_at: Option<Timestamp>
+}
+```
+</Collapsible>
+
+## Summary
+
+In this lesson, you learned:
+
+- **Module declaration** with `mod name @ version`
+- **Type definition** with `pub type Name { fields }`
+- **Enums** for modeling discrete states with optional data
+- **Value bindings** with `val` (immutable) and `var` (mutable)
+- **Type composition** to build complex domain models
+
+## Next Steps
+
+<NextTutorial
+  title="Defining Traits"
+  href="/tutorials/dol-syntax/002-traits"
+  description="Learn to create reusable behavior contracts with trait definitions"
+/>

@@ -1,0 +1,445 @@
+---
+title: "Version Evolution"
+description: "Manage type changes across versions with evolves declarations and migration strategies"
+track: "dol-syntax"
+tutorial: 5
+duration: "20 min"
+objectives:
+  - "Understand version evolution concepts"
+  - "Use evolves declarations for type migration"
+  - "Specify field additions, removals, and transformations"
+  - "Apply backward compatibility strategies"
+tags:
+  - "evolution"
+  - "versioning"
+  - "migration"
+  - "compatibility"
+---
+
+# Version Evolution
+
+Real-world specifications change over time. DOL's `evolves` keyword provides a declarative way to specify **how types change between versions**, enabling automatic migration and backward compatibility checks.
+
+## Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+- Understand version evolution concepts
+- Write `evolves` declarations for type migration
+- Specify field additions, removals, and transformations
+- Apply backward compatibility strategies
+
+## The Evolution Problem
+
+As systems grow, types need to change:
+
+```dol
+-- Version 1.0.0
+pub type User {
+    id: UInt64
+    name: String
+    email: String
+}
+
+-- Version 2.0.0 needs more fields!
+pub type User {
+    id: UInt64
+    name: String
+    email: String
+    avatar_url: Option<String>     -- New!
+    created_at: Timestamp          -- New!
+    settings: UserSettings         -- New!
+}
+```
+
+Without explicit evolution, consumers of your spec don't know:
+- What changed?
+- How do old records migrate?
+- Is it backward compatible?
+
+## The evolves Declaration
+
+The `evolves` keyword declares how a type changes:
+
+```dol
+evolves UserV1 > UserV2 @ 2.0.0 {
+    + avatar_url: Option<String> = None
+    + created_at: Timestamp = Timestamp.now()
+    + settings: UserSettings = UserSettings.default()
+}
+```
+
+This declares:
+- **Source**: `UserV1` - the previous version
+- **Target**: `UserV2` - the new version
+- **Version**: `@ 2.0.0` - when this evolution applies
+- **Changes**: Field additions with default values
+
+<Tip type="info">
+The `evolves` declaration serves as both documentation and migration specification. Tools can use it to auto-generate migration code.
+</Tip>
+
+## Evolution Operators
+
+DOL provides operators for different changes:
+
+### Adding Fields (+)
+
+Add new fields with default values:
+
+```dol
+evolves ProductV1 > ProductV2 @ 1.1.0 {
+    + description: String = ""
+    + tags: List<String> = []
+    + rating: Option<Float64> = None
+    + is_active: Bool = true
+}
+```
+
+### Removing Fields (-)
+
+Remove deprecated fields:
+
+```dol
+evolves ProductV2 > ProductV3 @ 2.0.0 {
+    - legacy_code: String
+    - old_category_id: UInt64
+}
+```
+
+<Tip type="warning">
+Removing fields is a breaking change. The `-` operator documents this but doesn't make it backward compatible.
+</Tip>
+
+### Renaming Fields (~)
+
+Rename fields while preserving data:
+
+```dol
+evolves CustomerV1 > CustomerV2 @ 1.2.0 {
+    ~ full_name -> name
+    ~ phone_number -> phone
+    ~ mailing_address -> address
+}
+```
+
+### Transforming Fields (=>)
+
+Transform field values during migration:
+
+```dol
+evolves OrderV1 > OrderV2 @ 2.0.0 {
+    -- Split name into first/last
+    => name: String to (first_name: String, last_name: String) {
+        split_name(name)
+    }
+
+    -- Convert cents to decimal
+    => price_cents: UInt64 to price: Decimal {
+        Decimal.from_cents(price_cents)
+    }
+}
+```
+
+## Complete Evolution Example
+
+Here is a comprehensive user type evolution:
+
+```dol
+mod users @ 0.3.0
+
+-- Original type (v1.0.0)
+pub type UserV1 {
+    id: UInt64
+    name: String
+    email: String
+}
+
+-- Version 1.1.0: Add optional profile fields
+pub type UserV1_1 {
+    id: UInt64
+    name: String
+    email: String
+    avatar_url: Option<String>
+    bio: Option<String>
+}
+
+evolves UserV1 > UserV1_1 @ 1.1.0 {
+    + avatar_url: Option<String> = None
+    + bio: Option<String> = None
+}
+
+-- Version 2.0.0: Add authentication and settings
+pub type UserV2 {
+    id: UInt64
+    name: String
+    email: String
+    avatar_url: Option<String>
+    bio: Option<String>
+    created_at: Timestamp
+    settings: UserSettings
+    auth_provider: AuthProvider
+}
+
+evolves UserV1_1 > UserV2 @ 2.0.0 {
+    + created_at: Timestamp = Timestamp.now()
+    + settings: UserSettings = UserSettings.default()
+    + auth_provider: AuthProvider = AuthProvider.Email
+}
+
+-- Supporting types
+pub type UserSettings {
+    theme: Theme
+    notifications_enabled: Bool
+    email_frequency: EmailFrequency
+}
+
+pub type Theme {
+    kind: enum { Light, Dark, System }
+}
+
+pub type EmailFrequency {
+    kind: enum { Immediate, Daily, Weekly, Never }
+}
+
+pub type AuthProvider {
+    kind: enum { Email, Google, GitHub, Apple }
+}
+```
+
+## Multi-Step Evolution
+
+Track evolution across multiple versions:
+
+```dol
+mod products @ 0.3.0
+
+-- Evolution chain: V1 -> V2 -> V3 -> V4
+
+evolves ProductV1 > ProductV2 @ 1.1.0 {
+    + description: String = ""
+    + tags: List<String> = []
+}
+
+evolves ProductV2 > ProductV3 @ 2.0.0 {
+    + category: Category = Category.Uncategorized
+    - legacy_sku: String  -- Removed deprecated field
+    ~ product_name -> name  -- Renamed for consistency
+}
+
+evolves ProductV3 > ProductV4 @ 3.0.0 {
+    + variants: List<ProductVariant> = []
+    + inventory: InventoryInfo = InventoryInfo.default()
+    => price: Float64 to pricing: PricingInfo {
+        PricingInfo { base_price: price, currency: "USD" }
+    }
+}
+```
+
+## Backward Compatibility Rules
+
+Evolution can be classified by compatibility:
+
+### Fully Backward Compatible
+
+- Adding optional fields with defaults
+- Adding new enum variants (if consumers handle unknown)
+
+```dol
+evolves ConfigV1 > ConfigV2 @ 1.1.0 {
+    -- Safe: optional with default
+    + new_feature_enabled: Bool = false
+    + cache_ttl: Option<UInt64> = None
+}
+```
+
+### Requires Migration
+
+- Adding required fields
+- Changing field types
+- Renaming fields
+
+```dol
+evolves DataV1 > DataV2 @ 2.0.0 {
+    -- Requires migration: new required field
+    + required_field: String = compute_default()
+
+    -- Requires migration: type change
+    => old_int: Int32 to new_int: Int64 { old_int.to_int64() }
+}
+```
+
+### Breaking Changes
+
+- Removing fields
+- Removing enum variants
+- Changing field semantics
+
+```dol
+evolves ApiV1 > ApiV2 @ 2.0.0 {
+    -- Breaking: field removed
+    - deprecated_field: String
+
+    -- Breaking: enum variant removed
+    -- (document separately)
+}
+```
+
+## Evolution Constraints
+
+Add constraints to evolution:
+
+```dol
+evolves OrderV1 > OrderV2 @ 2.0.0 {
+    + shipping_address: Address = Address.empty()
+    + billing_address: Option<Address> = None
+
+    constraint PostMigration {
+        forall order in orders {
+            -- After migration, ensure valid state
+            order.status == "completed" implies order.shipping_address.is_valid()
+        }
+    }
+}
+```
+
+## Version Metadata
+
+Include metadata with versions:
+
+```dol
+mod api @ 0.3.0
+
+version_history {
+    1.0.0: "Initial release"
+    1.1.0: "Added user profiles"
+    1.2.0: "Added activity tracking"
+    2.0.0: "Breaking: new authentication system"
+    2.1.0: "Added OAuth providers"
+    3.0.0: "Breaking: removed legacy endpoints"
+}
+
+deprecation_schedule {
+    1.x: deprecated @ 3.0.0, removed @ 4.0.0
+    2.0: deprecated @ 3.5.0, removed @ 5.0.0
+}
+```
+
+## Schema Registry Pattern
+
+For larger systems, track all evolutions:
+
+```dol
+mod schema.registry @ 0.3.0
+
+schema_registry {
+    User: [UserV1, UserV1_1, UserV2, UserV3]
+    Product: [ProductV1, ProductV2, ProductV3]
+    Order: [OrderV1, OrderV2]
+
+    current {
+        User: UserV3
+        Product: ProductV3
+        Order: OrderV2
+    }
+
+    migrations {
+        User: [
+            UserV1 > UserV1_1 @ 1.1.0,
+            UserV1_1 > UserV2 @ 2.0.0,
+            UserV2 > UserV3 @ 3.0.0
+        ]
+    }
+}
+```
+
+## Practice Exercise
+
+Define evolution for an `Article` type:
+1. V1: id, title, content, author_id
+2. V2: Add published_at (optional), tags (empty list), and slug (derived from title)
+3. V3: Add category (required with default), remove deprecated author_id, add author (full object)
+
+<Collapsible title="Solution">
+```dol
+mod blog.articles @ 0.3.0
+
+pub type ArticleV1 {
+    id: UInt64
+    title: String
+    content: String
+    author_id: UInt64
+}
+
+pub type ArticleV2 {
+    id: UInt64
+    title: String
+    content: String
+    author_id: UInt64
+    published_at: Option<Timestamp>
+    tags: List<String>
+    slug: String
+}
+
+evolves ArticleV1 > ArticleV2 @ 1.1.0 {
+    + published_at: Option<Timestamp> = None
+    + tags: List<String> = []
+    => title to (title, slug) {
+        (title, slugify(title))
+    }
+}
+
+pub type ArticleV3 {
+    id: UInt64
+    title: String
+    content: String
+    published_at: Option<Timestamp>
+    tags: List<String>
+    slug: String
+    category: Category
+    author: Author
+}
+
+pub type Author {
+    id: UInt64
+    name: String
+    email: String
+    avatar_url: Option<String>
+}
+
+pub type Category {
+    kind: enum {
+        Uncategorized,
+        Technology,
+        Science,
+        Business,
+        Lifestyle,
+        Opinion
+    }
+}
+
+evolves ArticleV2 > ArticleV3 @ 2.0.0 {
+    + category: Category = Category.Uncategorized
+    - author_id: UInt64
+    + author: Author = lookup_author(author_id)
+}
+```
+</Collapsible>
+
+## Summary
+
+In this lesson, you learned:
+
+- **Version evolution** concepts and why they matter
+- **evolves declarations** for explicit migration specs
+- **Evolution operators**: `+` add, `-` remove, `~` rename, `=>` transform
+- **Compatibility classification** for breaking vs non-breaking changes
+- **Multi-version evolution** chains and registry patterns
+
+## Next Steps
+
+<NextTutorial
+  title="Exegesis Documentation"
+  href="/tutorials/dol-syntax/006-exegesis"
+  description="Learn to write self-documenting specifications with structured comments"
+/>

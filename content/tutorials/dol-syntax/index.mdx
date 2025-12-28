@@ -1,0 +1,150 @@
+---
+title: "DOL Syntax Track"
+description: "Master the declarative syntax of DOL v0.3.0 through structured lessons on types, traits, systems, and more"
+track: "dol-syntax"
+order: 0
+duration: "2-3 hours total"
+prerequisites:
+  - "Basic programming concepts"
+  - "DOL environment setup (optional)"
+outcomes:
+  - "Define genes and types with proper structure"
+  - "Create reusable traits for shared behavior"
+  - "Model complete systems with components and connections"
+  - "Write constraints that enforce invariants"
+  - "Manage version evolution across specs"
+  - "Document specifications with exegesis"
+  - "Apply v0.3.0 new syntax features and HIR concepts"
+---
+
+# DOL Syntax Track
+
+Welcome to the DOL Syntax track. This track provides a comprehensive introduction to the Design Ontology Language v0.3.0 syntax, focusing on its declarative nature and specification-first approach.
+
+## What is DOL?
+
+DOL (Design Ontology Language) is a **declarative specification language** for defining system ontologies. Unlike imperative programming languages that describe *how* to do things, DOL describes *what* things are and *how they relate* to each other.
+
+```dol
+-- DOL is declarative: describe WHAT, not HOW
+mod example @ 0.3.0
+
+pub type User {
+    id: UInt64
+    name: String
+    email: String
+    created_at: Timestamp
+}
+```
+
+## Core Principles
+
+DOL follows three fundamental principles:
+
+1. **Specification First** - Define what should exist before implementing it
+2. **Declarative Over Imperative** - Describe structure and relationships, not procedures
+3. **Self-Documenting** - Every specification includes its own documentation
+
+## Track Overview
+
+<TutorialGrid>
+  <TutorialCard
+    number="01"
+    title="Defining Genes"
+    duration="20 min"
+    description="Learn type definitions with pub type, fields, and enums"
+    href="/tutorials/dol-syntax/001-genes"
+  />
+  <TutorialCard
+    number="02"
+    title="Defining Traits"
+    duration="20 min"
+    description="Create reusable behavior contracts with trait definitions"
+    href="/tutorials/dol-syntax/002-traits"
+  />
+  <TutorialCard
+    number="03"
+    title="Defining Systems"
+    duration="25 min"
+    description="Model complete systems with components and connections"
+    href="/tutorials/dol-syntax/003-systems"
+  />
+  <TutorialCard
+    number="04"
+    title="Defining Constraints"
+    duration="20 min"
+    description="Enforce invariants with forall quantifiers and validation rules"
+    href="/tutorials/dol-syntax/004-constraints"
+  />
+  <TutorialCard
+    number="05"
+    title="Version Evolution"
+    duration="20 min"
+    description="Manage type changes across versions with evolves declarations"
+    href="/tutorials/dol-syntax/005-evolution"
+  />
+  <TutorialCard
+    number="06"
+    title="Exegesis Documentation"
+    duration="15 min"
+    description="Write self-documenting specifications with structured comments"
+    href="/tutorials/dol-syntax/006-exegesis"
+  />
+  <TutorialCard
+    number="07"
+    title="v0.3.0 New Syntax"
+    duration="25 min"
+    description="Learn type keyword, extends, val/var bindings, and HIR architecture"
+    href="/tutorials/dol-syntax/007-v030-syntax"
+  />
+</TutorialGrid>
+
+## Prerequisites
+
+This track assumes:
+
+- Basic familiarity with programming concepts (types, functions)
+- No prior DOL experience required
+- Optional: DOL environment for hands-on practice
+
+## Learning Path
+
+```
+                         DOL Syntax Track
+
+    [01 Genes] --> [02 Traits] --> [03 Systems]
+                                        |
+                                        v
+[07 v0.3.0] <-- [06 Exegesis] <-- [05 Evolution] <-- [04 Constraints]
+```
+
+Each lesson builds on concepts from previous lessons. We recommend completing them in order, though experienced developers may skip ahead. Tutorial 07 covers the latest v0.3.0 syntax changes and the HIR architecture.
+
+## DOL v0.3.0 Syntax Overview
+
+This track covers the complete v0.3.0 syntax:
+
+| Keyword | Purpose | Example |
+|---------|---------|---------|
+| `mod` | Module declaration | `mod container.runtime @ 0.3.0` |
+| `pub type` | Public type definition | `pub type User { ... }` |
+| `trait` | Behavior contract | `trait Lifecycle { ... }` |
+| `system` | System architecture | `system OrderProcessing { ... }` |
+| `constraint` | Invariant rules | `constraint ValidOrder { ... }` |
+| `evolves` | Version migration | `evolves V1 > V2 @ 2.0.0 { ... }` |
+| `val` | Immutable binding | `val MAX_SIZE: UInt64 = 1000` |
+| `var` | Mutable binding | `var counter: UInt64 = 0` |
+| `forall` | Universal quantifier | `forall item in items { ... }` |
+| `extends` | Trait extension | `trait Admin extends User { ... }` |
+
+## Ready to Start?
+
+<CallToAction href="/tutorials/dol-syntax/001-genes">
+  Begin with Defining Genes
+</CallToAction>
+
+## Additional Resources
+
+- [DOL Language Reference](/dol/reference)
+- [Examples Gallery](/dol/examples)
+- [v0.3.0 Changelog](/dol/changelog)

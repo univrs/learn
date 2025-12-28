@@ -1,0 +1,677 @@
+---
+title: "v0.3.0 New Syntax"
+description: "New features in DOL v0.3.0: type keyword, extends clause, val/var bindings, inline exegesis, and HIR architecture"
+track: "dol-syntax"
+tutorial: 7
+duration: "25 min"
+objectives:
+  - "Use the new type keyword for type declarations"
+  - "Apply extends for inheritance relationships"
+  - "Work with val/var bindings for immutable and mutable values"
+  - "Write inline exegesis within type declarations"
+  - "Understand the HIR architecture and its benefits"
+tags:
+  - "v0.3.0"
+  - "type"
+  - "extends"
+  - "val"
+  - "var"
+  - "hir"
+  - "migration"
+---
+
+# v0.3.0 New Syntax Features
+
+DOL v0.3.0 introduces major improvements to syntax clarity and internal architecture. This lesson covers the new language features and explains why they were introduced.
+
+## Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+- Declare types using the new `type` keyword
+- Use `extends` for inheritance relationships
+- Apply `val` and `var` for value bindings
+- Write inline exegesis within declarations
+- Understand how HIR simplifies the language
+
+## What's New in v0.3.0
+
+DOL v0.3.0 focuses on **language cleanup** and the introduction of the **HIR (High-level Intermediate Representation)**:
+
+| Improvement | Before | After |
+|-------------|--------|-------|
+| Node Types | 50+ | 22 canonical |
+| Bindings | `let`/`let mut` | `val`/`var` |
+| Quantifier | `each`, `all`, `forall` | `forall` (unified) |
+| Inheritance | `derives from` | `extends` |
+| Module | `module` | `mod` |
+
+<Tip type="info">
+All deprecated syntax still works in v0.3.0 with deprecation warnings. You have time to migrate your codebase.
+</Tip>
+
+## The `type` Keyword
+
+While `gene` remains supported for ontological specifications, `type` is now the preferred keyword for type declarations:
+
+```dol
+mod container.runtime @ 0.3.0
+
+/// Container status enum
+pub type ContainerStatus {
+    kind: enum {
+        Created,
+        Running,
+        Paused,
+        Stopped,
+        Failed { reason: String }
+    }
+}
+
+/// A runtime container instance
+pub type Container {
+    id: UInt64
+    name: String
+    image: String
+    status: ContainerStatus
+    created_at: Timestamp
+    labels: Map<String, String>
+}
+```
+
+Compare with the equivalent `gene` syntax:
+
+```dol
+// Still works (for compatibility)
+pub gene Container {
+    has id: UInt64
+    has name: String
+    has status: Status
+}
+```
+
+<Tip type="success">
+Use `type` for new code. The `gene` keyword will continue to work indefinitely for Metal DOL ontological specifications where the biological metaphor is appropriate.
+</Tip>
+
+## The `extends` Clause
+
+Inheritance relationships now use the standard `extends` keyword instead of `derives from`:
+
+```dol
+// Before
+container derives from image
+
+// After
+container extends image
+
+// In type declarations
+pub type WebServer extends Server {
+    port: UInt16
+}
+```
+
+This applies to trait hierarchies as well:
+
+```dol
+mod stdlib.collections @ 0.1.0
+
+/// Base collection trait
+trait Collection<T> {
+    length: fun() -> UInt64
+    is_empty: fun() -> Bool = { self.length() == 0 }
+}
+
+/// Iterable collections
+trait Iterable<T> extends Collection<T> {
+    iter: fun() -> Iterator<T>
+
+    forall: fun(f: fun(T) -> Void) -> Void = {
+        var it = self.iter()
+        while let Some(item) = it.next() {
+            f(item)
+        }
+    }
+}
+
+/// Indexed access
+trait Indexed<T> extends Collection<T> {
+    get: fun(index: UInt64) -> Option<T>
+    get_unchecked: fun(index: UInt64) -> T
+
+    first: fun() -> Option<T> = { self.get(0) }
+    last: fun() -> Option<T> = {
+        if self.is_empty() { None }
+        else { self.get(self.length() - 1) }
+    }
+}
+
+/// Mutable collections
+trait MutableCollection<T> extends Collection<T> {
+    push: fun(item: T) -> Void
+    pop: fun() -> Option<T>
+    clear: fun() -> Void
+}
+```
+
+## Value Bindings: `val` and `var`
+
+DOL v0.3.0 introduces clear, symmetric naming for bindings:
+
+```dol
+// Immutable value (cannot be changed)
+val name = "DOL"
+val count = 42
+
+// Mutable variable (can be reassigned)
+var counter = 0
+counter = counter + 1
+```
+
+**Why the change?**
+- `val` = value (immutable)
+- `var` = variable (mutable)
+- Clear, symmetric naming that mirrors the concept
+
+### Complete Example with Bindings
+
+```dol
+mod examples.point @ 0.1.0
+
+/// A 2D point
+pub type Point2D {
+    x: Float64
+    y: Float64
+}
+
+/// Calculate distance between points
+fun distance(val a: Point2D, val b: Point2D) -> Float64 {
+    val dx = b.x - a.x
+    val dy = b.y - a.y
+    (dx * dx + dy * dy).sqrt()
+}
+```
+
+Notice how function parameters use `val` to indicate they are immutable within the function body.
+
+### Simulation Example
+
+Here is a more complete example showing `val` and `var` in a simulation context:
+
+```dol
+mod biology.mycelium @ 0.1.0
+
+/// Simulation configuration
+pub type SimConfig {
+    growth_probability: Float64
+    prune_threshold: Float64
+    nutrient_decay_rate: Float64
+    time_step: Duration
+    max_nodes: UInt32
+}
+
+/// Run one simulation step
+fun simulate_step(
+    var state: SimulationState,
+    val config: SimConfig
+) -> SimulationState {
+    // 1. Age all nodes
+    forall node in state.network.nodes {
+        node.age = node.age + config.time_step
+    }
+
+    // 2. Distribute nutrients
+    distribute_nutrients(state.network, config.nutrient_decay_rate)
+
+    // 3. Attempt growth
+    if state.rng.next_float() < config.growth_probability {
+        attempt_growth(state.network, config.max_nodes)
+    }
+
+    // 4. Prune weak connections
+    prune_connections(state.network, config.prune_threshold)
+
+    // 5. Update simulation state
+    state.time = state.time + config.time_step
+    state.step = state.step + 1
+
+    state
+}
+
+/// Run simulation for specified duration
+fun simulate(
+    val initial: MyceliumNetwork,
+    val config: SimConfig,
+    val duration: Duration
+) -> List<SimulationState> {
+    var state = SimulationState {
+        network: initial,
+        time: Duration.zero(),
+        step: 0,
+        rng: RandomState.new()
+    }
+
+    var history = []
+
+    while state.time < duration {
+        history.push(state.clone())
+        state = simulate_step(state, config)
+    }
+
+    history
+}
+```
+
+<Tip type="warning">
+Prefer `val` over `var` for most cases. Immutability makes specifications easier to reason about and validate.
+</Tip>
+
+## Unified Quantifier: `forall`
+
+Three keywords are unified into one for consistency:
+
+```dol
+// Before (three ways to say the same thing)
+each item in items { validate(item) }
+all items satisfy condition
+forall x: T. predicate(x)
+
+// After (one way)
+forall item in items { validate(item) }
+forall items satisfy condition
+forall x: T. predicate(x)
+```
+
+### Constraints with `forall`
+
+```dol
+mod ecommerce.orders @ 0.1.0
+
+/// Order validation constraint
+constraint ValidOrder {
+    forall order in orders {
+        order.items.length > 0
+        order.total == calculate_total(order.items)
+    }
+}
+
+/// Network topology constraints
+constraint TopologyRules {
+    forall node in network.nodes {
+        // Each node must have at least one connection
+        node.age > Duration.seconds(10) implies
+            node.connections.length > 0
+
+        // Maximum connection limit
+        node.connections.length <= 8
+    }
+}
+```
+
+## Inline Exegesis
+
+DOL v0.3.0 supports exegesis blocks inside gene/type declarations:
+
+```dol
+gene container.runtime {
+    container has id
+    container has name
+    container has status
+    container extends image
+}
+
+exegesis {
+    A runtime container instance.
+}
+```
+
+This produces documented Rust output:
+
+```rust
+// Generated from DOL HIR
+// Source: container.runtime
+
+/// A runtime container instance.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContainerRuntime {
+    pub id: String,
+    pub name: String,
+    pub status: String,
+}
+```
+
+### System-Level Exegesis
+
+Exegesis works at the system level too:
+
+```dol
+mod infrastructure.microservices @ 0.1.0
+
+/// Define a microservices system
+system OrderProcessing {
+    components {
+        api_gateway: ApiGateway
+        order_service: OrderService
+        inventory_service: InventoryService
+        payment_service: PaymentService
+        notification_service: NotificationService
+    }
+
+    connections {
+        api_gateway -> order_service: HTTP
+        order_service -> inventory_service: gRPC
+        order_service -> payment_service: gRPC
+        order_service -> notification_service: AMQP
+    }
+
+    constraints {
+        // All services must be healthy
+        forall service in components {
+            service.health_check() == Healthy
+        }
+
+        // Payment must respond within 5 seconds
+        payment_service.latency_p99 < Duration.seconds(5)
+    }
+}
+
+exegesis {
+    Order processing system with event-driven architecture.
+    The API gateway routes requests to the order service,
+    which coordinates with inventory, payment, and notifications.
+}
+```
+
+## HIR Architecture
+
+HIR (High-level Intermediate Representation) is a major architectural improvement that simplifies the language implementation:
+
+```
+DOL Source -> Parser -> AST -> Lowering -> HIR -> Codegen -> Rust
+```
+
+### Benefits
+
+1. **Simpler Codegen**: Only 22 node types to handle
+2. **Canonical Forms**: One representation per concept
+3. **Better Errors**: Cleaner error messages
+4. **Easier Extensions**: Add new surface syntax without changing codegen
+
+### Node Type Summary
+
+| Category | Count | Examples |
+|----------|-------|----------|
+| Declarations | 4 | Type, Trait, Function, Module |
+| Expressions | 12 | Literal, Call, If, Match, Lambda |
+| Statements | 6 | Val, Var, Assign, Return, Break |
+
+### HIR Statement Forms
+
+```dol
+// 6 statement forms (note val/var, not let/mut!):
+
+val x = 42              // Immutable binding
+var counter = 0         // Mutable binding
+counter = counter + 1   // Assignment
+process(data)           // Expression statement
+return result           // Return
+break                   // Break (with optional value)
+```
+
+### HIR Expression Forms
+
+```dol
+// 12 expression forms in HIR:
+
+// Atoms
+val x = 42                      // Literal
+val y = x                       // Var
+
+// Compound
+val sum = a + b                 // Binary
+val neg = -x                    // Unary
+val result = process(data)      // Call
+val len = list.length()         // MethodCall
+val name = user.name            // Field
+val first = items[0]            // Index
+
+// Control
+val value = { stmt1; stmt2; expr }  // Block
+val max = if a > b { a } else { b } // If
+val msg = match status {            // Match
+    Ok(v) => v,
+    Err(e) => "error"
+}
+
+// Functions
+val double = |x| x * 2          // Lambda
+```
+
+## Migration Guide
+
+### Automatic Migration
+
+Use the `dol-migrate` command to update your codebase:
+
+```bash
+# Migrate a directory
+dol migrate --from 0.2 --to 0.3 src/
+
+# Preview changes first
+dol migrate --from 0.2 --to 0.3 --dry-run src/
+```
+
+### Migration Rules
+
+| v0.2.x | v0.3.0 |
+|--------|--------|
+| `let x = 1` | `val x = 1` |
+| `let mut x = 1` | `var x = 1` |
+| `each x in xs` | `forall x in xs` |
+| `module foo` | `mod foo` |
+| `derives from x` | `extends x` |
+| `never valid` | `not valid` |
+
+### Deprecation Warnings
+
+In v0.3.0, deprecated syntax produces warnings:
+
+```
+warning: `let` is deprecated, use `val` instead
+  --> src/main.dol:5:1
+   |
+ 5 | let x = 42
+   | ^^^ deprecated
+   |
+   = help: replace with `val x = 42`
+```
+
+### Deprecation Timeline
+
+| Syntax | v0.3.0 | v0.4.0 | v1.0.0 |
+|--------|--------|--------|--------|
+| `let`/`mut` | Warning | Warning | Error |
+| `gene` | Works | Soft warn | Warning |
+| `each`/`all` | Warning | Error | Removed |
+| `module` | Warning | Error | Removed |
+| `derives from` | Warning | Error | Removed |
+
+## Complete Before/After Example
+
+### Before (v0.2.x)
+
+```dol
+module greeting.service @ 0.2.0
+
+gene greeting.entity {
+    entity has identity
+    entity has name: String
+    entity derives from template
+
+    each greeting in greetings {
+        greeting never empty
+    }
+}
+
+trait entity.greetable {
+    uses entity.identity
+    greetable can greet
+}
+
+test "greeting works" {
+    given g = Greeting.new("Hello")
+    when g.send()
+    then g.delivered == true
+}
+```
+
+### After (v0.3.0)
+
+```dol
+mod greeting.service @ 0.3.0
+
+type greeting.entity {
+    identity: Identity
+    name: String
+    extends template
+
+    forall greeting in greetings {
+        not greeting.empty
+    }
+}
+
+trait entity.greetable {
+    use entity.identity
+    greet: fun() -> Void
+}
+
+test "greeting works" {
+    val g = Greeting.new("Hello")
+    g.send()
+    assert g.delivered == true
+}
+```
+
+## Quick Start with v0.3.0
+
+1. **Update to v0.3.0**:
+   ```bash
+   cargo install metadol --version 0.3.0
+   ```
+
+2. **Migrate existing code**:
+   ```bash
+   dol migrate --from 0.2 --to 0.3 src/
+   ```
+
+3. **Write new code with v0.3.0 syntax**:
+   ```dol
+   mod myapp @ 0.1.0
+
+   pub type User {
+       id: UInt64
+       name: String
+       email: String
+   }
+
+   fun create_user(val name: String, val email: String) -> User {
+       User { id: generate_id(), name, email }
+   }
+   ```
+
+4. **Compile to Rust**:
+   ```bash
+   dol compile src/myapp.dol --output src/generated/
+   ```
+
+## Practice Exercise
+
+Migrate this v0.2.x code to v0.3.0 syntax:
+
+```dol
+module inventory @ 0.2.0
+
+gene Product {
+    product has sku: String
+    product has name: String
+    product has price: Float64
+    product derives from BaseItem
+}
+
+each product in products {
+    product never price < 0
+}
+
+let defaultProduct = Product.new("SKU001", "Default", 0.0)
+let mut productCount = 0
+```
+
+<Collapsible title="Solution">
+```dol
+mod inventory @ 0.3.0
+
+type Product {
+    sku: String
+    name: String
+    price: Float64
+    extends BaseItem
+}
+
+constraint ValidProduct {
+    forall product in products {
+        not product.price < 0
+    }
+}
+
+val defaultProduct = Product.new("SKU001", "Default", 0.0)
+var productCount = 0
+```
+
+**Changes made:**
+- `module` -> `mod`
+- `gene` -> `type`
+- `has` -> direct field syntax
+- `derives from` -> `extends`
+- `each` -> `forall` (inside constraint block)
+- `never` -> `not`
+- `let` -> `val`
+- `let mut` -> `var`
+</Collapsible>
+
+## Summary
+
+In this lesson, you learned:
+
+- **`type` keyword** - preferred over `gene` for type declarations
+- **`extends` clause** - cleaner inheritance syntax
+- **`val`/`var` bindings** - clear immutable/mutable distinction
+- **Unified `forall`** - replaces `each`, `all`
+- **Inline exegesis** - documentation inside declarations
+- **HIR architecture** - 22 canonical node types for simpler tooling
+- **Migration path** - automatic migration with deprecation warnings
+
+## Resources
+
+- [HIR Tutorials](/dol/hir-tutorials) - Detailed HIR documentation
+- [Language Decisions](/dol/design-decisions) - Design rationale
+- [Examples Gallery](/dol/examples) - More code examples
+- [API Documentation](https://docs.rs/metadol) - Rust API docs
+
+## Next Steps
+
+<TutorialGrid>
+  <TutorialCard
+    number="Next"
+    title="CLI Mastery"
+    duration="2 hours"
+    description="Master the VUDO command-line tools for DOL development"
+    href="/tutorials/vudo-cli"
+  />
+  <TutorialCard
+    number="Next"
+    title="Spirit System"
+    duration="2 hours"
+    description="Learn DOL's runtime execution model with Spirits"
+    href="/tutorials/spirits"
+  />
+</TutorialGrid>

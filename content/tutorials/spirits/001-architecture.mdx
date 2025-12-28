@@ -1,0 +1,475 @@
+---
+title: "VUDO Platform Architecture"
+description: "Understand the two-crate design, security model, fuel metering, and data flow of the VUDO platform"
+track: "spirits"
+tutorial: 1
+duration: "30 min"
+level: "intermediate"
+prerequisites:
+  - "DOL Fundamentals track"
+concepts:
+  - "Two-crate architecture"
+  - "vudo_vm sandbox runtime"
+  - "spirit_runtime package management"
+  - "Defense in depth security"
+  - "Fuel metering"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+import { Diagram } from '@/components/ui/Diagram'
+
+# VUDO Platform Architecture
+
+The VUDO platform is built on a clean two-crate architecture that separates execution concerns from package management. This design provides defense in depth through multiple security layers.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Understand the separation between `vudo_vm` and `spirit_runtime`
+- Learn how the security model provides defense in depth
+- Grasp fuel metering and resource limits
+- Follow the data flow from package to execution
+
+## The Two-Crate Design
+
+The VUDO platform splits responsibilities between two primary crates:
+
+### vudo_vm: The Sandbox Runtime
+
+The `vudo_vm` crate handles all aspects of Spirit execution:
+
+```rust
+// vudo_vm responsibilities
+pub struct VudoVm {
+    /// WebAssembly execution engine
+    engine: WasmEngine,
+
+    /// Fuel meter for resource tracking
+    fuel_meter: FuelMeter,
+
+    /// Capability checker for permission enforcement
+    capability_checker: CapabilityChecker,
+
+    /// Memory limits and resource boundaries
+    resource_limits: ResourceLimits,
+}
+```
+
+**Key responsibilities:**
+
+| Component | Purpose |
+|-----------|---------|
+| WebAssembly Engine | Execute WASM bytecode in isolated sandbox |
+| Fuel Metering | Track and limit computational resources |
+| Capability Checks | Enforce permission boundaries at runtime |
+| Resource Limits | Memory, table size, and execution bounds |
+
+### spirit_runtime: Package Management
+
+The `spirit_runtime` crate handles the lifecycle of Spirit packages:
+
+```rust
+// spirit_runtime responsibilities
+pub struct SpiritRuntime {
+    /// Manifest parser and validator
+    manifest: ManifestModule,
+
+    /// Ed25519 signature verification
+    signature: SignatureModule,
+
+    /// Local package storage
+    registry: RegistryModule,
+
+    /// Semantic version handling
+    version: VersionModule,
+
+    /// Dependency resolution
+    dependency: DependencyModule,
+
+    /// Credit economics
+    pricing: PricingModule,
+}
+```
+
+**Key responsibilities:**
+
+| Module | Purpose |
+|--------|---------|
+| Manifest | Parse and validate TOML manifests |
+| Signature | Ed25519 signing and verification |
+| Registry | Local storage of installed packages |
+| Version | Semantic versioning with SemVer |
+| Dependency | Resolve dependency graphs |
+| Pricing | Credit economics and metering |
+
+## Architecture Diagram
+
+```
++------------------------------------------------------------------+
+|                         VUDO Platform                             |
++------------------------------------------------------------------+
+|                                                                   |
+|   SPIRIT PACKAGE                                                  |
+|   +----------------------------------------------------------+   |
+|   | Manifest (TOML) | WASM Bytecode | Ed25519 Signature      |   |
+|   +----------------------------------------------------------+   |
+|                              |                                    |
+|                              v                                    |
+|   +----------------------------------------------------------+   |
+|   |                    spirit_runtime                         |   |
+|   |                                                           |   |
+|   |   +----------+  +----------+  +----------+  +----------+ |   |
+|   |   | manifest |  | signature|  | registry |  | version  | |   |
+|   |   +----------+  +----------+  +----------+  +----------+ |   |
+|   |                                                           |   |
+|   |   +----------+  +----------+                              |   |
+|   |   |dependency|  | pricing  |                              |   |
+|   |   +----------+  +----------+                              |   |
+|   +----------------------------------------------------------+   |
+|                              |                                    |
+|                              | (verified package)                 |
+|                              v                                    |
+|   +----------------------------------------------------------+   |
+|   |                       vudo_vm                             |   |
+|   |                                                           |   |
+|   |   +--------------------------------------------------+   |   |
+|   |   |              WebAssembly Sandbox                  |   |   |
+|   |   |  +------------+  +------------+  +------------+  |   |   |
+|   |   |  | Linear     |  | Function   |  | Globals    |  |   |   |
+|   |   |  | Memory     |  | Table      |  |            |  |   |   |
+|   |   |  +------------+  +------------+  +------------+  |   |   |
+|   |   +--------------------------------------------------+   |   |
+|   |                                                           |   |
+|   |   +--------------------------------------------------+   |   |
+|   |   |              Runtime Services                     |   |   |
+|   |   |  +------------+  +------------+  +------------+  |   |   |
+|   |   |  | Fuel       |  | Capability |  | Resource   |  |   |   |
+|   |   |  | Meter      |  | Checker    |  | Limits     |  |   |   |
+|   |   |  +------------+  +------------+  +------------+  |   |   |
+|   |   +--------------------------------------------------+   |   |
+|   +----------------------------------------------------------+   |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+## Security Model: Defense in Depth
+
+The VUDO platform implements security through multiple independent layers:
+
+### Layer 1: Package Verification
+
+Before any code executes, `spirit_runtime` verifies the package:
+
+```rust
+fn verify_package(package: &SpiritPackage) -> Result<VerifiedPackage, Error> {
+    // 1. Parse and validate manifest
+    let manifest = manifest::parse(&package.manifest)?;
+    manifest::validate(&manifest)?;
+
+    // 2. Verify Ed25519 signature
+    let author_key = signature::parse_public_key(&manifest.author)?;
+    signature::verify(&package, &author_key)?;
+
+    // 3. Check version constraints
+    version::validate(&manifest.version)?;
+
+    // 4. Resolve dependencies
+    dependency::resolve(&manifest.dependencies)?;
+
+    Ok(VerifiedPackage { manifest, wasm: package.wasm })
+}
+```
+
+### Layer 2: Capability Declaration
+
+Spirits must declare all capabilities in their manifest:
+
+```toml
+[capabilities]
+# Only these capabilities will be available at runtime
+network_connect = true
+storage_read = true
+sensor_time = true
+actuator_log = true
+```
+
+<Callout type="security" title="Principle of Least Privilege">
+Spirits should only request the minimum capabilities needed. Users can review declared capabilities before running a Spirit, and the runtime enforces these boundaries strictly.
+</Callout>
+
+### Layer 3: WebAssembly Sandbox
+
+The WASM execution environment provides memory safety:
+
+```
++------------------------------------------+
+|           Spirit A Sandbox                |
+|  +------------------------------------+  |
+|  |         Linear Memory              |  |
+|  |  +------------------------------+  |  |
+|  |  | Only accessible by Spirit A  |  |  |
+|  |  +------------------------------+  |  |
+|  +------------------------------------+  |
+|                                          |
+|  CANNOT ACCESS:                          |
+|  - Host memory                           |
+|  - Other Spirit memory                   |
+|  - System resources directly             |
++------------------------------------------+
+```
+
+### Layer 4: Runtime Capability Checks
+
+Every host function call is verified:
+
+```rust
+fn handle_storage_read(spirit_id: SpiritId, key: &str) -> Result<Vec<u8>, Error> {
+    let manifest = get_manifest(spirit_id)?;
+
+    // Runtime capability check
+    if !manifest.capabilities.contains(&Capability::StorageRead) {
+        return Err(Error::CapabilityDenied("storage_read"));
+    }
+
+    // Perform the operation
+    storage::read(spirit_id, key)
+}
+```
+
+### Layer 5: Fuel Metering
+
+Computational resources are tracked and limited:
+
+```rust
+fn execute_with_fuel(spirit: &Spirit, fuel_limit: u64) -> Result<Output, Error> {
+    let mut fuel_remaining = fuel_limit;
+
+    loop {
+        // Deduct fuel for each instruction
+        let cost = calculate_instruction_cost(&instruction);
+        if fuel_remaining < cost {
+            return Err(Error::OutOfFuel);
+        }
+        fuel_remaining -= cost;
+
+        // Execute instruction
+        execute_instruction(&instruction)?;
+    }
+}
+```
+
+## Fuel Metering
+
+Fuel metering prevents runaway computations and enables fair resource allocation.
+
+### How Fuel Works
+
+```
++------------------------------------------+
+|            Fuel Metering                  |
++------------------------------------------+
+|                                          |
+|  Initial Fuel: 1,000,000 units           |
+|                                          |
+|  Instruction Costs:                      |
+|  +------------------------------------+  |
+|  | Simple ops (add, sub)   | 1 unit  |  |
+|  | Memory access           | 3 units |  |
+|  | Function call           | 5 units |  |
+|  | Host function call      | 10+     |  |
+|  +------------------------------------+  |
+|                                          |
+|  Current Fuel: 847,234 units             |
+|  Status: RUNNING                         |
+|                                          |
++------------------------------------------+
+```
+
+### Fuel Costs by Operation
+
+| Operation Type | Base Cost | Notes |
+|----------------|-----------|-------|
+| Arithmetic | 1 | add, sub, mul, div |
+| Comparison | 1 | eq, ne, lt, gt |
+| Memory Load | 3 | Reading from linear memory |
+| Memory Store | 3 | Writing to linear memory |
+| Local Get/Set | 2 | Local variable access |
+| Function Call | 5 | Internal WASM calls |
+| Host Call | 10+ | Varies by capability |
+
+### Host Function Fuel Costs
+
+```rust
+// Example fuel costs for host functions
+const FUEL_COSTS: &[(&str, u64)] = &[
+    ("sensor_time", 10),
+    ("sensor_random", 15),
+    ("actuator_log", 20),
+    ("storage_read", 50),
+    ("storage_write", 100),
+    ("network_connect", 200),
+    ("spawn_sandbox", 500),
+];
+```
+
+## Data Flow: Package to Execution
+
+Here's the complete journey of a Spirit from package to running code:
+
+### Step 1: Package Loading
+
+```
+Spirit Package (.spirit file)
+    |
+    +-- manifest.toml
+    +-- spirit.wasm
+    +-- signature.ed25519
+```
+
+### Step 2: Verification Pipeline
+
+```rust
+// spirit_runtime verification pipeline
+fn load_spirit(package_path: &Path) -> Result<Spirit, Error> {
+    // 1. Read package components
+    let package = read_package(package_path)?;
+
+    // 2. Parse manifest
+    let manifest = manifest::parse(&package.manifest)?;
+
+    // 3. Verify signature
+    signature::verify(&package)?;
+
+    // 4. Check registry for conflicts
+    registry::check_conflicts(&manifest)?;
+
+    // 5. Resolve dependencies
+    let deps = dependency::resolve(&manifest)?;
+
+    // 6. Calculate pricing
+    let credits = pricing::estimate(&manifest)?;
+
+    Ok(Spirit { manifest, wasm: package.wasm, deps, credits })
+}
+```
+
+### Step 3: Runtime Instantiation
+
+```rust
+// vudo_vm instantiation
+fn instantiate_spirit(spirit: &Spirit, fuel: u64) -> Result<Instance, Error> {
+    // 1. Compile WASM (cached)
+    let module = compile_wasm(&spirit.wasm)?;
+
+    // 2. Create capability set
+    let capabilities = CapabilitySet::from_manifest(&spirit.manifest)?;
+
+    // 3. Allocate resources
+    let memory = allocate_memory(spirit.manifest.memory_limit)?;
+
+    // 4. Initialize fuel meter
+    let fuel_meter = FuelMeter::new(fuel);
+
+    // 5. Create instance
+    Ok(Instance {
+        module,
+        capabilities,
+        memory,
+        fuel_meter,
+    })
+}
+```
+
+### Step 4: Execution
+
+```rust
+// vudo_vm execution
+fn run_spirit(instance: &mut Instance, input: &[u8]) -> Result<Vec<u8>, Error> {
+    // 1. Set up input in Spirit memory
+    instance.write_input(input)?;
+
+    // 2. Call entry point with fuel metering
+    let result = instance.call_main()?;
+
+    // 3. Read output from Spirit memory
+    let output = instance.read_output()?;
+
+    // 4. Record fuel usage
+    let fuel_used = instance.fuel_meter.consumed();
+    pricing::record_usage(instance.spirit_id, fuel_used)?;
+
+    Ok(output)
+}
+```
+
+## Complete Data Flow Diagram
+
+```
++------------------------------------------------------------------+
+|                      SPIRIT LIFECYCLE                             |
++------------------------------------------------------------------+
+|                                                                   |
+|  1. PACKAGE                                                       |
+|  +------------------+                                             |
+|  | manifest.toml    |                                             |
+|  | spirit.wasm      |                                             |
+|  | signature.ed25519|                                             |
+|  +--------+---------+                                             |
+|           |                                                       |
+|           v                                                       |
+|  2. VERIFY (spirit_runtime)                                       |
+|  +----------------------------------------------------------+    |
+|  | manifest::parse() -> signature::verify() -> registry::check|   |
+|  | -> dependency::resolve() -> pricing::estimate()            |   |
+|  +----------------------------------------------------------+    |
+|           |                                                       |
+|           v                                                       |
+|  3. INSTANTIATE (vudo_vm)                                         |
+|  +----------------------------------------------------------+    |
+|  | compile_wasm() -> CapabilitySet::new() -> allocate_memory()|   |
+|  | -> FuelMeter::new() -> Instance::create()                  |   |
+|  +----------------------------------------------------------+    |
+|           |                                                       |
+|           v                                                       |
+|  4. EXECUTE (vudo_vm)                                             |
+|  +----------------------------------------------------------+    |
+|  | write_input() -> call_main() [with fuel metering]          |   |
+|  | -> read_output() -> pricing::record_usage()                |   |
+|  +----------------------------------------------------------+    |
+|           |                                                       |
+|           v                                                       |
+|  5. RESULT                                                        |
+|  +------------------+                                             |
+|  | Output bytes     |                                             |
+|  | Fuel consumed    |                                             |
+|  | Credits charged  |                                             |
+|  +------------------+                                             |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+## Key Takeaways
+
+1. **Two-Crate Architecture**: `vudo_vm` handles execution while `spirit_runtime` manages packages - clean separation of concerns
+
+2. **Defense in Depth**: Five security layers work together: package verification, capability declaration, WASM sandbox, runtime checks, and fuel metering
+
+3. **Fuel Metering**: Every operation has a cost, preventing infinite loops and enabling fair resource allocation
+
+4. **Complete Verification**: Packages are verified through manifest parsing, signature checking, and dependency resolution before any code runs
+
+5. **Capability Enforcement**: Permissions are checked both at load time and at runtime for every host function call
+
+## What's Next?
+
+Now that you understand the platform architecture, you're ready to learn about Spirit manifests - the contract between a Spirit and the runtime.
+
+Continue to [Spirit Manifests](/tutorials/spirits/002-manifests).
+
+## Additional Resources
+
+- [VUDO VM Source Code](https://github.com/univrs/vudo)
+- [WebAssembly Core Specification](https://webassembly.github.io/spec/)
+- [Ed25519 Signature Standard](https://ed25519.cr.yp.to/)

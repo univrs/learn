@@ -1,0 +1,132 @@
+---
+title: "VUDO CLI Track"
+description: "Master the VUDO command-line interface for Spirit development and registry operations"
+track: "vudo-cli"
+order: 0
+duration: "2 hours total"
+prerequisites:
+  - "DOL fundamentals (Track 1)"
+  - "Spirit concepts (Track 2)"
+  - "Terminal/shell basics"
+outcomes:
+  - "Create and scaffold Spirit projects"
+  - "Build and run Spirits in sandboxed environments"
+  - "Sign and publish Spirits with Ed25519 cryptography"
+  - "Install, search, and summon Spirits from the registry"
+---
+
+# VUDO CLI Track
+
+Welcome to the VUDO CLI track. This track teaches you to master the full Spirit development lifecycle using the VUDO command-line interface.
+
+## What is VUDO?
+
+VUDO (Visionary Unified Development Operator) is the official CLI for Spirit development. It provides a unified interface for the complete development lifecycle:
+
+- **Project scaffolding** - Create new Spirit projects from templates
+- **Build and execution** - Compile to WASM and run in sandboxed environments
+- **Cryptographic signing** - Ed25519 keypair generation and manifest signing
+- **Registry operations** - Install, search, publish, and summon Spirits
+
+```bash
+# Quick install
+cargo install vudo
+
+# Verify installation
+vudo --version
+# vudo 0.2.3
+```
+
+## Track Overview
+
+<TutorialGrid>
+  <TutorialCard
+    number="01"
+    title="Project Creation"
+    duration="20 min"
+    description="Create Spirit projects with templates and understand project structure"
+    href="/tutorials/vudo-cli/001-project-creation"
+  />
+  <TutorialCard
+    number="02"
+    title="Build and Run"
+    duration="25 min"
+    description="Compile Spirits to WASM, execute in sandbox, and run tests"
+    href="/tutorials/vudo-cli/002-build-run"
+  />
+  <TutorialCard
+    number="03"
+    title="Signing and Publishing"
+    duration="30 min"
+    description="Generate Ed25519 keypairs, sign manifests, and publish to registry"
+    href="/tutorials/vudo-cli/003-signing"
+  />
+  <TutorialCard
+    number="04"
+    title="Registry Operations"
+    duration="25 min"
+    description="Install, search, and summon Spirits from the registry"
+    href="/tutorials/vudo-cli/004-registry"
+  />
+</TutorialGrid>
+
+## Prerequisites
+
+Before starting this track, ensure you have:
+
+1. **VUDO installed** - Follow the [Quick Start](/dol/quickstart) if needed
+2. **DOL fundamentals** - Complete [Track 1: DOL Fundamentals](/tutorials/dol)
+3. **Spirit concepts** - Complete [Track 2: Spirit Binding](/tutorials/spirits)
+4. **Terminal comfort** - Basic shell navigation and command execution
+
+## Learning Path
+
+```
+                    VUDO CLI Track
+
+    [01 Project]  -->  [02 Build/Run]
+         |                   |
+         v                   v
+    [03 Signing]  -->  [04 Registry]
+```
+
+Each tutorial builds on the previous one. Start with Project Creation to scaffold your first Spirit, then proceed through the build, signing, and registry workflows.
+
+## Quick Reference
+
+| Command | Purpose |
+|---------|---------|
+| `vudo new` | Create new Spirit project from template |
+| `vudo build` | Compile Spirit to WASM |
+| `vudo run` | Execute Spirit in sandbox |
+| `vudo test` | Run Spirit tests |
+| `vudo sign` | Generate keypairs and sign manifests |
+| `vudo pack` | Package Spirit for distribution |
+| `vudo publish` | Publish Spirit to registry |
+| `vudo install` | Install Spirit from registry |
+| `vudo search` | Search the registry |
+| `vudo info` | Get Spirit information |
+| `vudo summon` | Run an installed Spirit |
+
+## Registry Structure
+
+VUDO maintains a local registry at `~/.vudo/`:
+
+```
+~/.vudo/
+└── registry/
+    ├── index.json
+    ├── spirits/
+    │   └── my-spirit/
+    │       ├── 1.0.0/
+    │       │   ├── manifest.json
+    │       │   └── spirit.wasm
+    │       └── latest -> 1.0.0/
+    └── cache/
+```
+
+## Ready to Start?
+
+<CallToAction href="/tutorials/vudo-cli/001-project-creation">
+  Begin with Project Creation
+</CallToAction>
