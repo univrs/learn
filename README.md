@@ -1,5 +1,7 @@
 # MetaLearn Vision
 
+[![Deploy to GitHub Pages](https://github.com/univrs/learn/actions/workflows/deploy.yml/badge.svg)](https://github.com/univrs/learn/actions/workflows/deploy.yml)
+
 ## The Premise
 
 **MetaLearn** is a platform for tools that help systems understand themselves.
