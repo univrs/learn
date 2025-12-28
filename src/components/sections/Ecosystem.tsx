@@ -9,9 +9,9 @@ const repos = [
     color: '#f97316',
   },
   {
-    name: 'univrs-vudo',
+    name: 'vudo',
     description: 'VUDO VM, Spirit Runtime, and Registry',
-    href: 'https://github.com/univrs/univrs-vudo',
+    href: 'https://github.com/univrs/vudo',
     language: 'Rust',
     color: '#f97316',
     isNew: true,
@@ -38,9 +38,9 @@ const repos = [
     color: '#3b82f6',
   },
   {
-    name: 'RustOrchestration',
+    name: 'orchestration',
     description: 'Multi-agent orchestration framework',
-    href: 'https://github.com/univrs/RustOrchestration',
+    href: 'https://github.com/univrs/orchestration',
     language: 'Rust',
     color: '#f97316',
   },
