@@ -1,0 +1,476 @@
+---
+title: "Core Declarations"
+description: "Master type, trait, and module declarations in DOL v0.3.0"
+track: "dol"
+tutorial: 3
+duration: "30 min"
+level: "beginner"
+objectives:
+  - "Write type declarations with fields"
+  - "Define traits with associated functions"
+  - "Create versioned modules"
+  - "Understand gene syntax for compatibility"
+tags:
+  - "dol"
+  - "type"
+  - "trait"
+  - "module"
+  - "declarations"
+---
+
+# Core Declarations
+
+DOL specifications are built from declarations. In this tutorial, you will learn the three core declaration types: types, traits, and modules. These form the foundation of every DOL specification.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Write type declarations using the preferred `type` keyword
+- Define traits with method signatures
+- Create modules with semantic versioning
+- Understand when to use `gene` syntax for compatibility
+
+## Type Declarations
+
+Type declarations define the entities in your domain. In DOL v0.3.0, `type` is the preferred keyword.
+
+### Basic Type Declaration
+
+```dol
+/// A 2D point
+pub type Point2D {
+    x: Float64
+    y: Float64
+}
+```
+
+This declares:
+- A public type named `Point2D`
+- Two fields: `x` and `y`, both `Float64`
+- Documentation via `///` comment
+
+### Type Declaration Anatomy
+
+```dol
+/// Documentation comment (becomes doc in generated code)
+pub type TypeName {
+    field1: Type1
+    field2: Type2
+}
+```
+
+| Component | Purpose |
+|-----------|---------|
+| `///` | Documentation comment |
+| `pub` | Visibility modifier (public) |
+| `type` | Declaration keyword |
+| `TypeName` | The type name (PascalCase) |
+| `{ ... }` | Field list |
+| `field: Type` | Field with type annotation |
+
+### Visibility Modifiers
+
+| Modifier | Meaning |
+|----------|---------|
+| `pub` | Public, accessible everywhere |
+| (none) | Private to module |
+
+```dol
+pub type PublicPoint {
+    x: Float64
+    y: Float64
+}
+
+type InternalHelper {
+    data: Bytes
+}
+```
+
+### Primitive Types
+
+DOL includes these built-in primitive types:
+
+| Type | Description |
+|------|-------------|
+| `Int` | Platform integer |
+| `Int32` | 32-bit signed integer |
+| `Int64` | 64-bit signed integer |
+| `Float32` | 32-bit floating point |
+| `Float64` | 64-bit floating point |
+| `Bool` | Boolean (true/false) |
+| `String` | UTF-8 string |
+| `Bytes` | Raw byte sequence |
+| `UUID` | Universally unique identifier |
+
+### Type with Multiple Fields
+
+```dol
+/// A user account
+pub type User {
+    id: UUID
+    email: String
+    display_name: String
+    created_at: Int64
+    is_active: Bool
+}
+```
+
+### Type Inheritance with extends
+
+Types can extend other types using `extends`:
+
+```dol
+/// Base point type
+pub type Point2D {
+    x: Float64
+    y: Float64
+}
+
+/// Point with color extends Point2D
+pub type ColorPoint extends Point2D {
+    color: String
+}
+```
+
+`ColorPoint` inherits `x` and `y` from `Point2D` and adds `color`.
+
+<Callout type="warning" title="Syntax Note">
+DOL uses `extends`, not `derives from` or other inheritance keywords.
+</Callout>
+
+## Trait Declarations
+
+Traits define shared behavior that types can implement.
+
+### Basic Trait Declaration
+
+```dol
+/// Types that can be printed
+pub trait Printable {
+    fun to_string(val self) -> String
+}
+```
+
+This declares:
+- A public trait named `Printable`
+- One required method: `to_string`
+
+### Trait Declaration Anatomy
+
+```dol
+/// Documentation
+pub trait TraitName {
+    fun method1(val self) -> ReturnType
+    fun method2(val self, val param: ParamType) -> ReturnType
+}
+```
+
+| Component | Purpose |
+|-----------|---------|
+| `trait` | Declaration keyword |
+| `TraitName` | The trait name (PascalCase) |
+| `fun` | Method declaration |
+| `val self` | Immutable reference to implementing type |
+
+### Trait with Multiple Methods
+
+```dol
+/// Lifecycle management trait
+pub trait Lifecycle {
+    fun on_create(val self) -> Bool
+    fun on_update(val self, val data: Bytes) -> Bool
+    fun on_delete(val self) -> Bool
+}
+```
+
+### Trait with Generic Parameters
+
+Using `forall` for type parameters:
+
+```dol
+/// Comparable types
+pub trait Comparable {
+    forall T: Comparable
+    fun compare(val self, val other: T) -> Int
+}
+```
+
+<Callout type="info" title="Syntax Note">
+DOL uses `forall`, not `each` or `all`, for universal quantifiers.
+</Callout>
+
+## Module Declarations
+
+Modules organize code and provide versioning.
+
+### Basic Module Declaration
+
+```dol
+mod examples.point @ 0.1.0
+```
+
+This declares:
+- Module path: `examples.point`
+- Semantic version: `0.1.0`
+
+### Module Declaration Anatomy
+
+```dol
+mod namespace.name @ major.minor.patch
+```
+
+| Component | Purpose |
+|-----------|---------|
+| `mod` | Module keyword |
+| `namespace.name` | Dot-separated module path |
+| `@` | Version separator |
+| `major.minor.patch` | Semantic version |
+
+### Module with Dependencies
+
+```dol
+mod myapp.models @ 1.0.0
+
+uses std.collections @ 1.2.0
+uses myapp.core @ 0.5.0
+```
+
+The `uses` keyword imports other modules.
+
+### Module Organization
+
+A typical module structure:
+
+```dol
+mod myapp.domain @ 1.0.0
+
+uses std.validation @ 1.0.0
+
+/// User account
+pub type User {
+    id: UUID
+    email: String
+}
+
+/// Product listing
+pub type Product {
+    id: UUID
+    name: String
+    price: Int64
+}
+
+/// Auditable behavior
+pub trait Auditable {
+    fun audit_log(val self) -> String
+}
+```
+
+## Function Declarations
+
+Functions operate on types and values.
+
+### Basic Function Declaration
+
+```dol
+/// Calculate distance between points
+fun distance(val a: Point2D, val b: Point2D) -> Float64 {
+    val dx = b.x - a.x
+    val dy = b.y - a.y
+    (dx * dx + dy * dy).sqrt()
+}
+```
+
+### Function Declaration Anatomy
+
+```dol
+/// Documentation
+pub fun function_name(val param1: Type1, val param2: Type2) -> ReturnType {
+    // function body
+}
+```
+
+| Component | Purpose |
+|-----------|---------|
+| `fun` | Function keyword |
+| `val param` | Immutable parameter binding |
+| `-> ReturnType` | Return type annotation |
+| `{ ... }` | Function body |
+
+### Parameter Mutability
+
+```dol
+fun increment(var counter: Int) -> Int {
+    counter = counter + 1
+    counter
+}
+```
+
+- `val param`: Immutable parameter (cannot be reassigned)
+- `var param`: Mutable parameter (can be reassigned)
+
+### Local Bindings in Functions
+
+```dol
+fun process(val input: String) -> String {
+    val trimmed = input.trim()      // Immutable local
+    var result = trimmed.uppercase()  // Mutable local
+    result = result.append("!")
+    result
+}
+```
+
+## Gene Syntax (Compatibility)
+
+The `gene` keyword is still supported for backward compatibility but `type` is preferred in v0.3.0.
+
+### Gene vs Type
+
+```dol
+// Preferred v0.3.0 syntax
+type Point2D {
+    x: Float64
+    y: Float64
+}
+
+// Legacy syntax (still works)
+gene Point2D {
+    x: Float64
+    y: Float64
+}
+```
+
+Both produce identical HIR and generated code.
+
+<Callout type="info" title="Why gene?">
+Early DOL versions used `gene` as a nod to genetics and evolution metaphors. The `type` keyword was added for familiarity and is now preferred.
+</Callout>
+
+### When to Use Gene
+
+Use `gene` when:
+- Maintaining legacy DOL codebases
+- Working with older documentation or examples
+- Emphasizing evolutionary/biological metaphors in domain modeling
+
+Use `type` when:
+- Writing new DOL code
+- Following v0.3.0 conventions
+- Maximum clarity for team members
+
+## Complete Example
+
+Here is a complete DOL specification using all core declarations:
+
+```dol
+mod examples.point @ 0.1.0
+
+/// A 2D point
+pub type Point2D {
+    x: Float64
+    y: Float64
+}
+
+/// Points that can calculate distance
+pub trait Measurable {
+    fun distance_from_origin(val self) -> Float64
+}
+
+/// Calculate distance between two points
+pub fun distance(val a: Point2D, val b: Point2D) -> Float64 {
+    val dx = b.x - a.x
+    val dy = b.y - a.y
+    (dx * dx + dy * dy).sqrt()
+}
+
+/// Create a point at the origin
+pub fun origin() -> Point2D {
+    Point2D { x: 0.0, y: 0.0 }
+}
+```
+
+This specification:
+1. Declares a versioned module
+2. Defines a public type with two fields
+3. Declares a trait for measurement behavior
+4. Provides utility functions for points
+
+## Key Takeaways
+
+1. **Type declarations** use `type` (preferred) or `gene` (compatible)
+   ```dol
+   type Point2D { x: Float64, y: Float64 }
+   ```
+
+2. **Trait declarations** define shared behavior
+   ```dol
+   trait Printable { fun to_string(val self) -> String }
+   ```
+
+3. **Module declarations** include semantic versions
+   ```dol
+   mod examples.point @ 0.1.0
+   ```
+
+4. **Function declarations** use `fun` and `val`/`var` for parameters
+   ```dol
+   fun distance(val a: Point2D, val b: Point2D) -> Float64
+   ```
+
+5. **Inheritance** uses `extends`, quantifiers use `forall`
+
+## What is Next?
+
+You have now completed the DOL Concepts track. You understand:
+- What DOL is (declarative, ontology-first)
+- How the compilation pipeline works (Source -> AST -> HIR -> Code)
+- How to write core declarations (types, traits, modules)
+
+To continue learning, explore:
+- [DOL Fundamentals Track](/tutorials/dol) - Deep dive into advanced features
+- [DOL Examples Gallery](/dol/examples) - Real-world specifications
+- [DOL Language Reference](/dol/reference) - Complete syntax reference
+
+## Practice Exercise
+
+Try writing a DOL specification for a simple library system:
+
+1. Create a module `library.catalog @ 0.1.0`
+2. Define a `Book` type with: `id`, `title`, `author`, `isbn`
+3. Define a `Borrowable` trait with a `checkout` method
+4. Write a function to check if a book is available
+
+<details>
+<summary>Show Solution</summary>
+
+```dol
+mod library.catalog @ 0.1.0
+
+/// A book in the library
+pub type Book {
+    id: UUID
+    title: String
+    author: String
+    isbn: String
+    is_available: Bool
+}
+
+/// Items that can be borrowed
+pub trait Borrowable {
+    fun checkout(val self, val borrower_id: UUID) -> Bool
+    fun return_item(val self) -> Bool
+}
+
+/// Check if a book is available for checkout
+pub fun is_available(val book: Book) -> Bool {
+    book.is_available
+}
+```
+
+</details>
+
+## Additional Resources
+
+- [DOL Language Reference](/dol/reference)
+- [DOL Examples Gallery](/dol/examples)
+- [HIR Node Reference](/dol/reference/hir)

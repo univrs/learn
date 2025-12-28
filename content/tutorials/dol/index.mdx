@@ -1,0 +1,135 @@
+---
+title: "DOL Concepts Track"
+description: "Understand the Design Ontology Language from first principles"
+track: "dol"
+order: 0
+duration: "1-2 hours total"
+prerequisites:
+  - "Basic programming experience"
+  - "Familiarity with type systems (helpful but not required)"
+outcomes:
+  - "Understand what DOL is and its declarative nature"
+  - "Know the compilation pipeline from source to target code"
+  - "Write core declarations: types, traits, and modules"
+---
+
+# DOL Concepts Track
+
+Welcome to the DOL Concepts track. This track teaches you the foundational concepts of the Design Ontology Language (DOL) v0.3.0, preparing you to write specifications that compile to Rust, TypeScript, and WebAssembly.
+
+## What is DOL?
+
+DOL is a **declarative specification language** for ontology-first development. Unlike imperative languages that describe *how* to do something, DOL describes *what* something is.
+
+```dol
+mod examples.point @ 0.1.0
+
+/// A 2D point
+pub type Point2D {
+    x: Float64
+    y: Float64
+}
+```
+
+DOL specifications are compiled through a pipeline that produces verified, type-safe code in your target language.
+
+## Track Overview
+
+<TutorialGrid>
+  <TutorialCard
+    number="01"
+    title="What is DOL?"
+    duration="20 min"
+    description="Understand declarative specifications and ontology-first development"
+    href="/tutorials/dol/001-what-is-dol"
+  />
+  <TutorialCard
+    number="02"
+    title="The Compilation Pipeline"
+    duration="25 min"
+    description="Learn how DOL source becomes AST, HIR, and target code"
+    href="/tutorials/dol/002-compilation-pipeline"
+  />
+  <TutorialCard
+    number="03"
+    title="Core Declarations"
+    duration="30 min"
+    description="Master type, trait, and module declarations in DOL v0.3.0"
+    href="/tutorials/dol/003-core-declarations"
+  />
+</TutorialGrid>
+
+## Prerequisites
+
+Before starting this track, you should have:
+
+1. **Basic programming experience** - Familiarity with any programming language
+2. **Conceptual understanding of types** - Knowing what types and fields are
+3. **VUDO CLI installed** - Follow the [Quick Start](/dol/quickstart) if needed
+
+## Core Concepts You Will Learn
+
+### Declarative vs Imperative
+
+DOL is fundamentally different from languages like JavaScript or Python:
+
+| Imperative (Python) | Declarative (DOL) |
+|---------------------|-------------------|
+| Describes *how* to compute | Describes *what* exists |
+| Step-by-step instructions | Structural definitions |
+| Runtime behavior focus | Compile-time verification |
+| Mutable state common | Immutability preferred |
+
+### The DOL v0.3.0 Keywords
+
+DOL v0.3.0 uses specific keywords for bindings and declarations:
+
+| Keyword | Purpose |
+|---------|---------|
+| `val` | Immutable binding |
+| `var` | Mutable binding |
+| `type` | Type declaration (preferred) |
+| `trait` | Trait declaration |
+| `fun` | Function declaration |
+| `mod` | Module declaration |
+| `forall` | Universal quantifier |
+| `extends` | Inheritance |
+
+### Compilation Targets
+
+DOL compiles to multiple targets through a unified pipeline:
+
+```
+DOL Source --> AST --> HIR --> Rust / TypeScript / WASM
+```
+
+## Learning Path
+
+```
+                    DOL Concepts Track
+
+    [01 What is DOL?] --> [02 Pipeline] --> [03 Declarations]
+                                                   |
+                                                   v
+                                      Ready for DOL Fundamentals
+```
+
+Each tutorial builds on the previous one. Start with understanding what DOL is, then learn the compilation pipeline, and finally master the core declaration syntax.
+
+## Quick Reference
+
+| DOL v0.3.0 Syntax | Meaning |
+|-------------------|---------|
+| `val x = 5` | Immutable binding (like `let` elsewhere) |
+| `var y = 10` | Mutable binding (like `let mut` elsewhere) |
+| `type Point { x: Int }` | Type declaration (preferred over `gene`) |
+| `trait Printable { ... }` | Trait declaration |
+| `mod my.module @ 1.0.0` | Module with version |
+| `forall T: Eq` | Universal quantifier over types |
+| `extends Base` | Inheritance from base type |
+
+## Ready to Start?
+
+<CallToAction href="/tutorials/dol/001-what-is-dol">
+  Begin with What is DOL?
+</CallToAction>

@@ -1,0 +1,444 @@
+---
+title: "Define the Ontology"
+description: "Create the complete DOL specification for Lion & Swan archetypes, traits, and constraints"
+track: "capstone"
+tutorial: 1
+duration: "45 min"
+level: "advanced"
+prerequisites:
+  - "DOL Fundamentals track"
+concepts:
+  - "Type inheritance"
+  - "Trait definitions"
+  - "Constraint systems"
+  - "Exegesis documentation"
+---
+
+import { Callout } from '@/components/ui/Callout'
+import { CodeBlock } from '@/components/code/CodeBlock'
+import { Diagram } from '@/components/ui/Diagram'
+
+# Define the Ontology
+
+Every great system begins with a specification. In this first step, we will create the complete DOL specification for the Lion & Swan mythology - the foundation upon which our Spirit will be built.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Create a complete DOL specification from scratch
+- Model archetypes with type inheritance
+- Define behavioral traits for narrative scenes
+- Write constraints that ensure mythology integrity
+- Document meaning through exegesis
+
+## The Power of Specification-First Development
+
+Before writing any implementation code, we define **what the system should be**. The DOL specification serves as:
+
+1. **Contract**: What types and behaviors exist
+2. **Documentation**: What the mythology means
+3. **Validation**: What constraints must hold
+4. **Generation**: Source for derived code
+
+```
++------------------+     +------------------+     +------------------+
+|   DOL Spec       | --> |   Validation     | --> |   Code Gen       |
+|   (lion_swan.dol)|     |   (vudo check)   |     |   (ontology.rs)  |
++------------------+     +------------------+     +------------------+
+```
+
+## Creating the Specification File
+
+Create a new file called `lion_swan.dol` in your project root:
+
+```bash
+touch lion_swan.dol
+```
+
+Now let us build the specification section by section.
+
+## System Declaration
+
+Every DOL specification begins with a system declaration that identifies the module and its dependencies:
+
+```dol
+// Lion & Swan Ontology
+// DOL v0.3.0 specification
+
+system lion_swan.mythology @ 0.1.0 {
+  requires narrative.framework >= 0.0.1
+  requires symbol.system >= 0.0.1
+
+  provides mythic_content
+  provides symbol_generation
+}
+```
+
+This declares:
+- **Module identity**: `lion_swan.mythology` at version `0.1.0`
+- **Dependencies**: Requires narrative and symbol frameworks
+- **Capabilities**: Provides mythic content and symbol generation
+
+<Callout type="info" title="Semantic Versioning">
+DOL uses semantic versioning. The `@ 0.1.0` indicates this is an early development version. The `>=` operator ensures compatibility with future framework versions.
+</Callout>
+
+## Base Archetype Type
+
+We start by defining the base type that all mythological symbols inherit from:
+
+```dol
+/// The fundamental archetype from which all mythic symbols derive.
+/// Each archetype carries a name, color association, meaning, and
+/// a power level that determines its narrative weight.
+pub type symbol.archetype {
+  name: String
+  color: String
+  meaning: String
+  power_level: UInt32
+}
+```
+
+The `pub` keyword makes this type publicly accessible to other modules. Each archetype has:
+
+- **name**: The symbol's identifier
+- **color**: Its associated color (symbolic importance)
+- **meaning**: What the symbol represents
+- **power_level**: Narrative weight (affects story outcomes)
+
+## The Lion Archetype
+
+Now we define the Black Lion, extending the base archetype:
+
+```dol
+/// The Black Lion archetype - Keepers of Light.
+///
+/// Lions are guardians of harmony achieved through mycelial economics.
+/// Their obsidian color represents the absorption of chaos and
+/// reflection of order. Lions do not rule through force, but through
+/// the invisible networks of mutual benefit.
+pub type symbol.lion {
+  extends symbol.archetype
+  color: String = "obsidian"
+  meaning: String = "guardian"
+  allegiance: String = "keeper"
+
+  // Lion-specific attributes
+  pride_name: String
+  generations_served: UInt32
+  territories: List<String>
+}
+```
+
+Key elements:
+- **extends**: Inherits all fields from `symbol.archetype`
+- **Default values**: `color`, `meaning`, and `allegiance` have defaults
+- **Additional fields**: Lions have prides, generations, and territories
+
+## The Swan Archetype
+
+The White Swan represents transformation:
+
+```dol
+/// The White Swan archetype - Agents of Transformation.
+///
+/// Swans embody the promise and danger of change. Their pearl color
+/// emerges from irritation transformed into beauty. Swans can lead
+/// to liberation or destructive revivalism, depending on how
+/// transformation is channeled.
+pub type symbol.swan {
+  extends symbol.archetype
+  color: String = "pearl"
+  meaning: String = "transformation"
+  allegiance: String = "variable"
+
+  // Swan-specific attributes
+  flock_name: String
+  transformations_witnessed: UInt32
+  prophecies: List<String>
+}
+```
+
+Note the key difference: a Swan's allegiance is `"variable"` - they can shift between liberation and destruction.
+
+## Narrative Scene Trait
+
+Traits define behaviors that types can implement. The narrative scene trait defines the four phases of mythic storytelling:
+
+```dol
+/// A narrative scene in the Lion & Swan mythology.
+///
+/// Each scene follows a four-phase structure:
+/// 1. Confrontation - the meeting of opposing forces
+/// 2. Interrogation - the questioning of motives and truth
+/// 3. Transformation - the change that results
+/// 4. Revelation - the truth that emerges
+trait narrative.scene {
+  /// The meeting of Lion and Swan, or internal conflict.
+  confrontation: fun() -> String
+
+  /// Deep questioning: "Are we protectors or oppressors?"
+  interrogation: fun() -> String
+
+  /// The change that occurs through the narrative.
+  transformation: fun() -> String
+
+  /// The truth revealed at the scene's conclusion.
+  revelation: fun() -> String
+}
+```
+
+Any type implementing this trait must provide all four functions.
+
+## Story Container Type
+
+We need a type to hold complete stories:
+
+```dol
+/// A complete mythic narrative containing multiple scenes.
+pub type narrative.story {
+  title: String
+  epoch: String
+  scenes: List<narrative.scene>
+  moral: String
+  generation: UInt32
+}
+```
+
+## Mythology Constraints
+
+Constraints are the heart of DOL - they ensure the mythology maintains internal consistency:
+
+```dol
+/// Ensure all symbols have meaningful definitions.
+constraint mythology.symbol_integrity {
+  forall symbol in symbols {
+    not symbol.meaning.is_empty
+    symbol.power_level > 0
+    symbol.power_level <= 100
+  }
+}
+
+/// Ensure narratives maintain consistency.
+constraint mythology.narrative_consistency {
+  forall narrative in narratives {
+    narrative.scenes.len() >= 1
+    narrative.has_confrontation
+    narrative.has_revelation
+  }
+}
+
+/// The balance constraint - Lions and Swans must coexist.
+constraint mythology.eternal_balance {
+  exists lion in lions
+  exists swan in swans
+
+  // Neither can dominate completely
+  sum(lions.power_level) < total_power * 0.7
+  sum(swans.power_level) < total_power * 0.7
+}
+
+/// Self-correction: every generation must question.
+constraint mythology.self_correction {
+  forall generation in generations {
+    generation.has_questioned("Are we protectors or oppressors?")
+  }
+}
+```
+
+<Callout type="warning" title="Constraint Violations">
+When a constraint is violated, the VUDO runtime will prevent the operation. This ensures the mythology cannot be corrupted by invalid data.
+</Callout>
+
+## The Exegesis
+
+The exegesis provides the philosophical foundation - the *why* behind the specification:
+
+```dol
+exegesis {
+  The Lion & Swan mythology serves as a self-correcting
+  narrative system for the Univrs.io ecosystem.
+
+  ## The Black Lion
+
+  The Black Lion represents the Keepers of Light -
+  guardians of harmony achieved through mycelial economics.
+  Like obsidian, the Lion absorbs chaos and reflects order.
+  The Keepers maintain balance not through force, but through
+  the invisible networks of mutual benefit.
+
+  ## The White Swan
+
+  The White Swan represents transformation - the danger
+  and promise of change that could lead to liberation
+  or destructive revivalism. Like pearl formed through
+  irritation, the Swan emerges from conflict.
+
+  ## The Eternal Question
+
+  Each generation must ask: Are we Lions protecting
+  harmony, or have we become oppressors? This question
+  prevents the calcification of power structures while
+  maintaining system stability.
+
+  ## Mycelial Economics
+
+  The Lion's method of harmony through mycelial economics
+  mirrors the fungal networks that sustain forests - value
+  flows to where it is needed, not where power demands.
+  The mythology encodes this principle into the fabric
+  of the Univrs ecosystem.
+}
+```
+
+## Complete DOL Specification
+
+Here is the complete specification in one file:
+
+```dol
+// lion_swan.dol
+// Lion & Swan Ontology
+// DOL v0.3.0 specification
+
+system lion_swan.mythology @ 0.1.0 {
+  requires narrative.framework >= 0.0.1
+  requires symbol.system >= 0.0.1
+
+  provides mythic_content
+  provides symbol_generation
+}
+
+/// The fundamental archetype from which all mythic symbols derive.
+pub type symbol.archetype {
+  name: String
+  color: String
+  meaning: String
+  power_level: UInt32
+}
+
+/// The Black Lion archetype - Keepers of Light.
+pub type symbol.lion {
+  extends symbol.archetype
+  color: String = "obsidian"
+  meaning: String = "guardian"
+  allegiance: String = "keeper"
+
+  pride_name: String
+  generations_served: UInt32
+  territories: List<String>
+}
+
+/// The White Swan archetype - Agents of Transformation.
+pub type symbol.swan {
+  extends symbol.archetype
+  color: String = "pearl"
+  meaning: String = "transformation"
+  allegiance: String = "variable"
+
+  flock_name: String
+  transformations_witnessed: UInt32
+  prophecies: List<String>
+}
+
+/// A narrative scene in the Lion & Swan mythology.
+trait narrative.scene {
+  confrontation: fun() -> String
+  interrogation: fun() -> String
+  transformation: fun() -> String
+  revelation: fun() -> String
+}
+
+/// A complete mythic narrative.
+pub type narrative.story {
+  title: String
+  epoch: String
+  scenes: List<narrative.scene>
+  moral: String
+  generation: UInt32
+}
+
+/// Generation output from the Spirit.
+pub type generation.output {
+  image_url: String
+  narrative_text: String
+  archetype: String
+  credits_charged: UInt64
+  timestamp: UInt64
+}
+
+constraint mythology.integrity {
+  forall symbol in symbols {
+    not symbol.meaning.is_empty
+  }
+  forall narrative in narratives {
+    narrative.is_consistent
+  }
+}
+
+constraint mythology.eternal_balance {
+  exists lion in lions
+  exists swan in swans
+}
+
+exegesis {
+  The Lion & Swan mythology serves as a self-correcting
+  narrative system for the Univrs.io ecosystem.
+
+  The Black Lion represents the Keepers of Light -
+  guardians of harmony achieved through mycelial economics.
+
+  The White Swan represents transformation - the danger
+  and promise of change that could lead to liberation
+  or destructive revivalism.
+
+  Each generation must ask: Are we Lions protecting
+  harmony, or have we become oppressors?
+}
+```
+
+## Validating the Specification
+
+Use the VUDO CLI to validate your DOL specification:
+
+```bash
+# Check syntax
+vudo dol check lion_swan.dol
+
+# View parsed structure
+vudo dol parse lion_swan.dol --format json
+
+# Generate Rust types (preview)
+vudo dol codegen lion_swan.dol --lang rust --preview
+```
+
+Expected output:
+
+```
+Checking lion_swan.dol...
+  System: lion_swan.mythology @ 0.1.0
+  Types: 5 defined
+  Traits: 1 defined
+  Constraints: 2 defined
+  Exegesis: present
+
+All checks passed.
+```
+
+## Key Takeaways
+
+1. **Specification first**: Define what the system is before implementing it
+2. **Type inheritance**: Use `extends` to build type hierarchies
+3. **Traits for behavior**: Define required functions with traits
+4. **Constraints for integrity**: Ensure the system cannot enter invalid states
+5. **Exegesis for meaning**: Document the philosophy, not just the structure
+
+## What is Next?
+
+With our ontology defined, we are ready to create the Spirit project structure. In the next step, you will:
+
+- Scaffold the project with `vudo new`
+- Configure the manifest with required capabilities
+- Set up the module structure
+
+Continue to [Create Spirit Project](/tutorials/capstone/002-project-setup).

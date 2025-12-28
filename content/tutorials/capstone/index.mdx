@@ -1,0 +1,233 @@
+---
+title: "Lion & Swan Capstone Project"
+description: "Build a complete AI-powered mythological content creator bringing together DOL, Spirits, and VUDO CLI"
+track: "capstone"
+duration: "6-8 hours"
+level: "advanced"
+prerequisites:
+  - "DOL Fundamentals track"
+  - "Spirit Development track"
+  - "VUDO CLI Mastery track"
+concepts:
+  - "Full DOL specification"
+  - "AI image generation"
+  - "Narrative generation"
+  - "Credit economics"
+  - "Spirit publishing"
+---
+
+import { Card, CardGrid } from '@/components/ui/Card'
+import { Prerequisites } from '@/components/docs/Prerequisites'
+import { LearningPath } from '@/components/docs/LearningPath'
+import { Callout } from '@/components/ui/Callout'
+
+# Lion & Swan Capstone Project
+
+Build a complete AI-powered mythological content creator that generates images and narratives from the Lion & Swan mythology. This capstone project brings together everything you have learned: DOL specifications, Spirit development, and VUDO CLI tooling.
+
+<Callout type="info" title="The Capstone Challenge">
+This is the final project of the Univrs learning tracks. You will create a production-ready Spirit that demonstrates mastery of specification-driven development, capability-based security, and mycelial economics.
+</Callout>
+
+<Prerequisites items={[
+  { text: "DOL Fundamentals track", link: "/tutorials/dol" },
+  { text: "Spirit Development track", link: "/tutorials/spirits" },
+  { text: "CLI Mastery track", link: "/tutorials/cli" },
+  { text: "VUDO CLI installed (v0.3+)", link: "/dol/install" }
+]} />
+
+## The Lion & Swan Mythology
+
+The Lion & Swan mythology serves as a **self-correcting narrative system** for the Univrs.io ecosystem. It embodies the philosophical tensions at the heart of decentralized systems.
+
+```
+            +-------------------------------------------------+
+            |                                                 |
+            |            THE ETERNAL BALANCE                  |
+            |                                                 |
+            |    +-------------------+   +------------------+ |
+            |    |                   |   |                  | |
+            |    |   BLACK LION      |   |   WHITE SWAN     | |
+            |    |                   |   |                  | |
+            |    |   Keepers of      |   |   Agents of      | |
+            |    |   Light           |   |   Transformation | |
+            |    |                   |   |                  | |
+            |    |   Harmony through |   |   Liberation or  | |
+            |    |   mycelial        |   |   destruction    | |
+            |    |   economics       |   |   through change | |
+            |    |                   |   |                  | |
+            |    +-------------------+   +------------------+ |
+            |                                                 |
+            |   "Are we Lions protecting harmony,             |
+            |    or have we become oppressors?"               |
+            |                                                 |
+            +-------------------------------------------------+
+```
+
+### The Black Lion
+
+The Black Lion represents the **Keepers of Light** - guardians of harmony achieved through mycelial economics. Like obsidian, the Lion absorbs chaos and reflects order. The Keepers maintain balance not through force, but through the invisible networks of mutual benefit.
+
+### The White Swan
+
+The White Swan represents **transformation** - the promise and danger of change. Like pearl formed through irritation, the Swan emerges from conflict. It can lead to liberation or destructive revivalism, depending on how transformation is channeled.
+
+### The Self-Correcting Narrative
+
+Each generation must ask: *Are we Lions protecting harmony, or have we become oppressors?* The mythology provides a framework for questioning power structures while maintaining system stability.
+
+## What You Will Build
+
+The **Lion & Swan Creator** Spirit generates:
+
+1. **Mythic Images**: AI-generated artwork depicting Lion and Swan archetypes
+2. **Narrative Content**: Story fragments, prophecies, and meditations
+3. **Combined Artifacts**: Image-text pairs for use in the Univrs ecosystem
+
+### Features
+
+- Complete DOL specification for the mythology
+- AI image generation using network capabilities
+- Narrative text generation with templating
+- Credit-based economic model
+- Full test coverage
+- Published to the Imaginarium
+
+## Project Architecture
+
+```
+lion-swan-creator/
++-- spirit.toml               # Spirit manifest with capabilities
++-- lion_swan.dol             # DOL specification
++-- src/
+|   +-- lib.rs                # Main Spirit entry
+|   +-- ontology.rs           # DOL-derived types
+|   +-- image_gen.rs          # Image generation module
+|   +-- narrative.rs          # Story generation module
+|   +-- credits.rs            # Economic integration
+|   +-- prompts/
+|       +-- lion_prompts.rs   # Lion image prompts
+|       +-- swan_prompts.rs   # Swan image prompts
++-- tests/
+|   +-- integration.rs        # Integration tests
+|   +-- mocks.rs              # Mock host functions
++-- assets/
+    +-- templates/            # Narrative templates
+```
+
+## Track Overview
+
+<CardGrid>
+  <Card
+    number={1}
+    title="Define the Ontology"
+    description="Create the complete DOL specification for Lion & Swan archetypes, traits, and constraints."
+    duration="45 min"
+    link="/tutorials/capstone/001-ontology"
+  />
+
+  <Card
+    number={2}
+    title="Create Spirit Project"
+    description="Scaffold the project with vudo new, configure capabilities, and set up the structure."
+    duration="30 min"
+    link="/tutorials/capstone/002-project-setup"
+  />
+
+  <Card
+    number={3}
+    title="Image Generation"
+    description="Implement AI image generation using the network_connect capability."
+    duration="60 min"
+    link="/tutorials/capstone/003-image-gen"
+  />
+
+  <Card
+    number={4}
+    title="Narrative Generation"
+    description="Build the story generation system with templates and dynamic content."
+    duration="50 min"
+    link="/tutorials/capstone/004-narrative"
+  />
+
+  <Card
+    number={5}
+    title="Credit Integration"
+    description="Add mycelial economics with credit balances, transfers, and pricing."
+    duration="40 min"
+    link="/tutorials/capstone/005-credits"
+  />
+
+  <Card
+    number={6}
+    title="Testing and Polish"
+    description="Write comprehensive tests, use vudo check, and polish the implementation."
+    duration="45 min"
+    link="/tutorials/capstone/006-testing"
+  />
+
+  <Card
+    number={7}
+    title="Sign and Publish"
+    description="Package, sign, and publish your Spirit to the Imaginarium."
+    duration="30 min"
+    link="/tutorials/capstone/007-publish"
+  />
+</CardGrid>
+
+## The Journey Ahead
+
+This capstone synthesizes everything you have learned:
+
+| Track | Skills Applied |
+|-------|---------------|
+| **DOL Fundamentals** | Type definitions, traits, constraints, exegesis |
+| **Spirit Development** | Host functions, storage, networking, credits |
+| **CLI Mastery** | Templates, REPL, quality tools, registry |
+
+By the end, you will have:
+
+- A complete, working Spirit
+- Published to the Imaginarium
+- Generating real mythological content
+- Earning credits through the mycelial economy
+
+## Prerequisites Check
+
+Verify your environment before starting:
+
+```bash
+# Check VUDO CLI version (need 0.3+)
+vudo --version
+
+# Verify Rust toolchain
+rustup show
+
+# Ensure wasm32 target
+rustup target list --installed | grep wasm32
+
+# Check available templates
+vudo template list
+```
+
+## Recommended Approach
+
+1. **Follow in order**: Each step builds on the previous
+2. **Type the code**: Do not just copy-paste; understand each line
+3. **Run tests frequently**: Catch issues early
+4. **Read the exegesis**: The mythology has meaning; let it inform your implementation
+5. **Take breaks**: This is a substantial project
+
+<Callout type="warning" title="Estimated Time">
+Plan for 6-8 hours to complete this capstone. You may want to spread it across multiple sessions.
+</Callout>
+
+## Getting Help
+
+- **Documentation**: [VUDO Reference](/dol/reference/vudo)
+- **Spirit Examples**: [GitHub Repository](https://github.com/univrs/spirit-examples)
+- **Community**: [GitHub Discussions](https://github.com/univrs/dol/discussions)
+
+Ready to begin your journey into the Lion & Swan mythology?
+
+Continue to [Define the Ontology](/tutorials/capstone/001-ontology).

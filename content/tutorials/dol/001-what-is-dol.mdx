@@ -1,0 +1,284 @@
+---
+title: "What is DOL?"
+description: "Understand the Design Ontology Language as a declarative specification language"
+track: "dol"
+tutorial: 1
+duration: "20 min"
+level: "beginner"
+objectives:
+  - "Understand DOL as a declarative language"
+  - "Learn ontology-first development principles"
+  - "Know what DOL compiles to"
+  - "Avoid common misconceptions about DOL"
+tags:
+  - "dol"
+  - "concepts"
+  - "declarative"
+  - "ontology"
+---
+
+# What is DOL?
+
+The Design Ontology Language (DOL) is a **declarative specification language** for describing systems. Unlike imperative programming languages, DOL focuses on describing *what* something is rather than *how* to compute it.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Understand what makes DOL declarative
+- Learn the ontology-first development approach
+- Know that DOL compiles to Rust, TypeScript, and WebAssembly
+- Recognize anti-patterns and common misconceptions
+
+## DOL is Declarative
+
+The most important thing to understand about DOL is that it is **declarative, not imperative**.
+
+### What Does "Declarative" Mean?
+
+A declarative language describes *what* you want, not *how* to achieve it.
+
+Consider this DOL specification:
+
+```dol
+mod examples.point @ 0.1.0
+
+/// A 2D point
+pub type Point2D {
+    x: Float64
+    y: Float64
+}
+```
+
+This declaration states:
+- There exists a type called `Point2D`
+- It has two fields: `x` and `y`
+- Both fields are 64-bit floating point numbers
+- It is public (`pub`) and part of the `examples.point` module
+
+Notice what is **not** specified:
+- How memory is allocated for a `Point2D`
+- How the fields are laid out in memory
+- How to construct a `Point2D` instance
+- What happens at runtime
+
+The DOL compiler determines all of these implementation details based on the target language.
+
+### Declarative vs Imperative Comparison
+
+| Aspect | Imperative (Python) | Declarative (DOL) |
+|--------|---------------------|-------------------|
+| Focus | Steps to execute | Structures that exist |
+| Mental model | "Do this, then do that" | "This is what exists" |
+| Verification | Runtime errors | Compile-time guarantees |
+| Order | Execution order matters | Declaration order irrelevant |
+
+<Callout type="info" title="Key Insight">
+DOL specifications are not "run" like Python scripts. They are compiled into verified code in your target language.
+</Callout>
+
+## Ontology-First Development
+
+DOL enables **ontology-first development** - a methodology where you define your domain concepts before writing implementation code.
+
+### What is an Ontology?
+
+In DOL, an ontology is a formal description of:
+- **Types**: The entities that exist in your domain
+- **Traits**: The behaviors and capabilities entities can have
+- **Relationships**: How entities relate to each other
+
+### The Ontology-First Workflow
+
+```
+1. Specify Domain       2. Validate Spec       3. Generate Code
+   (Write DOL)             (DOL Compiler)         (Rust/TS/WASM)
+       |                       |                       |
+       v                       v                       v
+   type User {            Type-check             struct User {
+       id: UUID           Constraint verify          id: Uuid,
+       email: String      Consistency check          email: String,
+   }                                             }
+```
+
+Benefits of ontology-first:
+1. **Catch errors early**: Invalid specifications fail at compile time
+2. **Single source of truth**: The DOL spec defines your domain
+3. **Multiple targets**: One spec, many implementations
+4. **Documentation**: The spec is readable documentation
+
+## What DOL Compiles To
+
+DOL source code is compiled through a pipeline that produces code in target languages:
+
+```
+DOL Source  -->  AST  -->  HIR  -->  Target Code
+                                         |
+                                         +-- Rust
+                                         +-- TypeScript
+                                         +-- WebAssembly
+```
+
+### Rust Target
+
+DOL types become Rust structs with appropriate derives:
+
+```rust
+// Generated from Point2D declaration
+#[derive(Debug, Clone, PartialEq)]
+pub struct Point2D {
+    pub x: f64,
+    pub y: f64,
+}
+```
+
+### TypeScript Target
+
+DOL types become TypeScript interfaces:
+
+```typescript
+// Generated from Point2D declaration
+export interface Point2D {
+    x: number;
+    y: number;
+}
+```
+
+### WebAssembly Target
+
+DOL can compile to WASM for browser or edge runtime execution, with bindings generated for JavaScript interop.
+
+## What DOL is NOT
+
+Understanding what DOL is *not* helps avoid common misconceptions.
+
+### DOL is NOT Like JavaScript/Python
+
+DOL does not have:
+- A `fn` keyword (it uses `fun` for functions)
+- Implicit global scope
+- Dynamic typing
+- Runtime type coercion
+- Side effects by default
+
+<Callout type="warning" title="Common Mistake">
+Do not try to write DOL like a scripting language. DOL specifications declare structure, not runtime behavior.
+</Callout>
+
+### DOL is NOT a General-Purpose Language
+
+DOL is purpose-built for:
+- Domain modeling
+- Type specifications
+- Constraint definition
+- System architecture
+
+DOL is **not** designed for:
+- Writing algorithms
+- Low-level systems programming
+- GUI applications
+- Database queries
+
+### DOL Does NOT Execute
+
+A DOL file is not "run" like a Python script. Instead:
+
+1. DOL source is **compiled** to an intermediate representation
+2. The IR is **validated** against constraints
+3. Target code is **generated** in Rust, TypeScript, or WASM
+4. The generated code is what actually executes
+
+## DOL v0.3.0 Syntax Fundamentals
+
+DOL v0.3.0 uses specific keywords that may differ from other languages you know:
+
+### Bindings
+
+```dol
+val x = 5       // Immutable binding (cannot be reassigned)
+var y = 10      // Mutable binding (can be reassigned)
+```
+
+Note: DOL uses `val`/`var`, not `let`/`let mut` like Rust.
+
+### Type Declarations
+
+```dol
+type Point2D {
+    x: Float64
+    y: Float64
+}
+```
+
+Note: `type` is the preferred keyword in v0.3.0. The `gene` keyword is still supported for compatibility but `type` is recommended.
+
+### Module Declarations
+
+```dol
+mod examples.point @ 0.1.0
+```
+
+Modules include semantic versioning to ensure compatibility.
+
+### Universal Quantifiers
+
+```dol
+forall T: Eq
+```
+
+Note: DOL uses `forall`, not `each` or `all`.
+
+## A Complete Example
+
+Here is a complete, valid DOL specification:
+
+```dol
+mod examples.point @ 0.1.0
+
+/// A 2D point
+pub type Point2D {
+    x: Float64
+    y: Float64
+}
+
+/// Calculate distance between points
+fun distance(val a: Point2D, val b: Point2D) -> Float64 {
+    val dx = b.x - a.x
+    val dy = b.y - a.y
+    (dx * dx + dy * dy).sqrt()
+}
+```
+
+This specification declares:
+- A module named `examples.point` at version 0.1.0
+- A public type `Point2D` with two fields
+- A function `distance` that calculates distance between two points
+
+Notice:
+- Parameters use `val` for immutable bindings
+- The function body uses `val` for local bindings
+- Documentation comments use `///`
+
+## Key Takeaways
+
+1. **DOL is declarative**: It describes *what* exists, not *how* to compute it
+
+2. **Ontology-first development**: Define your domain concepts before implementation
+
+3. **Multi-target compilation**: One DOL spec compiles to Rust, TypeScript, and WASM
+
+4. **Specific syntax**: DOL v0.3.0 uses `val`/`var`, `type`, `fun`, `forall`, and `extends`
+
+5. **Not a scripting language**: DOL specifications are compiled, not executed directly
+
+## What is Next?
+
+Now that you understand what DOL is, the next tutorial explains how DOL source code is transformed through the compilation pipeline.
+
+Continue to [The Compilation Pipeline](/tutorials/dol/002-compilation-pipeline).
+
+## Additional Resources
+
+- [DOL Language Reference](/dol/reference)
+- [DOL Examples Gallery](/dol/examples)
+- [Ontology-First Development Guide](/dol/learn/ontology-first)

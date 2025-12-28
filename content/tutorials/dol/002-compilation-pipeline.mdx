@@ -1,0 +1,338 @@
+---
+title: "The Compilation Pipeline"
+description: "Learn how DOL source is transformed through AST and HIR to target code"
+track: "dol"
+tutorial: 2
+duration: "25 min"
+level: "beginner"
+objectives:
+  - "Understand the DOL compilation stages"
+  - "Learn what AST and HIR represent"
+  - "Know the 22 canonical HIR node types"
+  - "Understand desugaring rules"
+tags:
+  - "dol"
+  - "compilation"
+  - "ast"
+  - "hir"
+  - "pipeline"
+---
+
+# The Compilation Pipeline
+
+DOL source code is transformed through a series of well-defined stages before becoming executable code in Rust, TypeScript, or WebAssembly. Understanding this pipeline helps you write better specifications and debug compilation issues.
+
+## Learning Objectives
+
+By the end of this tutorial, you will:
+
+- Understand the four stages of DOL compilation
+- Know the difference between AST and HIR
+- Learn the 22 canonical HIR node types
+- Understand how syntax is desugared between stages
+
+## The Pipeline Overview
+
+DOL compilation follows a staged transformation:
+
+```
++-------------+     +-------------+     +-------------+     +-------------+
+| DOL Source  | --> |     AST     | --> |     HIR     | --> | Target Code |
++-------------+     +-------------+     +-------------+     +-------------+
+    (text)           (syntax tree)      (typed IR)         (Rust/TS/WASM)
+```
+
+Each stage serves a specific purpose:
+
+| Stage | Purpose |
+|-------|---------|
+| **Source** | Human-readable DOL text |
+| **AST** | Syntax structure, preserves formatting |
+| **HIR** | Typed, canonical representation |
+| **Target** | Executable code in target language |
+
+## Stage 1: DOL Source
+
+The source stage is the DOL text you write. Consider this example:
+
+```dol
+mod examples.point @ 0.1.0
+
+/// A 2D point
+pub type Point2D {
+    x: Float64
+    y: Float64
+}
+
+/// Calculate distance between points
+fun distance(val a: Point2D, val b: Point2D) -> Float64 {
+    val dx = b.x - a.x
+    val dy = b.y - a.y
+    (dx * dx + dy * dy).sqrt()
+}
+```
+
+At this stage, the compiler has only text. It does not yet understand the structure or meaning of the code.
+
+## Stage 2: Abstract Syntax Tree (AST)
+
+The parser transforms source text into an Abstract Syntax Tree (AST). The AST represents the syntactic structure of your code, preserving:
+
+- Token positions (for error messages)
+- Whitespace and formatting info
+- Comments and documentation
+- Syntactic sugar (not yet desugared)
+
+### AST Structure Example
+
+The `Point2D` type declaration becomes an AST like:
+
+```
+TypeDecl
+├── visibility: Public
+├── name: "Point2D"
+├── doc_comment: "A 2D point"
+└── fields:
+    ├── Field
+    │   ├── name: "x"
+    │   └── type_ref: "Float64"
+    └── Field
+        ├── name: "y"
+        └── type_ref: "Float64"
+```
+
+The AST preserves the exact syntax you wrote, including any syntactic variations allowed by DOL.
+
+<Callout type="info" title="Parsing Errors">
+Syntax errors are caught during AST construction. If your DOL has a typo or malformed syntax, you will get an error at this stage with line and column information.
+</Callout>
+
+## Stage 3: High-Level Intermediate Representation (HIR)
+
+The HIR is the most important internal representation. It is:
+
+- **Typed**: All expressions have resolved types
+- **Canonical**: Syntactic sugar is removed
+- **Validated**: Semantic constraints are verified
+
+### The 22 HIR Node Types
+
+DOL v0.3.0 uses exactly **22 canonical HIR node types**, organized into three categories:
+
+#### Declarations (4 types)
+
+| Node Type | Purpose |
+|-----------|---------|
+| `Type` | Type declarations (including gene syntax) |
+| `Trait` | Trait declarations |
+| `Function` | Function declarations |
+| `Module` | Module declarations with versioning |
+
+#### Expressions (12 types)
+
+| Node Type | Purpose |
+|-----------|---------|
+| `Literal` | Numeric, string, boolean literals |
+| `Var` | Variable references |
+| `Binary` | Binary operations (`+`, `-`, `*`, `/`, etc.) |
+| `Unary` | Unary operations (`-`, `!`) |
+| `Call` | Function calls |
+| `MethodCall` | Method calls (`.method()`) |
+| `Field` | Field access (`.field`) |
+| `Index` | Index access (`[index]`) |
+| `Block` | Block expressions `{ ... }` |
+| `If` | Conditional expressions |
+| `Match` | Pattern matching |
+| `Lambda` | Anonymous functions |
+
+#### Statements (6 types)
+
+| Node Type | Purpose |
+|-----------|---------|
+| `Val` | Immutable binding declaration |
+| `Var` | Mutable binding declaration |
+| `Assign` | Assignment to mutable binding |
+| `Expr` | Expression statement |
+| `Return` | Early return from function |
+| `Break` | Break from loop |
+
+### Why Exactly 22 Types?
+
+The 22 HIR node types represent the **canonical forms** of DOL. Any DOL program, regardless of how it is written in source, is reduced to combinations of these 22 nodes.
+
+This canonical form:
+1. Simplifies code generation
+2. Makes analysis uniform
+3. Enables optimization passes
+4. Ensures consistent semantics
+
+## Desugaring Rules
+
+During the AST-to-HIR transformation, syntactic sugar is removed. Understanding these rules helps you predict what your DOL becomes internally.
+
+### val/var vs let/mut
+
+DOL v0.3.0 uses `val` and `var`:
+
+| DOL Syntax | HIR Node | Conceptual Equivalent |
+|------------|----------|----------------------|
+| `val x = 5` | `Val` statement | Immutable binding |
+| `var y = 10` | `Var` statement | Mutable binding |
+
+<Callout type="warning" title="DOL is Not Rust">
+DOL uses `val`/`var`, not `let`/`let mut`. This is a common source of confusion for Rust programmers.
+</Callout>
+
+### forall vs each/all
+
+DOL uses `forall` for universal quantifiers:
+
+```dol
+// DOL syntax
+forall T: Eq
+
+// NOT valid DOL:
+// each T: Eq    (wrong)
+// all T: Eq     (wrong)
+```
+
+### type vs gene
+
+In DOL v0.3.0, `type` is the preferred keyword for type declarations:
+
+```dol
+// Preferred in v0.3.0
+type Point2D {
+    x: Float64
+    y: Float64
+}
+
+// Still supported for compatibility
+gene Point2D {
+    x: Float64
+    y: Float64
+}
+```
+
+Both produce the same `Type` HIR node.
+
+### extends vs derives from
+
+DOL uses `extends` for inheritance:
+
+```dol
+// DOL syntax
+type ColorPoint extends Point2D {
+    color: String
+}
+
+// NOT valid DOL:
+// type ColorPoint derives from Point2D   (wrong)
+```
+
+## Stage 4: Target Code Generation
+
+The final stage transforms HIR into code in the target language.
+
+### Rust Target Generation
+
+HIR `Type` nodes become Rust structs:
+
+```dol
+// DOL HIR (conceptual)
+Type {
+    name: "Point2D",
+    visibility: Public,
+    fields: [
+        Field { name: "x", type: Float64 },
+        Field { name: "y", type: Float64 },
+    ]
+}
+```
+
+Becomes:
+
+```rust
+// Generated Rust
+#[derive(Debug, Clone, PartialEq)]
+pub struct Point2D {
+    pub x: f64,
+    pub y: f64,
+}
+```
+
+### TypeScript Target Generation
+
+The same HIR becomes a TypeScript interface:
+
+```typescript
+// Generated TypeScript
+export interface Point2D {
+    x: number;
+    y: number;
+}
+```
+
+### WASM Target Generation
+
+For WebAssembly, the HIR is compiled to WASM bytecode with appropriate bindings for JavaScript interop.
+
+## Pipeline Visualization
+
+Here is the complete pipeline for our example:
+
+```
+DOL Source                      AST                         HIR                        Rust
++---------------------+    +----------------+    +--------------------+    +------------------+
+| mod examples.point  | -> | Module {       | -> | Module {           | -> | mod examples {   |
+|   @ 0.1.0           |    |   name: ...,   |    |   name: "point",   |    |   mod point {    |
+|                     |    |   version: ... |    |   version: "0.1.0" |    |                  |
+| pub type Point2D {  |    | }              |    | }                  |    |     pub struct   |
+|   x: Float64        |    |                |    |                    |    |       Point2D {  |
+|   y: Float64        |    | TypeDecl {     |    | Type {             |    |         pub x:   |
+| }                   |    |   name: ...,   |    |   name: "Point2D", |    |           f64,   |
+|                     |    |   fields: ...  |    |   fields: [...]    |    |         pub y:   |
+|                     |    | }              |    | }                  |    |           f64,   |
++---------------------+    +----------------+    +--------------------+    +------------------+
+```
+
+## Compilation Errors
+
+Errors can occur at different stages:
+
+| Stage | Error Type | Example |
+|-------|------------|---------|
+| Source to AST | Syntax error | Missing closing brace |
+| AST to HIR | Semantic error | Unknown type reference |
+| HIR validation | Constraint error | Trait not implemented |
+| Code generation | Target error | Incompatible target feature |
+
+The compiler provides detailed error messages indicating which stage failed.
+
+## Key Takeaways
+
+1. **Four stages**: DOL Source -> AST -> HIR -> Target Code
+
+2. **22 HIR node types**: 4 declarations, 12 expressions, 6 statements
+
+3. **Desugaring happens** during AST-to-HIR transformation:
+   - `val`/`var` (not `let`/`let mut`)
+   - `forall` (not `each` or `all`)
+   - `type` preferred (but `gene` still works)
+   - `extends` (not `derives from`)
+
+4. **Multiple targets**: One HIR produces Rust, TypeScript, or WASM
+
+5. **Errors are stage-specific**: The stage tells you what kind of problem occurred
+
+## What is Next?
+
+Now that you understand how DOL is compiled, the next tutorial covers the core declaration syntax in detail.
+
+Continue to [Core Declarations](/tutorials/dol/003-core-declarations).
+
+## Additional Resources
+
+- [DOL Language Reference](/dol/reference)
+- [HIR Node Reference](/dol/reference/hir)
+- [Target-Specific Code Generation](/dol/reference/codegen)
