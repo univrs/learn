@@ -14,7 +14,7 @@ const year1Milestones: Milestone[] = [
   { name: 'SEX System', status: 'complete', metric: '24 tests' },
   { name: 'Rust Codegen', status: 'complete', metric: '24 tests' },
   { name: 'Self-Hosting (v0.2.3)', status: 'complete', metric: '1532 tests' },
-  { name: 'DOL v0.3.0 + HIR', status: 'complete', metric: '1410+ tests' },
+  { name: 'DOL v0.4.0 + HIR Complete', status: 'complete', metric: '365 HIR tests' },
 ]
 
 const year2Milestones: Milestone[] = [
@@ -25,12 +25,20 @@ const year2Milestones: Milestone[] = [
   { name: 'vudo CLI', status: 'complete', metric: '15 commands + REPL' },
 ]
 
+const year25Milestones: Milestone[] = [
+  { name: 'MLIR Dialect Definition', status: 'planned' },
+  { name: 'HIR → MLIR Lowering', status: 'planned' },
+  { name: 'MLIR → WASM Emission', status: 'planned' },
+  { name: 'VUDO VM Integration', status: 'planned' },
+  { name: 'MCP Server for AI Integration', status: 'planned' },
+]
+
 const year3Milestones: Milestone[] = [
+  { name: 'Full Bootstrap (DOL→DOL→WASM)', status: 'planned' },
+  { name: 'Spirit Runtime in WASM', status: 'planned' },
   { name: 'Mycelial Credits System', status: 'planned' },
   { name: 'Spirit Marketplace', status: 'planned' },
   { name: 'Imaginarium Platform', status: 'planned' },
-  { name: 'Community Governance', status: 'planned' },
-  { name: 'Enterprise Deployment', status: 'planned' },
 ]
 
 function MilestoneItem({ milestone }: { milestone: Milestone }) {
@@ -175,8 +183,52 @@ export default function Roadmap() {
         </div>
       </section>
 
-      {/* Year 3: Emergence */}
+      {/* Year 2.5: DOL v0.5.0 */}
       <section className="py-16 bg-univrs-bg-secondary">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-3 gap-8 mb-12">
+            <div className="lg:col-span-1">
+              <div className="sticky top-24">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
+                    <Cpu className="w-6 h-6 text-univrs-bg-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-light text-univrs-text-primary">v0.5.0</h2>
+                    <p className="text-sm text-univrs-text-muted">2025</p>
+                  </div>
+                </div>
+                <h3 className="text-2xl font-light text-cyan-400 mb-2">Compilation</h3>
+                <p className="text-univrs-text-secondary italic mb-6">
+                  "From HIR to WASM"
+                </p>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/30">
+                  <Circle className="w-3 h-3 text-yellow-400" />
+                  <span className="text-sm text-yellow-400 font-medium">NEXT</span>
+                </div>
+              </div>
+            </div>
+            <div className="lg:col-span-2">
+              <div className="card">
+                <div className="space-y-1">
+                  {year25Milestones.map((milestone, idx) => (
+                    <MilestoneItem key={idx} milestone={milestone} />
+                  ))}
+                </div>
+                <div className="mt-6 pt-6 border-t border-univrs-text-muted/20">
+                  <p className="text-sm text-univrs-text-secondary">
+                    <strong className="text-univrs-text-primary">Focus:</strong> MLIR dialect for DOL, lowering HIR to MLIR,
+                    emitting WASM binaries for Spirit packages. Full integration with VUDO VM for execution.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Year 3: Emergence */}
+      <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-3 gap-8 mb-12">
             <div className="lg:col-span-1">
@@ -209,8 +261,8 @@ export default function Roadmap() {
                 </div>
                 <div className="mt-6 pt-6 border-t border-univrs-text-muted/20">
                   <p className="text-sm text-univrs-text-secondary">
-                    <strong className="text-univrs-text-primary">Focus:</strong> Launch ecosystem economy with Mycelial Credits.
-                    Create marketplace for Spirit trading and collaborative development through the Imaginarium platform.
+                    <strong className="text-univrs-text-primary">Focus:</strong> Full bootstrap where DOL compiles DOL to WASM.
+                    Launch ecosystem economy with Mycelial Credits and Spirit Marketplace.
                   </p>
                 </div>
               </div>
@@ -237,7 +289,7 @@ export default function Roadmap() {
               <div className="text-3xl mb-3">🔬</div>
               <h3 className="text-lg font-normal text-univrs-text-primary mb-2">Proven Technology</h3>
               <p className="text-sm text-univrs-text-muted">
-                1,410+ passing tests across lexer, parser, type checker, HIR, and SEX system. Production-ready v0.3.0.
+                1,775+ passing tests across lexer, parser, type checker, HIR, validation, and codegen. Production-ready v0.4.0.
               </p>
             </div>
             <div className="card">
@@ -261,16 +313,16 @@ export default function Roadmap() {
             <div className="card">
               <div className="grid grid-cols-2 gap-8">
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">1,410+</div>
+                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">1,775+</div>
                   <div className="text-sm text-univrs-text-muted">DOL Tests Passing</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">v0.3.0</div>
-                  <div className="text-sm text-univrs-text-muted">DOL + HIR Released</div>
+                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">v0.4.0</div>
+                  <div className="text-sm text-univrs-text-muted">DOL + HIR Complete</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">100%</div>
-                  <div className="text-sm text-univrs-text-muted">Phase 2 Complete</div>
+                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">365</div>
+                  <div className="text-sm text-univrs-text-muted">HIR Tests Passing</div>
                 </div>
                 <div className="text-center">
                   <div className="text-4xl font-light text-univrs-secondary-400 mb-2">260</div>

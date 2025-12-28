@@ -8,12 +8,12 @@
 
 ---
 
-## DOL v0.3.0
+## DOL v0.4.0
 
 The Design Ontology Language (DOL) is a specification-first language for ontology-driven development.
 
-[![GitHub Release](https://img.shields.io/github/v/release/univrs/dol)](https://github.com/univrs/dol/releases/tag/v0.3.0)
-[![Crates.io](https://img.shields.io/crates/v/dol)](https://crates.io/crates/dol/0.3.0)
+[![GitHub Release](https://img.shields.io/github/v/release/univrs/dol)](https://github.com/univrs/dol/releases/tag/v0.4.0)
+[![Crates.io](https://img.shields.io/crates/v/dol)](https://crates.io/crates/dol/0.4.0)
 
 ### Quick Example
 
@@ -101,13 +101,22 @@ Build a complete Spirit from DOL to deployment:
 | **Pattern Matching** | Destructure and match data |
 | **Pipes** | Function composition with `\|>` and `>>` |
 
-### v0.3.0 Highlights
+### v0.4.0 Highlights
 
-- **HIR** - High-level Intermediate Representation (22 canonical node types)
+- **HIR Complete** - High-level Intermediate Representation (22 canonical node types, 365 tests)
+- **HIR Validation** - Full type checking and scope resolution (1403 lines)
+- **HIR Codegen** - Rust code generation from HIR (763 lines)
+- **Self-Validation** - DOL files validate through full pipeline (10/10 passing)
 - **`val`/`var`** - Clear immutable vs mutable bindings
 - **`type`** - Standard type declarations (alongside `gene`)
-- **`extends`** - Replaces `derives from`
-- **`forall`** - Unified quantifier (replaces `each`, `all`)
+
+### Roadmap
+
+| Version | Focus | Status |
+|---------|-------|--------|
+| v0.4.0 | HIR Types, Validation, Rust Codegen | ✅ Complete |
+| v0.5.0 | MLIR Dialect, HIR → MLIR, WASM Emission | 🎯 Next |
+| v0.6.0 | MCP Server, Full Bootstrap, Spirit Runtime | 📋 Planned |
 
 ---
 
