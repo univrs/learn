@@ -35,32 +35,32 @@ pub gene MyceliumNode {
 
 ```dol
 // Empty list
-let empty: List<Int64> = []
+val empty: List<Int64> = []
 
 // List with elements
-let numbers = [1, 2, 3, 4, 5]
+val numbers = [1, 2, 3, 4, 5]
 
 // From repeated value
-let zeros = [0; 10]  // [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+val zeros = [0; 10]  // [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ```
 
 ### List Operations
 
 ```dol
-let mut items = [1, 2, 3]
+var items = [1, 2, 3]
 
 // Access by index
-let first = items[0]        // 1
-let last = items[items.len() - 1]  // 3
+val first = items[0]        // 1
+val last = items[items.len() - 1]  // 3
 
 // Length
-let count = items.len()     // 3
+val count = items.len()     // 3
 
-// Add elements (requires mut)
+// Add elements (requires var)
 items.push(4)               // [1, 2, 3, 4]
 
 // Check membership
-let has_two = items.contains(2)  // true
+val has_two = items.contains(2)  // true
 ```
 
 ## Map
@@ -83,18 +83,18 @@ pub system MyceliumNetwork {
 
 ```dol
 // Create a map
-let mut scores: Map<String, Int64> = Map.new()
+var scores: Map<String, Int64> = Map.new()
 
 // Insert values
 scores.insert("Alice", 100)
 scores.insert("Bob", 85)
 
 // Get value
-let alice_score = scores.get("Alice")  // Some(100)
-let unknown = scores.get("Charlie")    // None
+val alice_score = scores.get("Alice")  // Some(100)
+val unknown = scores.get("Charlie")    // None
 
 // Check key exists
-let has_bob = scores.contains_key("Bob")  // true
+val has_bob = scores.contains_key("Bob")  // true
 
 // Iterate
 for (name, score) in scores {
@@ -118,8 +118,8 @@ pub gene GeneDecl {
 ### Working with Option
 
 ```dol
-let maybe_value: Option<Int64> = Some(42)
-let nothing: Option<Int64> = None
+val maybe_value: Option<Int64> = Some(42)
+val nothing: Option<Int64> = None
 
 // Pattern match
 match maybe_value {
@@ -128,13 +128,13 @@ match maybe_value {
 }
 
 // Unwrap with default
-let value = maybe_value.unwrap_or(0)
+val value = maybe_value.unwrap_or(0)
 
 // Map over Option
-let doubled = maybe_value.map(|v| v * 2)  // Some(84)
+val doubled = maybe_value.map(|v| v * 2)  // Some(84)
 
 // Chain operations
-let result = maybe_value
+val result = maybe_value
   .filter(|v| v > 10)
   .map(|v| v * 2)
   .unwrap_or(0)
@@ -149,11 +149,11 @@ DOL collections support functional programming patterns:
 Transform each element:
 
 ```dol
-let numbers = [1, 2, 3, 4, 5]
-let doubled = numbers.map(|n| n * 2)  // [2, 4, 6, 8, 10]
+val numbers = [1, 2, 3, 4, 5]
+val doubled = numbers.map(|n| n * 2)  // [2, 4, 6, 8, 10]
 
 // From the codebase
-let call_args = args.map(|arg| CallArg {
+val call_args = args.map(|arg| CallArg {
   name: None,
   value: arg,
   span: span.clone()
@@ -165,12 +165,12 @@ let call_args = args.map(|arg| CallArg {
 Keep elements matching a predicate:
 
 ```dol
-let numbers = [1, 2, 3, 4, 5, 6]
-let evens = numbers.filter(|n| n % 2 == 0)  // [2, 4, 6]
+val numbers = [1, 2, 3, 4, 5, 6]
+val evens = numbers.filter(|n| n % 2 == 0)  // [2, 4, 6]
 
 // From the codebase
 fun has_enough_branching_points() -> Bool {
-  let branch_count = this.nodes.values()
+  val branch_count = this.nodes.values()
     .filter(|n| n.is_branching_point())
     .len()
   return branch_count > 10
@@ -182,13 +182,13 @@ fun has_enough_branching_points() -> Bool {
 Combine all elements into one:
 
 ```dol
-let numbers = [1, 2, 3, 4, 5]
-let sum = numbers.reduce(0, |acc, n| acc + n)  // 15
+val numbers = [1, 2, 3, 4, 5]
+val sum = numbers.reduce(0, |acc, n| acc + n)  // 15
 
 // From the codebase
 fun calculate_biomass() -> Float64 {
-  let node_mass = sum(this.nodes.values().map(|n| n.stored_nutrients.total_mass()))
-  let edge_mass = sum(this.edges.map(|e| e.length() * e.diameter * 0.1))
+  val node_mass = sum(this.nodes.values().map(|n| n.stored_nutrients.total_mass()))
+  val edge_mass = sum(this.edges.map(|e| e.length() * e.diameter * 0.1))
   return node_mass + edge_mass
 }
 ```
@@ -198,9 +198,9 @@ fun calculate_biomass() -> Float64 {
 Find first matching element:
 
 ```dol
-let numbers = [1, 2, 3, 4, 5]
-let first_even = numbers.find(|n| n % 2 == 0)  // Some(2)
-let first_big = numbers.find(|n| n > 10)        // None
+val numbers = [1, 2, 3, 4, 5]
+val first_even = numbers.find(|n| n % 2 == 0)  // Some(2)
+val first_big = numbers.find(|n| n > 10)        // None
 ```
 
 ### Any / All
@@ -208,11 +208,11 @@ let first_big = numbers.find(|n| n > 10)        // None
 Check if any or all elements match:
 
 ```dol
-let numbers = [1, 2, 3, 4, 5]
+val numbers = [1, 2, 3, 4, 5]
 
-let has_even = numbers.any(|n| n % 2 == 0)  // true
-let all_positive = numbers.all(|n| n > 0)   // true
-let all_even = numbers.all(|n| n % 2 == 0)  // false
+val has_even = numbers.any(|n| n % 2 == 0)  // true
+val all_positive = numbers.all(|n| n > 0)   // true
+val all_even = numbers.all(|n| n % 2 == 0)  // false
 ```
 
 ## Chaining Operations
@@ -227,7 +227,7 @@ pub fun can_fruit() -> Bool {
 }
 
 fun has_enough_branching_points() -> Bool {
-  let branch_count = this.nodes.values()
+  val branch_count = this.nodes.values()
     .filter(|n| n.is_branching_point())
     .len()
   return branch_count > 10
@@ -240,7 +240,7 @@ Collections can be converted to iterators for lazy evaluation:
 
 ```dol
 // Lazy iteration - only computes what's needed
-let result = large_list
+val result = large_list
   .iter()
   .filter(|x| expensive_check(x))
   .take(10)  // Only computes first 10 matches
@@ -256,7 +256,7 @@ pub gene DolFile {
 }
 
 // Flatten nested structures
-let all_fields = declarations
+val all_fields = declarations
   .filter_map(|d| match d {
     Decl.Gene { decl } => Some(decl.fields),
     _ => None

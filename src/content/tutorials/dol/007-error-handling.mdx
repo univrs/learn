@@ -79,18 +79,18 @@ pub fun greet_user(name: Option<String>) -> String {
 ### Option Methods
 
 ```dol
-let maybe_value: Option<Int64> = Some(42)
-let nothing: Option<Int64> = None
+val maybe_value: Option<Int64> = Some(42)
+val nothing: Option<Int64> = None
 
 // Unwrap with default
-let value = maybe_value.unwrap_or(0)  // 42
-let default = nothing.unwrap_or(0)    // 0
+val value = maybe_value.unwrap_or(0)  // 42
+val default = nothing.unwrap_or(0)    // 0
 
 // Map over Option
-let doubled = maybe_value.map(|v| v * 2)  // Some(84)
+val doubled = maybe_value.map(|v| v * 2)  // Some(84)
 
 // Chain operations
-let result = maybe_value
+val result = maybe_value
   .filter(|v| v > 10)
   .map(|v| v * 2)
   .unwrap_or(0)  // 84
@@ -145,7 +145,7 @@ pub fun parse_int(text: String) -> Result<Int64, ParseError> {
 
 ```dol
 pub fun process_input(text: String) -> String {
-  let result = parse_int(text)
+  val result = parse_int(text)
 
   match result {
     Ok(value) => {
@@ -161,21 +161,21 @@ pub fun process_input(text: String) -> String {
 ### Result Methods
 
 ```dol
-let success: Result<Int64, String> = Ok(42)
-let failure: Result<Int64, String> = Err("not found")
+val success: Result<Int64, String> = Ok(42)
+val failure: Result<Int64, String> = Err("not found")
 
 // Check status
-let is_ok = success.is_ok()    // true
-let is_err = failure.is_err()  // true
+val is_ok = success.is_ok()    // true
+val is_err = failure.is_err()  // true
 
 // Unwrap with default
-let value = failure.unwrap_or(0)  // 0
+val value = failure.unwrap_or(0)  // 0
 
 // Map success value
-let doubled = success.map(|v| v * 2)  // Ok(84)
+val doubled = success.map(|v| v * 2)  // Ok(84)
 
 // Map error
-let with_context = failure.map_err(|e| "Parse failed: " + e)
+val with_context = failure.map_err(|e| "Parse failed: " + e)
 ```
 
 ## The ? Operator
@@ -184,9 +184,9 @@ The `?` operator provides clean error propagation:
 
 ```dol
 pub fun parse_config(text: String) -> Result<Config, Error> {
-  let name = parse_name(text)?   // Returns Err early if parse fails
-  let port = parse_port(text)?   // Returns Err early if parse fails
-  let host = parse_host(text)?   // Returns Err early if parse fails
+  val name = parse_name(text)?   // Returns Err early if parse fails
+  val port = parse_port(text)?   // Returns Err early if parse fails
+  val host = parse_host(text)?   // Returns Err early if parse fails
 
   Ok(Config { name, port, host })
 }
@@ -196,17 +196,17 @@ Without `?`, the same code would be verbose:
 
 ```dol
 pub fun parse_config_verbose(text: String) -> Result<Config, Error> {
-  let name = match parse_name(text) {
+  val name = match parse_name(text) {
     Ok(n) => n,
     Err(e) => { return Err(e) }
   }
 
-  let port = match parse_port(text) {
+  val port = match parse_port(text) {
     Ok(p) => p,
     Err(e) => { return Err(e) }
   }
 
-  let host = match parse_host(text) {
+  val host = match parse_host(text) {
     Ok(h) => h,
     Err(e) => { return Err(e) }
   }
@@ -287,15 +287,15 @@ pub fun handle_validation(result: Result<User, ValidationError>) -> String {
 
 ```dol
 // Option to Result
-let maybe: Option<Int64> = Some(42)
-let result: Result<Int64, String> = maybe.ok_or("No value found")
+val maybe: Option<Int64> = Some(42)
+val result: Result<Int64, String> = maybe.ok_or("No value found")
 
 // Result to Option
-let res: Result<Int64, String> = Ok(42)
-let opt: Option<Int64> = res.ok()  // Some(42)
+val res: Result<Int64, String> = Ok(42)
+val opt: Option<Int64> = res.ok()  // Some(42)
 
-let err: Result<Int64, String> = Err("failed")
-let none: Option<Int64> = err.ok()  // None
+val err: Result<Int64, String> = Err("failed")
+val none: Option<Int64> = err.ok()  // None
 ```
 
 ## Chaining Fallible Operations
@@ -313,9 +313,9 @@ Or with the `?` operator:
 
 ```dol
 pub fun process_data(input: String) -> Result<Output, Error> {
-  let parsed = parse(input)?
-  let valid = validate(parsed)?
-  let transformed = transform(valid)?
+  val parsed = parse(input)?
+  val valid = validate(parsed)?
+  val transformed = transform(valid)?
   Ok(Output { data: transformed })
 }
 ```
@@ -326,13 +326,13 @@ Add context to errors for better debugging:
 
 ```dol
 pub fun load_config(path: String) -> Result<Config, Error> {
-  let content = read_file(path)
+  val content = read_file(path)
     .map_err(|e| Error {
       message: "Failed to read config file: " + e.message,
       source: Some(Box.new(e))
     })?
 
-  let config = parse_config(content)
+  val config = parse_config(content)
     .map_err(|e| Error {
       message: "Failed to parse config: " + e.message,
       source: Some(Box.new(e))

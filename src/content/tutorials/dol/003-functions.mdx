@@ -96,7 +96,7 @@ pub fun add(a: Int64, b: Int64) -> Int64 {
 }
 
 pub fun multiply(x: Int64, y: Int64) -> Int64 {
-  let result = x * y
+  val result = x * y
   result  // Explicitly return result
 }
 ```
@@ -174,13 +174,13 @@ Anonymous functions use pipe syntax:
 
 ```dol
 // Lambda syntax: |params| body
-let double = |x: Int64| x * 2
-let add = |a: Int64, b: Int64| a + b
+val double = |x: Int64| x * 2
+val add = |a: Int64, b: Int64| a + b
 
 // Block lambdas for complex logic
-let calculate = |x: Int64| {
-  let squared = x * x
-  let doubled = squared * 2
+val calculate = |x: Int64| {
+  val squared = x * x
+  val doubled = squared * 2
   doubled + 1
 }
 ```
@@ -189,12 +189,12 @@ Lambdas are commonly used with collection methods:
 
 ```dol
 pub fun find_nearby_nodes(pos: Vec3, max_dist: Float64) -> List<UInt64> {
-  let mut result = []
+  var result = []
   for (id, node) in this.nodes {
-    let dx = pos.x - node.position.x
-    let dy = pos.y - node.position.y
-    let dz = pos.z - node.position.z
-    let dist = (dx * dx + dy * dy + dz * dz).sqrt()
+    val dx = pos.x - node.position.x
+    val dy = pos.y - node.position.y
+    val dz = pos.z - node.position.z
+    val dist = (dx * dx + dy * dy + dz * dz).sqrt()
     if dist <= max_dist {
       result.push(id)
     }
@@ -238,13 +238,13 @@ pub system MyceliumNetwork {
   state next_id: UInt64
 
   pub fun from_spore(position: Vec3) -> MyceliumNetwork {
-    let initial_tip = HyphalTip {
+    val initial_tip = HyphalTip {
       position: position,
       direction: Vec3 { x: 0.0, y: 0.0, z: 1.0 },
       age: 0.0
     }
 
-    let initial_node = MyceliumNode {
+    val initial_node = MyceliumNode {
       id: 0,
       position: position,
       tips: [initial_tip],

@@ -40,7 +40,7 @@ pub fun describe_number(n: Int64) -> String {
 Since `if` returns a value, you can assign it directly:
 
 ```dol
-let status = if is_active { "active" } else { "inactive" }
+val status = if is_active { "active" } else { "inactive" }
 ```
 
 ## Match Expressions
@@ -149,7 +149,7 @@ for i in 0..=10 {
 Continue while a condition is true:
 
 ```dol
-pub fun find_root(mut n: Int64) -> Int64 {
+pub fun find_root(var n: Int64) -> Int64 {
   while n > 1 {
     n = n / 2
   }
@@ -163,12 +163,12 @@ Infinite loop until explicitly broken:
 
 ```dol
 pub fun find_first_match(items: List<Item>, predicate: (Item) -> Bool) -> Option<Item> {
-  mut index = 0
+  var index = 0
   loop {
     if index >= items.len() {
       break None
     }
-    let item = items[index]
+    val item = items[index]
     if predicate(item) {
       break Some(item)
     }

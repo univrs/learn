@@ -29,7 +29,7 @@ trait container.lifecycle {
   container is removing
   container is removed
 
-  each transition emits event
+  forall transition emits event
 }
 
 exegesis {
@@ -99,10 +99,10 @@ exegesis {
 
 ```dol
 constraint container.integrity {
-  state matches declared
-  identity never changes
-  boundaries never expand
-  resources never exceeds
+  state == declared
+  identity not changes
+  boundaries not expand
+  resources not exceeds
 }
 
 exegesis {
@@ -126,8 +126,8 @@ DOL constraints use specific keywords:
 
 | Keyword | Meaning |
 |---------|---------|
-| `matches` | Value must equal declared specification |
-| `never` | Action is prohibited |
+| `==` | Value must equal declared specification |
+| `not` | Action is prohibited |
 | `always` | Condition must hold at all times |
 | `requires` | Prerequisite condition |
 
@@ -137,9 +137,9 @@ Ensure properties maintain specific relationships:
 
 ```dol
 constraint resource.allocation {
-  used never exceeds allocated
-  allocated never exceeds maximum
-  minimum never exceeds allocated
+  used not exceeds allocated
+  allocated not exceeds maximum
+  minimum not exceeds allocated
 }
 
 exegesis {
@@ -155,15 +155,15 @@ Protect immutable aspects of entities:
 
 ```dol
 constraint identity.cryptographic {
-  keypair never changes
-  public_key derives from keypair
+  keypair not changes
+  public_key extends keypair
   signature is verifiable
 }
 
 exegesis {
   Cryptographic identity constraints ensure that identity remains
   stable and verifiable throughout an entity's lifetime. The keypair
-  is generated once and never modified.
+  is generated once and not modified.
 }
 ```
 
@@ -248,7 +248,7 @@ trait container.lifecycle {
   container is removing
   container is removed
 
-  each transition emits event
+  forall transition emits event
 }
 
 exegesis {
@@ -256,10 +256,10 @@ exegesis {
 }
 
 constraint container.integrity {
-  state matches declared
-  identity never changes
-  boundaries never expand
-  resources never exceeds
+  state == declared
+  identity not changes
+  boundaries not expand
+  resources not exceeds
 }
 
 exegesis {
@@ -313,8 +313,9 @@ exegesis {
 - Use `is` to declare states: `entity is state`
 - Use `uses` to compose traits: `uses other.trait`
 - **Constraints** enforce invariants with `constraint name { }`
-- Use `matches` for equality: `value matches declared`
-- Use `never` for prohibitions: `property never changes`
+- Use `==` for equality: `value == declared`
+- Use `not` for prohibitions: `property not changes`
+- Use `forall` for quantified predicates: `forall x in items`
 - Traits can include method signatures for implementation
 - Combine traits and constraints for complete specifications
 
@@ -351,9 +352,9 @@ exegesis {
 
 constraint user.security {
   // Add constraints for:
-  // - password_hash never exposed
-  // - email matches pattern
-  // - username never changes
+  // - password_hash not exposed
+  // - email == pattern
+  // - username not changes
 }
 
 exegesis {

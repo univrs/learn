@@ -15,10 +15,10 @@ As your DOL specifications grow, you need to organize them into modules. Modules
 
 ## Module Declaration
 
-Every DOL file can declare its module with a version:
+Every DOL file can declare its module with a version. DOL v0.3.0 prefers `mod` over `module`:
 
 ```dol
-module dol.token @ 0.4.0
+mod dol.token @ 0.4.0
 
 exegesis {
   Token span tracks the location of tokens in source code.
@@ -33,7 +33,7 @@ pub gene Span {
 ```
 
 The module declaration includes:
-- `module` - keyword
+- `mod` - keyword (also accepts `module` for compatibility)
 - `dol.token` - module path using dot notation
 - `@` - version separator
 - `0.4.0` - semver version number
@@ -43,7 +43,7 @@ The module declaration includes:
 Use the `use` statement to import from other modules:
 
 ```dol
-module dol.ast @ 0.4.0
+mod dol.ast @ 0.4.0
 
 use dol.token.{ Span }
 use dol.types.{ TypeExpr, TypeParam }
@@ -82,7 +82,7 @@ use dol.ast.{ * }
 Items are private by default. Use `pub` to make them public:
 
 ```dol
-module user.account @ 1.0.0
+mod user.account @ 1.0.0
 
 // Public - accessible from other modules
 pub gene User {
@@ -190,7 +190,7 @@ my-project/
 ### lib.dol (Entry Point)
 
 ```dol
-module myproject @ 1.0.0
+mod myproject @ 1.0.0
 
 // Re-export public API
 pub use myproject.types.{ User, Config, Error }
@@ -199,14 +199,14 @@ pub use myproject.systems.{ NetworkSystem }
 
 exegesis {
   My Project library - a DOL specification for [purpose].
-  This module re-exports the public API.
+  This mod re-exports the public API.
 }
 ```
 
 ### types/mod.dol
 
 ```dol
-module myproject.types @ 1.0.0
+mod myproject.types @ 1.0.0
 
 pub use myproject.types.core.{ User, Config }
 pub use myproject.types.errors.{ Error, ValidationError }
@@ -261,9 +261,9 @@ DOL has several visibility levels:
 | `pub(super)` | Public to parent module |
 
 ```dol
-module myproject.internal @ 1.0.0
+mod myproject.internal @ 1.0.0
 
-// Private - only this module
+// Private - only this mod
 gene PrivateHelper {
   has data: String
 }
@@ -290,18 +290,18 @@ pub gene PublicAPI {
 
 ```dol
 // Good: focused modules
-module myproject.user @ 1.0.0
-module myproject.auth @ 1.0.0
-module myproject.session @ 1.0.0
+mod myproject.user @ 1.0.0
+mod myproject.auth @ 1.0.0
+mod myproject.session @ 1.0.0
 
 // Avoid: catch-all modules
-module myproject.misc @ 1.0.0  // Too vague
+mod myproject.misc @ 1.0.0  // Too vague
 ```
 
 ### 2. Minimize Public API
 
 ```dol
-module myproject.auth @ 1.0.0
+mod myproject.auth @ 1.0.0
 
 // Only expose what users need
 pub gene Session {
@@ -325,18 +325,18 @@ fun validate_token(token: String) -> Bool {
 
 ```dol
 // Major: Breaking changes
-module myproject @ 2.0.0  // Incompatible API changes
+mod myproject @ 2.0.0  // Incompatible API changes
 
 // Minor: New features
-module myproject @ 1.1.0  // Added new genes/functions
+mod myproject @ 1.1.0  // Added new genes/functions
 
 // Patch: Bug fixes
-module myproject @ 1.0.1  // Fixed behavior, no API changes
+mod myproject @ 1.0.1  // Fixed behavior, no API changes
 ```
 
 ## Key Takeaways
 
-- Declare modules with `module path.name @ version`
+- Declare modules with `mod path.name @ version`
 - Import with `use module.path.{ Items }`
 - Use `pub` for public visibility
 - Systems declare dependencies with `requires name >= version`
@@ -349,7 +349,7 @@ module myproject @ 1.0.1  // Fixed behavior, no API changes
 Create a module structure for a blog system:
 
 ```dol
-module blog @ 1.0.0
+mod blog @ 1.0.0
 
 use blog.types.{ Post, Author, Comment }
 use blog.traits.{ Publishable, Commentable }
@@ -359,7 +359,7 @@ exegesis {
 }
 
 // In blog/types.dol:
-module blog.types @ 1.0.0
+mod blog.types @ 1.0.0
 
 pub gene Post {
   has id: UInt64
@@ -383,7 +383,7 @@ pub gene Comment {
 }
 
 // In blog/traits.dol:
-module blog.traits @ 1.0.0
+mod blog.traits @ 1.0.0
 
 use blog.types.{ Post }
 
