@@ -2,7 +2,7 @@ import { Routes, Route, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { FileCode, BookOpen, Library, Code2, ArrowRight, Sparkles, Zap, Package, Github, Terminal } from "lucide-react";
 
-const DOL_VERSION = "0.2.3";
+const DOL_VERSION = "0.3.0";
 import DOLLearn from "./Learn";
 import DOLReference from "./Reference";
 import DOLStdlib from "./Stdlib";
@@ -152,7 +152,7 @@ function DOLOverview() {
                                 color: "var(--glow-cyan)",
                             }}
                         >
-                            cargo install dol --features cli
+                            cargo install dol
                         </code>
                     </div>
                 </div>
@@ -242,16 +242,15 @@ function DOLOverview() {
                             className="p-6 text-sm font-mono overflow-x-auto"
                             style={{ color: "var(--glow-cyan)" }}
                         >
-                            {`gene container.exists @1.0.0 {
+                            {`gene hello.world {
+  message has content
+  message has sender
+  message has timestamp
+}
 
-    has identifier: string
-    has state: ContainerState
-    is entity
-    is persistent
-
-    exegesis {
-        A container exists in the system with unique identity.
-    }
+exegesis {
+  The hello.world gene defines a message entity
+  with three essential properties.
 }`}
                         </pre>
                     </div>

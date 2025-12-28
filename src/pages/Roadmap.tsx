@@ -14,6 +14,7 @@ const year1Milestones: Milestone[] = [
   { name: 'SEX System', status: 'complete', metric: '24 tests' },
   { name: 'Rust Codegen', status: 'complete', metric: '24 tests' },
   { name: 'Self-Hosting (v0.2.3)', status: 'complete', metric: '1532 tests' },
+  { name: 'DOL v0.3.0 + HIR', status: 'complete', metric: '1410+ tests' },
 ]
 
 const year2Milestones: Milestone[] = [
@@ -236,7 +237,7 @@ export default function Roadmap() {
               <div className="text-3xl mb-3">🔬</div>
               <h3 className="text-lg font-normal text-univrs-text-primary mb-2">Proven Technology</h3>
               <p className="text-sm text-univrs-text-muted">
-                276 passing tests across lexer, parser, type checker, and SEX system. Production-ready foundation.
+                1,410+ passing tests across lexer, parser, type checker, HIR, and SEX system. Production-ready v0.3.0.
               </p>
             </div>
             <div className="card">
@@ -260,12 +261,12 @@ export default function Roadmap() {
             <div className="card">
               <div className="grid grid-cols-2 gap-8">
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">1,376</div>
-                  <div className="text-sm text-univrs-text-muted">Total Tests Passing</div>
+                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">1,410+</div>
+                  <div className="text-sm text-univrs-text-muted">DOL Tests Passing</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">5</div>
-                  <div className="text-sm text-univrs-text-muted">Repos, 0 Warnings</div>
+                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">v0.3.0</div>
+                  <div className="text-sm text-univrs-text-muted">DOL + HIR Released</div>
                 </div>
                 <div className="text-center">
                   <div className="text-4xl font-light text-univrs-primary-400 mb-2">100%</div>
