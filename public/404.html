@@ -4,17 +4,35 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Univrs Learn</title>
+    <meta name="description" content="Learn Univrs meta-tools: DOL, LLVM Translation Tools, and Skills Framework" />
+    <title>Univrs Learn - Tools that build tools</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet" />
+    <!-- Initialize theme before page renders to prevent flash -->
     <script>
-      // SPA redirect for Cloudflare Pages
-      // Redirects to index.html while preserving the path for client-side routing
-      var path = window.location.pathname + window.location.search + window.location.hash;
-      window.location.replace('/' + '?redirect=' + encodeURIComponent(path));
+      (function() {
+        var stored = localStorage.getItem('theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = stored || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
+    <!-- GitHub Pages SPA redirect: store path and redirect to root -->
+    <script>
+      (function() {
+        var path = window.location.pathname + window.location.search + window.location.hash;
+        // Store the path for the app to restore after redirect
+        sessionStorage.setItem('spa-redirect-path', path);
+        // Redirect to root with the path encoded
+        window.location.replace('/?redirect=' + encodeURIComponent(path));
+      })();
     </script>
   </head>
   <body>
     <noscript>
       <meta http-equiv="refresh" content="0;url=/" />
     </noscript>
+    <div id="root"></div>
   </body>
 </html>
