@@ -9,7 +9,7 @@ export default function Home() {
     <>
       <Helmet>
         <title>Univrs.io - Tools for systems that understand themselves</title>
-        <meta name="description" content="The Univrs meta-tools ecosystem: DOL (Design Ontology Language) with 631 tests, LLVM Translation Tools, and Skills Framework. Specification-first development for intelligent systems." />
+        <meta name="description" content="The Univrs meta-tools ecosystem: DOL (Design Ontology Language) v0.4.0 with 1,775+ tests, HIR complete with 365 tests. Specification-first development for intelligent systems." />
       </Helmet>
 
       <Hero />

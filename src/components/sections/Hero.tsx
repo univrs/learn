@@ -48,21 +48,21 @@ export default function Hero() {
             }}
           >
             <div className="flex items-center gap-2">
-              <span style={{ color: 'var(--glow-cyan)' }}>590 Tests</span>
+              <span style={{ color: 'var(--glow-cyan)' }}>1,775+ Tests</span>
             </div>
             <div
               className="hidden sm:block w-px h-4"
               style={{ backgroundColor: 'var(--soft-gray)' }}
             />
             <div className="flex items-center gap-2">
-              <span style={{ color: 'var(--glow-gold)' }}>v0.2.0 Meta-Programming</span>
+              <span style={{ color: 'var(--glow-gold)' }}>DOL v0.4.0 + HIR Complete</span>
             </div>
             <div
               className="hidden sm:block w-px h-4"
               style={{ backgroundColor: 'var(--soft-gray)' }}
             />
             <div className="flex items-center gap-2">
-              <span style={{ color: 'var(--spore-purple)' }}>Quote/Eval + 18 Macros</span>
+              <span style={{ color: 'var(--spore-purple)' }}>365 HIR Tests</span>
             </div>
           </div>
 
