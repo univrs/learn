@@ -219,7 +219,7 @@ export default function DOLCheatsheet() {
                         className="text-center text-sm"
                         style={{ color: "var(--soft-gray)" }}
                     >
-                        DOL v0.2.0 "Meta-Programming" | 590 tests passing
+                        DOL v0.4.0 "HIR Complete" | 1,775+ tests passing
                     </div>
                 </div>
             </section>
