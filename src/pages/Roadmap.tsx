@@ -1,5 +1,6 @@
 import { Helmet } from 'react-helmet-async'
 import { CheckCircle2, Circle, Rocket, Cpu, Sprout } from 'lucide-react'
+import MilestoneTracker from '../components/MilestoneTracker'
 
 interface Milestone {
   name: string
@@ -303,8 +304,11 @@ export default function Roadmap() {
         </div>
       </section>
 
+      {/* Milestone Tracker */}
+      <MilestoneTracker />
+
       {/* Technical Progress */}
-      <section className="py-16 bg-univrs-bg-secondary">
+      <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-light text-univrs-text-primary mb-8 text-center">
             Technical <span className="gradient-text">Progress</span>
