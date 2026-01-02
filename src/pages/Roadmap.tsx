@@ -12,7 +12,7 @@ const year1Milestones: Milestone[] = [
   { name: 'DOL 2.0 Specification', status: 'complete' },
   { name: 'Lexer + Parser', status: 'complete', metric: '157 tests' },
   { name: 'Type Checker', status: 'complete', metric: '87 tests' },
-  { name: 'SEX System', status: 'complete', metric: '24 tests' },
+  { name: 'Effect Inference', status: 'complete', metric: '24 tests' },
   { name: 'Rust Codegen', status: 'complete', metric: '24 tests' },
   { name: 'Self-Hosting (v0.2.3)', status: 'complete', metric: '1532 tests' },
   { name: 'DOL v0.6.0 + WASM Pipeline', status: 'complete', metric: 'HIR + MLIR + WASM' },

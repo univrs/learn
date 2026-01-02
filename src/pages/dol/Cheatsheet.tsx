@@ -67,16 +67,6 @@ const sections = [
         ],
     },
     {
-        title: "SEX (Side Effects)",
-        items: [
-            { syntax: "sex fun name() { }", desc: "Effectful function" },
-            { syntax: "sex var NAME: Type", desc: "Mutable global" },
-            { syntax: "sex { block }", desc: "Effect block" },
-            { syntax: "*.sex.dol", desc: "Effect file extension" },
-            { syntax: "sex/", desc: "Effect directory" },
-        ],
-    },
-    {
         title: "Lambdas & Functions",
         items: [
             { syntax: "\\x -> x + 1", desc: "Lambda expression" },
