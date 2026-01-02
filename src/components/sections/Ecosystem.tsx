@@ -25,11 +25,13 @@ const repos = [
     color: '#3b82f6',
   },
   {
-    name: 'univrs-skills',
-    description: 'Skills framework and catalog',
-    href: 'https://github.com/univrs/univrs-skills',
-    language: 'TypeScript',
-    color: '#3b82f6',
+    name: 'Thermodynamic Foundations',
+    description: 'ENR curriculum: EROI, autopoiesis, heterotropi',
+    href: '/docs/foundations/thermodynamics',
+    language: 'Curriculum',
+    color: '#f97316',
+    isNew: true,
+    isDocsLink: true,
   },
   {
     name: 'network',
