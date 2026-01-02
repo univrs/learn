@@ -28,6 +28,14 @@ interface ENRSubsystem {
   formula?: string
 }
 
+// User/Adoption metrics - showing the gaps honestly
+interface AdoptionMetrics {
+  productionDeployments: number
+  externalContributors: number
+  githubStars: number
+  npmDownloads: number
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // DATA
 // ═══════════════════════════════════════════════════════════════════════════
@@ -107,6 +115,15 @@ const enrSubsystems: ENRSubsystem[] = [
   { name: 'Pricing', status: 'pending', dolLines: 651, formula: 'Fixed / Dynamic / Auction' },
 ]
 
+// Adoption metrics - the gaps we're showing honestly
+// "The dashboard shows 6/7 phases. The critique shows 0/1 users."
+const adoption: AdoptionMetrics = {
+  productionDeployments: 0,
+  externalContributors: 0,
+  githubStars: 0,
+  npmDownloads: 0,
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // STATUS COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -152,8 +169,8 @@ export default function MilestoneTracker() {
           </h2>
         </div>
 
-        {/* Stats */}
-        <div className="flex flex-wrap justify-center gap-8 sm:gap-16 mb-12">
+        {/* Builder Stats */}
+        <div className="flex flex-wrap justify-center gap-8 sm:gap-16 mb-8">
           <div className="text-center">
             <div className="text-3xl sm:text-4xl font-light text-univrs-primary-400">
               {completedPhases}/{phases.length}
@@ -176,6 +193,34 @@ export default function MilestoneTracker() {
             </div>
             <div className="text-xs text-univrs-text-muted uppercase tracking-wider mt-1">
               DOL Lines
+            </div>
+          </div>
+        </div>
+
+        {/* User/Adoption Stats - showing the gaps honestly */}
+        <div className="flex flex-wrap justify-center gap-8 sm:gap-16 mb-12 py-4 border-t border-b border-univrs-text-muted/10">
+          <div className="text-center">
+            <div className="text-3xl sm:text-4xl font-light text-univrs-text-muted">
+              {adoption.productionDeployments}/1
+            </div>
+            <div className="text-xs text-univrs-text-muted uppercase tracking-wider mt-1">
+              Production
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl sm:text-4xl font-light text-univrs-text-muted">
+              {adoption.externalContributors}
+            </div>
+            <div className="text-xs text-univrs-text-muted uppercase tracking-wider mt-1">
+              External Contributors
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl sm:text-4xl font-light text-univrs-text-muted">
+              {adoption.githubStars}
+            </div>
+            <div className="text-xs text-univrs-text-muted uppercase tracking-wider mt-1">
+              GitHub Stars
             </div>
           </div>
         </div>
