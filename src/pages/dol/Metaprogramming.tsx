@@ -33,7 +33,7 @@ export default function DOLMetaprogramming() {
     return (
         <>
             <Helmet>
-                <title>Meta-Programming | DOL v0.4.0 | Univrs Learn</title>
+                <title>Meta-Programming | DOL v0.6.0 | Univrs Learn</title>
                 <meta
                     name="description"
                     content="DOL meta-programming: Quote/Eval for AST manipulation, Reflect for type introspection, 18 built-in macros, and idiom brackets for applicative style."
