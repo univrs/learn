@@ -67,16 +67,6 @@ const sections = [
         ],
     },
     {
-        title: "SEX (Side Effects)",
-        items: [
-            { syntax: "sex fun name() { }", desc: "Effectful function" },
-            { syntax: "sex var NAME: Type", desc: "Mutable global" },
-            { syntax: "sex { block }", desc: "Effect block" },
-            { syntax: "*.sex.dol", desc: "Effect file extension" },
-            { syntax: "sex/", desc: "Effect directory" },
-        ],
-    },
-    {
         title: "Lambdas & Functions",
         items: [
             { syntax: "\\x -> x + 1", desc: "Lambda expression" },
@@ -219,7 +209,7 @@ export default function DOLCheatsheet() {
                         className="text-center text-sm"
                         style={{ color: "var(--soft-gray)" }}
                     >
-                        DOL v0.4.0 "HIR Complete" | 1,775+ tests passing
+                        DOL v0.6.0 "WASM Pipeline" | 1,705+ tests passing
                     </div>
                 </div>
             </section>

@@ -269,31 +269,6 @@ pub system MyceliumNetwork {
 }
 ```
 
-## Side Effects (SEX)
-
-DOL tracks side effects with the `sex` keyword:
-
-```dol
-// Pure function - no side effects
-pub fun calculate(x: Int64) -> Int64 {
-  x * 2 + 1
-}
-
-// Side-effectful function - marked with sex
-pub sex fun print_result(x: Int64) -> Void {
-  println!("Result: {}", x)
-}
-
-// Or using the SEX block
-pub fun process(data: Data) -> Result {
-  sex {
-    log("Processing data...")
-    write_to_disk(data)
-  }
-  return compute_result(data)
-}
-```
-
 ## Key Takeaways
 
 - Define functions with `fun name(params) -> ReturnType { body }`
@@ -302,7 +277,6 @@ pub fun process(data: Data) -> Result {
 - Use `pub` for public visibility
 - Lambdas: `|params| expression` or `|params| { block }`
 - Generic functions use type parameters: `fun name<T>(x: T) -> T`
-- Mark side-effectful functions with `sex`
 
 ## Practice Exercise
 

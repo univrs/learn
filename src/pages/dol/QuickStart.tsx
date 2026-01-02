@@ -9,11 +9,6 @@ const nextSteps = [
         href: "/dol/learn",
     },
     {
-        title: "SEX System",
-        description: "Learn the Structure-Expression-eXegesis paradigm",
-        href: "/dol/sex",
-    },
-    {
         title: "Examples",
         description: "Explore real-world DOL patterns and use cases",
         href: "/dol/examples",

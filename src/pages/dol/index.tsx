@@ -1,14 +1,13 @@
 import { Routes, Route, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { FileCode, BookOpen, Library, Code2, ArrowRight, Sparkles, Zap, Package, Github, Terminal } from "lucide-react";
+import { FileCode, BookOpen, Library, Code2, ArrowRight, Sparkles, Package, Github, Terminal } from "lucide-react";
 
-const DOL_VERSION = "0.4.0";
+const DOL_VERSION = "0.6.0";
 import DOLLearn from "./Learn";
 import DOLReference from "./Reference";
 import DOLStdlib from "./Stdlib";
 import DOLExamples from "./Examples";
 import DOLMetaprogramming from "./Metaprogramming";
-import DOLSex from "./Sex";
 import DOLCheatsheet from "./Cheatsheet";
 import DOLQuickStart from "./QuickStart";
 import DOLPlayground from "./Playground";
@@ -34,12 +33,6 @@ const sections = [
         href: "/dol/metaprogramming",
         icon: Sparkles,
         isNew: true,
-    },
-    {
-        name: "SEX System",
-        description: "Side Effect eXecution for controlled I/O",
-        href: "/dol/sex",
-        icon: Zap,
     },
     {
         name: "Examples",
@@ -327,7 +320,6 @@ export default function DOLIndex() {
             <Route path="learn" element={<DOLLearn />} />
             <Route path="tutorials/:slug" element={<DOLTutorial />} />
             <Route path="metaprogramming" element={<DOLMetaprogramming />} />
-            <Route path="sex" element={<DOLSex />} />
             <Route path="examples" element={<DOLExamples />} />
             <Route path="reference" element={<DOLReference />} />
             <Route path="stdlib" element={<DOLStdlib />} />

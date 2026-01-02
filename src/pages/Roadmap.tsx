@@ -12,10 +12,10 @@ const year1Milestones: Milestone[] = [
   { name: 'DOL 2.0 Specification', status: 'complete' },
   { name: 'Lexer + Parser', status: 'complete', metric: '157 tests' },
   { name: 'Type Checker', status: 'complete', metric: '87 tests' },
-  { name: 'SEX System', status: 'complete', metric: '24 tests' },
+  { name: 'Effect Inference', status: 'complete', metric: '24 tests' },
   { name: 'Rust Codegen', status: 'complete', metric: '24 tests' },
   { name: 'Self-Hosting (v0.2.3)', status: 'complete', metric: '1532 tests' },
-  { name: 'DOL v0.4.0 + HIR Complete', status: 'complete', metric: '365 HIR tests' },
+  { name: 'DOL v0.6.0 + WASM Pipeline', status: 'complete', metric: 'HIR + MLIR + WASM' },
 ]
 
 const year2Milestones: Milestone[] = [
@@ -290,7 +290,7 @@ export default function Roadmap() {
               <div className="text-3xl mb-3">🔬</div>
               <h3 className="text-lg font-normal text-univrs-text-primary mb-2">Proven Technology</h3>
               <p className="text-sm text-univrs-text-muted">
-                1,775+ passing tests across lexer, parser, type checker, HIR, validation, and codegen. Production-ready v0.4.0.
+                1,705+ passing tests across lexer, parser, type checker, HIR, validation, and codegen. Production-ready v0.6.0.
               </p>
             </div>
             <div className="card">
@@ -317,20 +317,20 @@ export default function Roadmap() {
             <div className="card">
               <div className="grid grid-cols-2 gap-8">
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">1,775+</div>
+                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">1,705+</div>
                   <div className="text-sm text-univrs-text-muted">DOL Tests Passing</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">v0.4.0</div>
-                  <div className="text-sm text-univrs-text-muted">DOL + HIR Complete</div>
+                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">v0.6.0</div>
+                  <div className="text-sm text-univrs-text-muted">DOL + WASM Pipeline</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">365</div>
-                  <div className="text-sm text-univrs-text-muted">HIR Tests Passing</div>
+                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">498</div>
+                  <div className="text-sm text-univrs-text-muted">Unit Tests (src/)</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">260</div>
-                  <div className="text-sm text-univrs-text-muted">VUDO Tests</div>
+                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">1,159</div>
+                  <div className="text-sm text-univrs-text-muted">Integration Tests</div>
                 </div>
               </div>
             </div>
