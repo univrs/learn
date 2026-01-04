@@ -2,7 +2,7 @@ import { Routes, Route, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { FileCode, BookOpen, Library, Code2, ArrowRight, Sparkles, Package, Github, Terminal } from "lucide-react";
 
-const DOL_VERSION = "0.7.0";
+const DOL_VERSION = "0.7.1";
 import DOLLearn from "./Learn";
 import DOLReference from "./Reference";
 import DOLStdlib from "./Stdlib";
