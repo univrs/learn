@@ -15,7 +15,7 @@ const year1Milestones: Milestone[] = [
   { name: 'Effect Inference', status: 'complete', metric: '24 tests' },
   { name: 'Rust Codegen', status: 'complete', metric: '24 tests' },
   { name: 'Self-Hosting (v0.2.3)', status: 'complete', metric: '1532 tests' },
-  { name: 'DOL v0.6.0 + WASM Pipeline', status: 'complete', metric: 'HIR + MLIR + WASM' },
+  { name: 'DOL v0.7.0 + WASM Pipeline', status: 'complete', metric: 'HIR + WASM + Live Editor' },
 ]
 
 const year2Milestones: Milestone[] = [
@@ -27,10 +27,10 @@ const year2Milestones: Milestone[] = [
 ]
 
 const year25Milestones: Milestone[] = [
-  { name: 'MLIR Dialect Definition', status: 'planned' },
-  { name: 'HIR → MLIR Lowering', status: 'planned' },
-  { name: 'MLIR → WASM Emission', status: 'planned' },
-  { name: 'VUDO VM Integration', status: 'planned' },
+  { name: 'DOL v0.7.0 Syntax (fun, sex fun, gene)', status: 'complete', metric: 'shipped' },
+  { name: 'WASM Compiler Pipeline', status: 'complete', metric: '~0.2ms compile' },
+  { name: 'Live Browser Editor', status: 'complete', metric: 'vudo.univrs.io/editor' },
+  { name: 'Execution Simulation', status: 'complete', metric: 'real-time output' },
   { name: 'MCP Server for AI Integration', status: 'planned' },
 ]
 
@@ -184,7 +184,7 @@ export default function Roadmap() {
         </div>
       </section>
 
-      {/* Year 2.5: DOL v0.5.0 */}
+      {/* DOL v0.7.0 */}
       <section className="py-16 bg-univrs-bg-secondary">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-3 gap-8 mb-12">
@@ -195,17 +195,17 @@ export default function Roadmap() {
                     <Cpu className="w-6 h-6 text-univrs-bg-primary" />
                   </div>
                   <div>
-                    <h2 className="text-3xl font-light text-univrs-text-primary">v0.5.0</h2>
-                    <p className="text-sm text-univrs-text-muted">2025</p>
+                    <h2 className="text-3xl font-light text-univrs-text-primary">v0.7.0</h2>
+                    <p className="text-sm text-univrs-text-muted">January 2026</p>
                   </div>
                 </div>
-                <h3 className="text-2xl font-light text-cyan-400 mb-2">Compilation</h3>
+                <h3 className="text-2xl font-light text-cyan-400 mb-2">Live Compiler</h3>
                 <p className="text-univrs-text-secondary italic mb-6">
-                  "From HIR to WASM"
+                  "Edit. Compile. Execute."
                 </p>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/30">
-                  <Circle className="w-3 h-3 text-yellow-400" />
-                  <span className="text-sm text-yellow-400 font-medium">NEXT</span>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/30">
+                  <CheckCircle2 className="w-3 h-3 text-cyan-400" />
+                  <span className="text-sm text-cyan-400 font-medium">SHIPPED</span>
                 </div>
               </div>
             </div>
@@ -218,8 +218,8 @@ export default function Roadmap() {
                 </div>
                 <div className="mt-6 pt-6 border-t border-univrs-text-muted/20">
                   <p className="text-sm text-univrs-text-secondary">
-                    <strong className="text-univrs-text-primary">Focus:</strong> MLIR dialect for DOL, lowering HIR to MLIR,
-                    emitting WASM binaries for Spirit packages. Full integration with VUDO VM for execution.
+                    <strong className="text-univrs-text-primary">Delivered:</strong> DOL v0.7.0 with new syntax (fun, sex fun, gene, has),
+                    WASM compiler in browser, live editor at vudo.univrs.io/editor with real-time execution simulation.
                   </p>
                 </div>
               </div>
@@ -290,7 +290,7 @@ export default function Roadmap() {
               <div className="text-3xl mb-3">🔬</div>
               <h3 className="text-lg font-normal text-univrs-text-primary mb-2">Proven Technology</h3>
               <p className="text-sm text-univrs-text-muted">
-                1,705+ passing tests across lexer, parser, type checker, HIR, validation, and codegen. Production-ready v0.6.0.
+                1,705+ passing tests across lexer, parser, type checker, HIR, validation, and codegen. Production-ready v0.7.0.
               </p>
             </div>
             <div className="card">
@@ -321,8 +321,8 @@ export default function Roadmap() {
                   <div className="text-sm text-univrs-text-muted">DOL Tests Passing</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">v0.6.0</div>
-                  <div className="text-sm text-univrs-text-muted">DOL + WASM Pipeline</div>
+                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">v0.7.0</div>
+                  <div className="text-sm text-univrs-text-muted">DOL + WASM + Live Editor</div>
                 </div>
                 <div className="text-center">
                   <div className="text-4xl font-light text-univrs-primary-400 mb-2">498</div>

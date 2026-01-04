@@ -115,8 +115,9 @@ Build a complete Spirit from DOL to deployment:
 | Version | Focus | Status |
 |---------|-------|--------|
 | v0.4.0 | HIR Types, Validation, Rust Codegen | ✅ Complete |
-| v0.5.0 | MLIR Dialect, HIR → MLIR, WASM Emission | 🎯 Next |
-| v0.6.0 | MCP Server, Full Bootstrap, Spirit Runtime | 📋 Planned |
+| v0.5.0 | MLIR Dialect, HIR → MLIR, WASM Emission | ✅ Complete |
+| v0.7.0 | Live Compiler, Browser Editor, Execution Simulation | ✅ Shipped |
+| v0.8.0 | MCP Server, Full Bootstrap, Spirit Runtime | 🎯 Next |
 
 ---
 
