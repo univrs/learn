@@ -74,7 +74,7 @@ export default function DOLLanguage() {
         <title>DOL Language Guide | Univrs Learn</title>
         <meta
           name="description"
-          content="Complete language guide for DOL 2.0 syntax including declarations, types, generics, operators, and control flow."
+          content="Complete language guide for DOL v0.7.0 syntax including declarations, types, generics, operators, and control flow."
         />
       </Helmet>
 
@@ -95,7 +95,7 @@ export default function DOLLanguage() {
             </h1>
           </div>
           <p className="text-xl max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
-            Complete reference for DOL 2.0 syntax, covering declarations, types, generics, operators, and control flow.
+            Complete reference for DOL v0.7.0 syntax, covering declarations, types, generics, operators, and control flow.
           </p>
         </div>
       </section>
@@ -460,8 +460,8 @@ pub(parent) constraint local.invariant @ 1.0.0 { /* ... */ }`}
             >
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
                 {`trait Serializable<T: Clone + Hash + Eq> @ 1.0.0 {
-    to_bytes(value: T) -> List<UInt8>
-    from_bytes(bytes: List<UInt8>) -> Option<T>
+    fun to_bytes(value: T) -> List<UInt8>
+    fun from_bytes(bytes: List<UInt8>) -> Option<T>
 }`}
               </pre>
             </div>
@@ -703,13 +703,13 @@ for user in users if user.active {
               style={{ backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)' }}
             >
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
-                {`// Basic function
-fn add(x: Int64, y: Int64) -> Int64 {
-    x + y
+                {`// Pure function
+fun add(x: Int64, y: Int64) -> Int64 {
+    return x + y
 }
 
 // Generic function
-fn first<T>(items: List<T>) -> Option<T> {
+fun first<T>(items: List<T>) -> Option<T> {
     if items.is_empty() {
         None
     } else {
@@ -718,17 +718,22 @@ fn first<T>(items: List<T>) -> Option<T> {
 }
 
 // Function with constraints
-fn sort<T: Comparable>(items: List<T>) -> List<T> {
+fun sort<T: Comparable>(items: List<T>) -> List<T> {
     // implementation
 }
 
-// Higher-order function
-fn map<A, B>(list: List<A>, f: fn(A) -> B) -> List<B> {
-    result = []
-    for item in list {
-        result.push(f(item))
+// Effectful function (IO/side effects)
+sex fun print_message(msg: String) {
+    vudo_print(msg)
+}
+
+// Effect block in pure function
+fun compute_with_log(x: Int64) -> Int64 {
+    let result = x * 2
+    sex {
+        vudo_print("computed: " + result.to_string())
     }
-    result
+    return result
 }`}
               </pre>
             </div>

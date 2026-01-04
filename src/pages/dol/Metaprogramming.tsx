@@ -33,7 +33,7 @@ export default function DOLMetaprogramming() {
     return (
         <>
             <Helmet>
-                <title>Meta-Programming | DOL v0.6.0 | Univrs Learn</title>
+                <title>Meta-Programming | DOL v0.7.0 | Univrs Learn</title>
                 <meta
                     name="description"
                     content="DOL meta-programming: Quote/Eval for AST manipulation, Reflect for type introspection, 18 built-in macros, and idiom brackets for applicative style."
@@ -74,7 +74,7 @@ export default function DOLMetaprogramming() {
                         className="text-xl max-w-3xl mb-4"
                         style={{ color: "var(--text-secondary)" }}
                     >
-                        DOL 2.0 includes powerful meta-programming capabilities for
+                        DOL v0.7.0 includes powerful meta-programming capabilities for
                         code generation, AST manipulation, and compile-time computation.
                     </p>
                     <div

@@ -41,6 +41,18 @@ const sections = [
         ],
     },
     {
+        title: "DOL Statements",
+        items: [
+            { syntax: "entity has property", desc: "Property declaration" },
+            { syntax: "entity is state", desc: "State/quality assertion" },
+            { syntax: "entity derives from source", desc: "Ancestry/origin" },
+            { syntax: "uses dependency", desc: "Import dependency" },
+            { syntax: "entity can action", desc: "Capability declaration" },
+            { syntax: "entity requires prop", desc: "Mandatory constraint" },
+            { syntax: "entity never changes", desc: "Immutability rule" },
+        ],
+    },
+    {
         title: "Operators",
         items: [
             { syntax: "|>", desc: "Pipe: x |> f  ->  f(x)" },
@@ -72,7 +84,9 @@ const sections = [
             { syntax: "\\x -> x + 1", desc: "Lambda expression" },
             { syntax: "\\(x, y) -> x + y", desc: "Multi-param lambda" },
             { syntax: "\\x: Int64 -> x * 2", desc: "Typed parameter" },
-            { syntax: "fun name(x: T) -> R { }", desc: "Named function" },
+            { syntax: "fun name(x: T) -> R { }", desc: "Pure function" },
+            { syntax: "sex fun name() { }", desc: "Effectful function (IO)" },
+            { syntax: "sex { ... }", desc: "Effect block in pure fn" },
         ],
     },
     {
@@ -209,7 +223,7 @@ export default function DOLCheatsheet() {
                         className="text-center text-sm"
                         style={{ color: "var(--soft-gray)" }}
                     >
-                        DOL v0.6.0 "WASM Pipeline" | 1,705+ tests passing
+                        DOL v0.7.0 "WASM Pipeline" | 1,800+ tests passing
                     </div>
                 </div>
             </section>

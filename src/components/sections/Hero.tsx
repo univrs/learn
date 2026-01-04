@@ -48,14 +48,14 @@ export default function Hero() {
             }}
           >
             <div className="flex items-center gap-2">
-              <span style={{ color: 'var(--glow-cyan)' }}>1,705+ Tests</span>
+              <span style={{ color: 'var(--glow-cyan)' }}>1,800+ Tests</span>
             </div>
             <div
               className="hidden sm:block w-px h-4"
               style={{ backgroundColor: 'var(--soft-gray)' }}
             />
             <div className="flex items-center gap-2">
-              <span style={{ color: 'var(--glow-gold)' }}>DOL v0.6.0 + WASM</span>
+              <span style={{ color: 'var(--glow-gold)' }}>DOL v0.7.0 + WASM</span>
             </div>
             <div
               className="hidden sm:block w-px h-4"
