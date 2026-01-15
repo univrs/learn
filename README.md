@@ -8,12 +8,12 @@
 
 ---
 
-## DOL v0.4.0
+## DOL v0.7.2
 
 The Design Ontology Language (DOL) is a specification-first language for ontology-driven development.
 
-[![GitHub Release](https://img.shields.io/github/v/release/univrs/dol)](https://github.com/univrs/dol/releases/tag/v0.4.0)
-[![Crates.io](https://img.shields.io/crates/v/dol)](https://crates.io/crates/dol/0.4.0)
+[![GitHub Release](https://img.shields.io/github/v/release/univrs/dol)](https://github.com/univrs/dol/releases/tag/v0.7.2)
+[![Crates.io](https://img.shields.io/crates/v/dol)](https://crates.io/crates/dol/0.7.2)
 
 ### Quick Example
 
@@ -51,7 +51,7 @@ Learn DOL from first principles:
 - Error Handling - Option, Result
 - Modules and Imports - Code organization
 
-### DOL v0.3.0 Syntax (Beginner, 2-3 hours)
+### DOL Syntax (Beginner, 2-3 hours)
 Master the declarative syntax:
 - Genes and Types
 - Defining Traits
@@ -101,22 +101,22 @@ Build a complete Spirit from DOL to deployment:
 | **Pattern Matching** | Destructure and match data |
 | **Pipes** | Function composition with `\|>` and `>>` |
 
-### v0.4.0 Highlights
+### v0.7.2 Highlights
 
-- **HIR Complete** - High-level Intermediate Representation (22 canonical node types, 365 tests)
-- **HIR Validation** - Full type checking and scope resolution (1403 lines)
-- **HIR Codegen** - Rust code generation from HIR (763 lines)
-- **Self-Validation** - DOL files validate through full pipeline (10/10 passing)
+- **`this` keyword** - Instance self-reference in methods (`this.value`, `this.method()`)
+- **Live Compiler** - Browser-based DOL playground with execution simulation
+- **WASM Pipeline** - Full compilation to WebAssembly (1,800+ tests passing)
+- **HIR Complete** - High-level Intermediate Representation with Rust codegen
 - **`val`/`var`** - Clear immutable vs mutable bindings
-- **`type`** - Standard type declarations (alongside `gene`)
+- **`Self` type** - Type-level self-reference in traits
 
 ### Roadmap
 
 | Version | Focus | Status |
 |---------|-------|--------|
-| v0.4.0 | HIR Types, Validation, Rust Codegen | ✅ Complete |
 | v0.5.0 | MLIR Dialect, HIR → MLIR, WASM Emission | ✅ Complete |
-| v0.7.0 | Live Compiler, Browser Editor, Execution Simulation | ✅ Shipped |
+| v0.7.0 | Live Compiler, Browser Editor, Execution Simulation | ✅ Complete |
+| v0.7.2 | `this` keyword, Instance self-reference | ✅ Current |
 | v0.8.0 | MCP Server, Full Bootstrap, Spirit Runtime | 🎯 Next |
 
 ---
