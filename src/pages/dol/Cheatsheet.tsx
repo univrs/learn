@@ -223,7 +223,7 @@ export default function DOLCheatsheet() {
                         className="text-center text-sm"
                         style={{ color: "var(--soft-gray)" }}
                     >
-                        DOL v0.7.0 "WASM Pipeline" | 1,800+ tests passing
+                        DOL v0.7.2 "WASM Pipeline" | 1,800+ tests passing
                     </div>
                 </div>
             </section>

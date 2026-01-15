@@ -64,7 +64,7 @@ export default function DOLExamples() {
             </h1>
           </div>
           <p className="text-xl max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
-            Real-world examples showcasing DOL v0.7.0 capabilities through a complete biological systems module.
+            Real-world examples showcasing DOL v0.7.2 capabilities through a complete biological systems module.
             Learn by exploring actual production code.
           </p>
         </div>
@@ -77,7 +77,7 @@ export default function DOLExamples() {
             Biology Module
           </h2>
           <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
-            A complete DOL v0.7.0 showcase modeling biological systems from molecular to ecosystem scales.
+            A complete DOL v0.7.2 showcase modeling biological systems from molecular to ecosystem scales.
             Located in the DOL repository at <code className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--glow-cyan)' }}>examples/stdlib/biology/</code>
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -213,15 +213,15 @@ pub gene Nutrient {
   law conservation_of_mass {
     // Mass in = mass out + mass stored
     forall self: Self.
-      self.absorbed_mass() ==
-        self.transported_mass() + self.stored_mass()
+      this.absorbed_mass() ==
+        this.transported_mass() + this.stored_mass()
   }
 
   law branching_conserves_potential {
     // Branching distributes potential, doesn't create it
     forall self: Self, factor: Float64.
-      sum(self.branch(factor).map(|b| b.branching_potential))
-        <= self.branching_potential
+      sum(this.branch(factor).map(|b| b.branching_potential))
+        <= this.branching_potential
   }
 
   exegesis {
