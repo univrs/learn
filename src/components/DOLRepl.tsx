@@ -228,7 +228,7 @@ const DOL_TYPES = [
 // ============================================================================
 
 export default function DOLRepl({
-  initialCode = '// Write your DOL code here\ngene example.hello {\n  message has content\n}\n\nexegesis {\n  A simple example gene.\n}\n\nprint("Hello, DOL!")',
+  initialCode = '// Write your DOL code here\ngen example.hello {\n  message has content\n}\n\ndocs {\n  A simple example gen.\n}\n\nprint("Hello, DOL!")',
   expectedOutput,
   readOnly = false,
   title,
