@@ -60,12 +60,79 @@ interface GeneDef {
   fields: { name: string; type: string }[]
 }
 
-// Persistent session state across evaluations
+// Persistent session state across evaluations (shared across all DOLRepl instances)
 const sessionState = {
   functions: new Map<string, FunctionDef>(),
   genes: new Map<string, GeneDef>(),
   variables: new Map<string, { value: number; type: string }>()
 }
+
+// Pre-define common tutorial functions so examples work independently
+function initTutorialFunctions() {
+  // Only init once
+  if (sessionState.functions.size > 0) return
+
+  // Common tutorial functions
+  sessionState.functions.set('square', {
+    name: 'square',
+    params: [{ name: 'x', type: 'i64' }],
+    returnType: 'i64',
+    body: 'x * x'
+  })
+  sessionState.functions.set('add', {
+    name: 'add',
+    params: [{ name: 'a', type: 'i64' }, { name: 'b', type: 'i64' }],
+    returnType: 'i64',
+    body: 'a + b'
+  })
+  sessionState.functions.set('multiply', {
+    name: 'multiply',
+    params: [{ name: 'x', type: 'i64' }, { name: 'y', type: 'i64' }],
+    returnType: 'i64',
+    body: 'x * y'
+  })
+  sessionState.functions.set('area', {
+    name: 'area',
+    params: [{ name: 'radius', type: 'f64' }],
+    returnType: 'f64',
+    body: '3.14159 * radius * radius'
+  })
+  sessionState.functions.set('cube', {
+    name: 'cube',
+    params: [{ name: 'x', type: 'i64' }],
+    returnType: 'i64',
+    body: 'x * square(x)'
+  })
+  sessionState.functions.set('celsiusToFahrenheit', {
+    name: 'celsiusToFahrenheit',
+    params: [{ name: 'c', type: 'f64' }],
+    returnType: 'f64',
+    body: 'c * 1.8 + 32.0'
+  })
+  sessionState.functions.set('fahrenheitToCelsius', {
+    name: 'fahrenheitToCelsius',
+    params: [{ name: 'f', type: 'f64' }],
+    returnType: 'f64',
+    body: '(f - 32.0) / 1.8'
+  })
+
+  // Common genes
+  sessionState.genes.set('Point', {
+    name: 'Point',
+    fields: [{ name: 'x', type: 'i64' }, { name: 'y', type: 'i64' }]
+  })
+  sessionState.genes.set('Circle', {
+    name: 'Circle',
+    fields: [{ name: 'radius', type: 'f64' }]
+  })
+  sessionState.genes.set('Rectangle', {
+    name: 'Rectangle',
+    fields: [{ name: 'width', type: 'i64' }, { name: 'height', type: 'i64' }]
+  })
+}
+
+// Initialize on module load
+initTutorialFunctions()
 
 /**
  * Simple expression evaluator for REPL tutorials
@@ -89,25 +156,28 @@ function evalExpr(expr: string): { value: number; type: string } | null {
     return evalExpr(expr.slice(1, -1))
   }
 
-  // Function call
-  const funcCallMatch = expr.match(/^(\w+)\s*\(\s*(.+)\s*\)$/)
+  // Function call - match funcName(args) or funcName()
+  const funcCallMatch = expr.match(/^(\w+)\s*\(\s*(.*?)\s*\)$/)
   if (funcCallMatch) {
     const [, funcName, argsStr] = funcCallMatch
     const func = sessionState.functions.get(funcName)
     if (func) {
-      // Parse arguments
-      const args = argsStr.split(',').map(a => evalExpr(a.trim()))
+      // Parse arguments (handle empty args for zero-parameter functions)
+      const argsList = argsStr.trim() ? argsStr.split(',').map(a => a.trim()) : []
+      const args = argsList.map(a => evalExpr(a))
       if (args.some(a => a === null)) return null
 
       // Simple body evaluation (handles basic expressions)
       let body = func.body.trim()
       func.params.forEach((param, i) => {
-        const argVal = args[i]!.value
-        body = body.replace(new RegExp(`\\b${param.name}\\b`, 'g'), String(argVal))
+        if (args[i]) {
+          const argVal = args[i]!.value
+          body = body.replace(new RegExp(`\\b${param.name}\\b`, 'g'), String(argVal))
+        }
       })
 
-      // Handle nested function calls in body
-      const nestedCall = body.match(/(\w+)\s*\(\s*([^)]+)\s*\)/)
+      // Handle nested function calls in body (recursive evaluation)
+      const nestedCall = body.match(/(\w+)\s*\(\s*([^)]*)\s*\)/)
       if (nestedCall) {
         const nestedResult = evalExpr(body)
         if (nestedResult) return nestedResult
@@ -116,6 +186,8 @@ function evalExpr(expr: string): { value: number; type: string } | null {
       // Evaluate arithmetic in body
       return evalArithmetic(body)
     }
+    // Function not found - return special marker for error handling
+    return { value: NaN, type: `__undefined_function__:${funcName}` }
   }
 
   // Arithmetic expression
@@ -198,14 +270,15 @@ function evaluateDOL(code: string): ExecutionResult {
       return { output, errors, success: true, timestamp: new Date() }
     }
 
-    // Handle gen definitions: gen name { field has type ... }
+    // Handle gen definitions: gen name { has field: type ... } (DOL v0.8 syntax)
     const genMatch = trimmedCode.match(/^(?:pub\s+)?gen\s+([\w.]+)\s*\{([^}]*)\}/)
     if (genMatch) {
       const [, name, fieldsBlock] = genMatch
       const fields: { name: string; type: string }[] = []
-      const fieldMatches = fieldsBlock.matchAll(/(\w+)\s+has\s+(\w+)/g)
+      // DOL v0.8 syntax: "has fieldName: type" or "has fieldName"
+      const fieldMatches = fieldsBlock.matchAll(/has\s+(\w+)(?:\s*:\s*(\w+))?/g)
       for (const m of fieldMatches) {
-        fields.push({ name: m[1], type: m[2] })
+        fields.push({ name: m[1], type: m[2] || 'any' })
       }
       sessionState.genes.set(name, { name, fields })
       output.push(`Defined gene '${name}'`)
@@ -242,11 +315,26 @@ function evaluateDOL(code: string): ExecutionResult {
     // Try to evaluate as an expression
     const result = evalExpr(trimmedCode)
     if (result !== null) {
+      // Check for undefined function error marker
+      if (result.type.startsWith('__undefined_function__:')) {
+        const funcName = result.type.split(':')[1]
+        errors.push(`Error: Function '${funcName}' is not defined`)
+        errors.push(`Hint: Define it first with: pub fun ${funcName}(...) -> Type { ... }`)
+        return { output, errors, success: false, timestamp: new Date() }
+      }
       output.push(`=> ${result.value} : ${result.type}`)
       return { output, errors, success: true, timestamp: new Date() }
     }
 
-    // Fallback: code parsed but not evaluated
+    // Check if it looks like a function call that failed
+    const funcCallPattern = /^(\w+)\s*\(/
+    const funcMatch = trimmedCode.match(funcCallPattern)
+    if (funcMatch && !sessionState.functions.has(funcMatch[1])) {
+      errors.push(`Error: Function '${funcMatch[1]}' is not defined`)
+      return { output, errors, success: false, timestamp: new Date() }
+    }
+
+    // Fallback: code structure recognized but not evaluated as expression
     output.push('[DOL] Code parsed successfully')
 
   } catch (e) {
@@ -265,10 +353,10 @@ function evaluateDOL(code: string): ExecutionResult {
 // DOL Language Definition for Shiki
 // ============================================================================
 
-// Custom DOL syntax highlighting tokens - GROUNDED in real DOL grammar
+// Custom DOL syntax highlighting tokens - GROUNDED in real DOL v0.8 grammar
 const DOL_KEYWORDS = [
-  // Core declarations
-  'gene', 'trait', 'constraint', 'system', 'evolves', 'exegesis',
+  // Core declarations (v0.8 uses 'gen' not 'gene')
+  'gen', 'gene', 'trait', 'constraint', 'system', 'evolves', 'exegesis', 'docs',
   // Predicates
   'has', 'is', 'derives', 'from', 'requires', 'uses', 'emits', 'matches', 'never',
   // Control flow
@@ -290,7 +378,7 @@ const DOL_TYPES = [
   'u8', 'u16', 'u32', 'u64',
   'f32', 'f64',
   'bool', 'string', 'void',
-  'List', 'Map', 'Option', 'Result', 'Tuple', 'Box'
+  'Vec', 'List', 'Map', 'Option', 'Result', 'Tuple', 'Box', 'Self'
 ]
 
 // ============================================================================
