@@ -12,12 +12,20 @@ import DOLCheatsheet from "./Cheatsheet";
 import DOLQuickStart from "./QuickStart";
 import DOLPlayground from "./Playground";
 import DOLTutorial from "./Tutorial";
+import ReplIndex from "./repl";
 
 const sections = [
     {
         name: "Playground",
         description: "Write and run DOL code in your browser",
         href: "/dol/playground",
+        icon: Terminal,
+        isNew: true,
+    },
+    {
+        name: "REPL Tutorial",
+        description: "Master interactive DOL exploration with expressions, functions, and genes",
+        href: "/dol/repl",
         icon: Terminal,
         isNew: true,
     },
@@ -317,6 +325,7 @@ export default function DOLIndex() {
         <Routes>
             <Route index element={<DOLOverview />} />
             <Route path="playground" element={<DOLPlayground />} />
+            <Route path="repl/*" element={<ReplIndex />} />
             <Route path="learn" element={<DOLLearn />} />
             <Route path="tutorials/:slug" element={<DOLTutorial />} />
             <Route path="metaprogramming" element={<DOLMetaprogramming />} />
