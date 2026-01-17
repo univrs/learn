@@ -47,137 +47,207 @@ interface DOLReplProps {
 // Mock DOL Evaluator
 // ============================================================================
 
+// Session state for defined functions and genes
+interface FunctionDef {
+  name: string
+  params: { name: string; type: string }[]
+  returnType: string
+  body: string
+}
+
+interface GeneDef {
+  name: string
+  fields: { name: string; type: string }[]
+}
+
+// Persistent session state across evaluations
+const sessionState = {
+  functions: new Map<string, FunctionDef>(),
+  genes: new Map<string, GeneDef>(),
+  variables: new Map<string, { value: number; type: string }>()
+}
+
+/**
+ * Simple expression evaluator for REPL tutorials
+ * Handles arithmetic, function calls, and gene field access
+ */
+function evalExpr(expr: string): { value: number; type: string } | null {
+  expr = expr.trim()
+
+  // Float literal
+  if (/^-?\d+\.\d+$/.test(expr)) {
+    return { value: parseFloat(expr), type: 'f64' }
+  }
+
+  // Integer literal
+  if (/^-?\d+$/.test(expr)) {
+    return { value: parseInt(expr, 10), type: 'i64' }
+  }
+
+  // Parenthesized expression
+  if (expr.startsWith('(') && expr.endsWith(')')) {
+    return evalExpr(expr.slice(1, -1))
+  }
+
+  // Function call
+  const funcCallMatch = expr.match(/^(\w+)\s*\(\s*(.+)\s*\)$/)
+  if (funcCallMatch) {
+    const [, funcName, argsStr] = funcCallMatch
+    const func = sessionState.functions.get(funcName)
+    if (func) {
+      // Parse arguments
+      const args = argsStr.split(',').map(a => evalExpr(a.trim()))
+      if (args.some(a => a === null)) return null
+
+      // Simple body evaluation (handles basic expressions)
+      let body = func.body.trim()
+      func.params.forEach((param, i) => {
+        const argVal = args[i]!.value
+        body = body.replace(new RegExp(`\\b${param.name}\\b`, 'g'), String(argVal))
+      })
+
+      // Handle nested function calls in body
+      const nestedCall = body.match(/(\w+)\s*\(\s*([^)]+)\s*\)/)
+      if (nestedCall) {
+        const nestedResult = evalExpr(body)
+        if (nestedResult) return nestedResult
+      }
+
+      // Evaluate arithmetic in body
+      return evalArithmetic(body)
+    }
+  }
+
+  // Arithmetic expression
+  return evalArithmetic(expr)
+}
+
+/**
+ * Evaluate arithmetic expressions with proper precedence
+ */
+function evalArithmetic(expr: string): { value: number; type: string } | null {
+  expr = expr.trim()
+
+  // Determine if result is float
+  const isFloat = expr.includes('.')
+
+  try {
+    // Handle parentheses first
+    while (expr.includes('(')) {
+      expr = expr.replace(/\(([^()]+)\)/g, (_, inner) => {
+        const result = evalArithmetic(inner)
+        return result ? String(result.value) : inner
+      })
+    }
+
+    // Simple arithmetic evaluation (safe for tutorial purposes)
+    // Only allow numbers, operators, and whitespace
+    if (!/^[\d\s+\-*/.]+$/.test(expr)) {
+      return null
+    }
+
+    // Use Function constructor for safe math evaluation
+    const result = new Function(`return ${expr}`)()
+
+    if (typeof result === 'number' && !isNaN(result)) {
+      return {
+        value: result,
+        type: isFloat || !Number.isInteger(result) ? 'f64' : 'i64'
+      }
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
+
 /**
  * Mock DOL evaluator for interactive tutorials
- * This will be replaced by actual DOL WASM bindings in the future
+ * Handles expressions, functions, and genes for REPL tutorial
  */
 function evaluateDOL(code: string): ExecutionResult {
   const output: string[] = []
   const errors: string[] = []
 
   try {
-    const lines = code.split('\n')
-    let inBlock = false
-    let blockType = ''
-    let blockName = ''
-    let braceCount = 0
+    const trimmedCode = code.trim()
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim()
-      const lineNum = i + 1
-
-      // Skip empty lines and comments
-      if (!line || line.startsWith('//') || line.startsWith('--')) {
-        continue
-      }
-
-      // Handle print() statements - the REAL DOL builtin
-      const printMatch = line.match(/print\s*\(\s*["'](.*)["']\s*\)/)
-      if (printMatch) {
-        output.push(printMatch[1])
-        continue
-      }
-
-      // Handle module declarations
-      const moduleMatch = line.match(/^module\s+([\w.]+)\s*@?\s*([\d.]+)?/)
-      if (moduleMatch) {
-        output.push(`[DOL] Module: ${moduleMatch[1]}${moduleMatch[2] ? ' v' + moduleMatch[2] : ''}`)
-        continue
-      }
-
-      // Handle gen declarations
-      const geneMatch = line.match(/^(?:pub\s+)?gene\s+([\w.<>]+)\s*\{?/)
-      if (geneMatch) {
-        inBlock = true
-        blockType = 'gene'
-        blockName = geneMatch[1]
-        braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
-        output.push(`[DOL] Defining gene: ${blockName}`)
-        continue
-      }
-
-      // Handle trait declarations
-      const traitMatch = line.match(/^(?:pub\s+)?trait\s+([\w.]+)\s*\{?/)
-      if (traitMatch) {
-        inBlock = true
-        blockType = 'trait'
-        blockName = traitMatch[1]
-        braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
-        output.push(`[DOL] Defining trait: ${blockName}`)
-        continue
-      }
-
-      // Handle constraint declarations
-      const constraintMatch = line.match(/^constraint\s+([\w.]+)\s*\{?/)
-      if (constraintMatch) {
-        inBlock = true
-        blockType = 'constraint'
-        blockName = constraintMatch[1]
-        braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
-        output.push(`[DOL] Adding constraint: ${blockName}`)
-        continue
-      }
-
-      // Handle system declarations
-      const systemMatch = line.match(/^(?:pub\s+)?system\s+([\w.]+)\s*@?([\d.]+)?\s*\{?/)
-      if (systemMatch) {
-        inBlock = true
-        blockType = 'system'
-        blockName = systemMatch[1]
-        braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
-        output.push(`[DOL] Defining system: ${blockName}${systemMatch[2] ? ' v' + systemMatch[2] : ''}`)
-        continue
-      }
-
-      // Handle function declarations
-      const funMatch = line.match(/^(?:pub\s+)?(?:sex\s+)?fun\s+(\w+)/)
-      if (funMatch) {
-        output.push(`[DOL] Defining function: ${funMatch[1]}`)
-        braceCount += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
-        continue
-      }
-
-      // Handle exegesis blocks
-      const exegesisMatch = line.match(/^exegesis\s*\{?/)
-      if (exegesisMatch) {
-        inBlock = true
-        blockType = 'exegesis'
-        braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
-        continue
-      }
-
-      // Handle test blocks
-      const testMatch = line.match(/^test\s+["'](.+)["']\s*\{?/)
-      if (testMatch) {
-        output.push(`[DOL] Running test: ${testMatch[1]}`)
-        braceCount += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
-        continue
-      }
-
-      // Track brace depth
-      const openBraces = (line.match(/\{/g) || []).length
-      const closeBraces = (line.match(/\}/g) || []).length
-      braceCount += openBraces - closeBraces
-
-      if (braceCount === 0 && inBlock && closeBraces > 0) {
-        if (blockType !== 'exegesis') {
-          output.push(`[DOL] ${blockType.charAt(0).toUpperCase() + blockType.slice(1)} ${blockName} validated`)
-        }
-        inBlock = false
-        blockType = ''
-        blockName = ''
-      }
-
-      // Detect potential syntax errors
-      if (line.includes(';;')) {
-        errors.push(`Syntax warning at line ${lineNum}: Double semicolon`)
-      }
+    // Skip empty lines and comments
+    if (!trimmedCode || trimmedCode.startsWith('//') || trimmedCode.startsWith('--')) {
+      return { output: [], errors: [], success: true, timestamp: new Date() }
     }
 
-    // Add completion message if no output yet
-    if (output.length === 0 && errors.length === 0) {
-      output.push('[DOL] Code parsed successfully')
+    // Handle print() statements
+    const printMatch = trimmedCode.match(/print\s*\(\s*["'](.*)["']\s*\)/)
+    if (printMatch) {
+      output.push(printMatch[1])
+      return { output, errors, success: true, timestamp: new Date() }
     }
+
+    // Handle function definitions: pub fun name(params) -> ReturnType { body }
+    const funMatch = trimmedCode.match(/^(?:pub\s+)?fun\s+(\w+)\s*\(\s*([^)]*)\s*\)\s*->\s*(\w+)\s*\{\s*(.+)\s*\}$/)
+    if (funMatch) {
+      const [, name, paramsStr, returnType, body] = funMatch
+      const params = paramsStr.split(',').filter(p => p.trim()).map(p => {
+        const [pname, ptype] = p.split(':').map(s => s.trim())
+        return { name: pname, type: ptype }
+      })
+      sessionState.functions.set(name, { name, params, returnType, body })
+      output.push(`Defined function '${name}'`)
+      return { output, errors, success: true, timestamp: new Date() }
+    }
+
+    // Handle gen definitions: gen name { field has type ... }
+    const genMatch = trimmedCode.match(/^(?:pub\s+)?gen\s+([\w.]+)\s*\{([^}]*)\}/)
+    if (genMatch) {
+      const [, name, fieldsBlock] = genMatch
+      const fields: { name: string; type: string }[] = []
+      const fieldMatches = fieldsBlock.matchAll(/(\w+)\s+has\s+(\w+)/g)
+      for (const m of fieldMatches) {
+        fields.push({ name: m[1], type: m[2] })
+      }
+      sessionState.genes.set(name, { name, fields })
+      output.push(`Defined gene '${name}'`)
+      return { output, errors, success: true, timestamp: new Date() }
+    }
+
+    // Handle docs blocks
+    if (trimmedCode.startsWith('docs') || trimmedCode.startsWith('exegesis')) {
+      output.push('[DOL] Documentation recorded')
+      return { output, errors, success: true, timestamp: new Date() }
+    }
+
+    // Handle module declarations
+    const moduleMatch = trimmedCode.match(/^module\s+([\w.]+)\s*@?\s*([\d.]+)?/)
+    if (moduleMatch) {
+      output.push(`[DOL] Module: ${moduleMatch[1]}${moduleMatch[2] ? ' v' + moduleMatch[2] : ''}`)
+      return { output, errors, success: true, timestamp: new Date() }
+    }
+
+    // Handle trait declarations
+    const traitMatch = trimmedCode.match(/^(?:pub\s+)?trait\s+([\w.]+)/)
+    if (traitMatch) {
+      output.push(`Defined trait '${traitMatch[1]}'`)
+      return { output, errors, success: true, timestamp: new Date() }
+    }
+
+    // Handle system declarations
+    const systemMatch = trimmedCode.match(/^(?:pub\s+)?system\s+([\w.]+)/)
+    if (systemMatch) {
+      output.push(`Defined system '${systemMatch[1]}'`)
+      return { output, errors, success: true, timestamp: new Date() }
+    }
+
+    // Try to evaluate as an expression
+    const result = evalExpr(trimmedCode)
+    if (result !== null) {
+      output.push(`=> ${result.value} : ${result.type}`)
+      return { output, errors, success: true, timestamp: new Date() }
+    }
+
+    // Fallback: code parsed but not evaluated
+    output.push('[DOL] Code parsed successfully')
 
   } catch (e) {
     errors.push(`Runtime error: ${e instanceof Error ? e.message : 'Unknown error'}`)
