@@ -216,10 +216,10 @@ const DOL_KEYWORDS = [
 ]
 
 const DOL_TYPES = [
-  'Int8', 'Int16', 'Int32', 'Int64',
-  'UInt8', 'UInt16', 'UInt32', 'UInt64',
-  'Float32', 'Float64',
-  'Bool', 'String', 'Void',
+  'i8', 'i16', 'i32', 'i64',
+  'u8', 'u16', 'u32', 'u64',
+  'f32', 'f64',
+  'bool', 'string', 'void',
   'List', 'Map', 'Option', 'Result', 'Tuple', 'Box'
 ]
 

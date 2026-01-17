@@ -42,13 +42,13 @@ DOL includes these primitive types:
 
 | Type | Description | Examples |
 |------|-------------|----------|
-| `Int8`, `Int16`, `Int32`, `Int64` | Signed integers | `-1`, `42`, `1000` |
-| `UInt8`, `UInt16`, `UInt32`, `UInt64` | Unsigned integers | `0`, `255`, `65535` |
-| `Float32`, `Float64` | Floating point | `3.14`, `-0.5` |
-| `Bool` | Boolean | `true`, `false` |
-| `String` | UTF-8 text | `"hello"` |
-| `Char` | Unicode scalar | `'a'`, `'\n'` |
-| `Void` | Unit/no value | `()` |
+| `i8`, `i16`, `i32`, `i64` | Signed integers | `-1`, `42`, `1000` |
+| `u8`, `u16`, `u32`, `u64` | Unsigned integers | `0`, `255`, `65535` |
+| `f32`, `f64` | Floating point | `3.14`, `-0.5` |
+| `bool` | Boolean | `true`, `false` |
+| `string` | UTF-8 text | `"hello"` |
+| `char` | Unicode scalar | `'a'`, `'\n'` |
+| `void` | Unit/no value | `()` |
 
 ## Typed Gene Example
 
@@ -257,8 +257,8 @@ pub gen TypeExpr {
 Give types shorter names:
 
 ```dol
-type NodeId = UInt64
-type Position = (Float64, Float64, Float64)
+type NodeId = u64
+type Position = (f64, f64, f64)
 type Callback = (Event) -> Bool
 
 pub gen NetworkNode {

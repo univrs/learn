@@ -292,7 +292,7 @@ system mycelium.network @0.1.0 {
   requires transport.protocol >= 0.0.1
   uses MyceliumNode
 
-  state nodes: Map<UInt64, MyceliumNode>
+  state nodes: Map<u64, MyceliumNode>
   state edges: List<HyphalSegment>
 
   rule {

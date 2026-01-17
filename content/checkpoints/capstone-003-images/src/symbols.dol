@@ -116,7 +116,7 @@ pub gen Symbol {
 
 /// A collection of symbols for a story
 pub gen SymbolRegistry {
-  has symbols: Map<UInt64, Symbol>
+  has symbols: Map<u64, Symbol>
   has lion_count: u64 = 0
   has swan_count: u64 = 0
 

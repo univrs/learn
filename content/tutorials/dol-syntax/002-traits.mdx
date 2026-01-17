@@ -299,7 +299,7 @@ trait Notifiable {
 
 trait NotificationSender {
     send: fun(notification: Notification, recipient: Notifiable) -> Result<Void, Error>
-    send_bulk: fun(notification: Notification, recipients: List<Notifiable>) -> Result<UInt64, Error>
+    send_bulk: fun(notification: Notification, recipients: List<Notifiable>) -> Result<u64, Error>
 }
 
 trait NotificationChannel extends Notifiable, NotificationSender {

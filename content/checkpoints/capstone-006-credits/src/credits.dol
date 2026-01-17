@@ -115,7 +115,7 @@ impl CreditError {
 /// The credit manager for handling all credit operations
 pub gen CreditManager {
   has costs: CreditCosts
-  has reservations: Map<UInt64, CreditReservation>
+  has reservations: Map<u64, CreditReservation>
   has reservation_timeout_ms: u64 = 300000  // 5 minutes
   has total_spent: u64 = 0
   has total_reserved: u64 = 0
@@ -143,7 +143,7 @@ pub gen CreditManager {
   }
 
   /// Get current available balance from host
-  pub fun balance(self) -> Result<UInt64, CreditError> {
+  pub fun balance(self) -> Result<u64, CreditError> {
     match host_credits::balance() {
       Ok(balance) => Ok(balance),
       Err(e) => Err(CreditError::HostError { message: e.to_string() }),
@@ -151,7 +151,7 @@ pub gen CreditManager {
   }
 
   /// Get effective available balance (minus reservations)
-  pub fun available_balance(self) -> Result<UInt64, CreditError> {
+  pub fun available_balance(self) -> Result<u64, CreditError> {
     let balance = self.balance()?
     if balance >= self.total_reserved {
       return Ok(balance - self.total_reserved)

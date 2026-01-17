@@ -48,22 +48,22 @@ val status = if is_active { "active" } else { "inactive" }
 Pattern matching is one of DOL's most powerful features:
 
 ```dol
-pub fun is_primitive(ty: TypeExpr) -> Bool {
+pub fun is_primitive(ty: TypeExpr) -> bool {
   match ty.type {
-    Int8 { return true }
-    Int16 { return true }
-    Int32 { return true }
-    Int64 { return true }
-    UInt8 { return true }
-    UInt16 { return true }
-    UInt32 { return true }
-    UInt64 { return true }
-    Float32 { return true }
-    Float64 { return true }
-    Bool { return true }
-    String { return true }
-    Char { return true }
-    Void { return true }
+    i8 { return true }
+    i16 { return true }
+    i32 { return true }
+    i64 { return true }
+    u8 { return true }
+    u16 { return true }
+    u32 { return true }
+    u64 { return true }
+    f32 { return true }
+    f64 { return true }
+    bool { return true }
+    string { return true }
+    char { return true }
+    void { return true }
     _ { return false }
   }
 }
