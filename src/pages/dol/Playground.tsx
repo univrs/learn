@@ -7,18 +7,18 @@ import DOLRepl from "../../components/DOLRepl";
 const examples = {
     hello: {
         title: "Hello DOL",
-        description: "Your first DOL gene definition",
+        description: "Your first DOL gen definition",
         code: `// Welcome to DOL!
 // Genes are the fundamental building blocks
 
-gene hello.world {
+gen hello.world {
   message has content
   message has sender
   message has timestamp
 }
 
-exegesis {
-  The hello.world gene defines a simple message
+docs {
+  The hello.world gen defines a simple message
   with content, sender, and timestamp properties.
 }
 
@@ -28,29 +28,29 @@ print("Genes define what things should be.")`,
     },
     gene: {
         title: "Defining Genes",
-        description: "Create typed gene specifications",
-        code: `// Define a User gene with typed properties
+        description: "Create typed gen specifications",
+        code: `// Define a User gen with typed properties
 module example.user @ 0.1.0
 
-pub gene User {
-  has id: UInt64
+pub gen User {
+  has id: u64
   has name: String
   has email: String
-  has created_at: Int64
+  has created_at: i64
 }
 
-exegesis {
-  User gene with typed fields.
+docs {
+  User gen with typed fields.
   Each property has a type from DOL's type system.
 }
 
-print("User gene defined successfully")`,
+print("User gen defined successfully")`,
     },
     constraints: {
         title: "Adding Constraints",
         description: "Enforce business rules with constraints",
         code: `// Constraints ensure invariants hold
-gene product.exists {
+gen product.exists {
   product has id
   product has name
   product has price
@@ -61,7 +61,7 @@ constraint product.valid {
   name never empty
 }
 
-exegesis {
+docs {
   Products must have positive prices
   and non-empty names.
 }
@@ -72,9 +72,9 @@ print("Product constraint validated")`,
         title: "Functions",
         description: "Add behavior with functions",
         code: `// Functions use the fun keyword
-pub gene Counter {
-  has value: Int64
-  has max: Int64
+pub gen Counter {
+  has value: i64
+  has max: i64
 
   fun increment() -> Counter {
     return Counter {
@@ -270,18 +270,18 @@ export default function DOLPlayground() {
 
 module order.system @ 1.0.0
 
-// Core gene definition
-pub gene Order {
-  has id: UInt64
-  has customer_id: UInt64
+// Core gen definition
+pub gen Order {
+  has id: u64
+  has customer_id: u64
   has items: List<OrderItem>
   has status: OrderStatus
-  has created_at: Int64
-  has total_amount: Float64
+  has created_at: i64
+  has total_amount: f64
 }
 
-// Enum-style gene for status
-pub gene OrderStatus {
+// Enum-style gen for status
+pub gen OrderStatus {
   type: enum {
     Pending,
     Confirmed,
@@ -307,7 +307,7 @@ system order.service @1.0.0 {
   service has persistence.strategy
 }
 
-exegesis {
+docs {
   Order system with status tracking,
   validation constraints, and service composition.
 }
@@ -379,7 +379,7 @@ print("OrderSystem ready")`}
                                 className="text-lg font-mono mb-2"
                                 style={{ color: "var(--glow-cyan)" }}
                             >
-                                gene name { }
+                                gen name { }
                             </div>
                             <p
                                 className="text-sm"

@@ -134,7 +134,7 @@ pub system LionSwan @ 0.1.0 {
   }
 
   /// Check if there are enough credits for a narrative
-  pub fun can_afford_narrative(self, scene_count: UInt32) -> Bool {
+  pub fun can_afford_narrative(self, scene_count: u32) -> Bool {
     let cost = self.credit_manager.costs.narrative_cost(scene_count)
     match self.credit_manager.check_balance(cost) {
       Ok(can) => can,
@@ -180,7 +180,7 @@ pub system LionSwan @ 0.1.0 {
   // ============= Narrative Generation =============
 
   /// Generate a new narrative and add to gallery (costs credits)
-  pub fun generate_narrative(self, scene_count: UInt32) -> Result<LionSwan, CreditError> {
+  pub fun generate_narrative(self, scene_count: u32) -> Result<LionSwan, CreditError> {
     let cost = self.credit_manager.costs.narrative_cost(scene_count)
     log::info("Narrative generation will cost {cost} credits")
 
@@ -206,7 +206,7 @@ pub system LionSwan @ 0.1.0 {
   }
 
   /// Generate a narrative focused on a specific allegiance (costs credits)
-  pub fun generate_allegiance_narrative(self, allegiance: Allegiance, scene_count: UInt32) -> Result<LionSwan, CreditError> {
+  pub fun generate_allegiance_narrative(self, allegiance: Allegiance, scene_count: u32) -> Result<LionSwan, CreditError> {
     let cost = self.credit_manager.costs.narrative_cost(scene_count)
     log::info("Allegiance narrative generation will cost {cost} credits")
 
@@ -315,7 +315,7 @@ pub system LionSwan @ 0.1.0 {
     return self.registry.by_allegiance(allegiance)
   }
 
-  exegesis {
+  docs {
     The Lion & Swan is a generative storytelling spirit that explores
     the duality of symbols through two allegiances.
 

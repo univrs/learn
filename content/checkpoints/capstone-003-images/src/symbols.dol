@@ -46,7 +46,7 @@ impl Allegiance {
     }
   }
 
-  exegesis {
+  docs {
     The Allegiance enum represents the fundamental duality at the heart
     of the Lion & Swan narrative. Each allegiance carries its own
     symbolic associations: colors, elements, times, and virtues.
@@ -59,13 +59,13 @@ impl Allegiance {
 }
 
 /// A symbolic archetype in the narrative
-pub gene Symbol {
-  has id: UInt64
+pub gen Symbol {
+  has id: u64
   has name: String
   has allegiance: Allegiance
   has description: String
-  has created_at: UInt64
-  has power_level: Float64 = 1.0
+  has created_at: u64
+  has power_level: f64 = 1.0
 
   constraint valid_power {
     this.power_level >= 0.0 && this.power_level <= 10.0
@@ -88,7 +88,7 @@ pub gene Symbol {
   }
 
   /// Increase the symbol's power through narrative focus
-  pub fun empower(self, amount: Float64) -> Symbol {
+  pub fun empower(self, amount: f64) -> Symbol {
     let new_power = (self.power_level + amount).min(10.0)
     return Symbol { ...self, power_level: new_power }
   }
@@ -103,7 +103,7 @@ pub gene Symbol {
     return self.allegiance != other.allegiance
   }
 
-  exegesis {
+  docs {
     A Symbol represents an archetypal concept within the Lion & Swan
     narrative framework. Each symbol belongs to an allegiance and
     carries descriptive properties that influence story generation.
@@ -115,10 +115,10 @@ pub gene Symbol {
 }
 
 /// A collection of symbols for a story
-pub gene SymbolRegistry {
+pub gen SymbolRegistry {
   has symbols: Map<UInt64, Symbol>
-  has lion_count: UInt64 = 0
-  has swan_count: UInt64 = 0
+  has lion_count: u64 = 0
+  has swan_count: u64 = 0
 
   /// Create an empty registry
   pub fun new() -> SymbolRegistry {
@@ -161,7 +161,7 @@ pub gene SymbolRegistry {
       .collect()
   }
 
-  exegesis {
+  docs {
     The SymbolRegistry maintains a collection of symbols and tracks
     the balance between the two allegiances. It provides methods for
     querying symbols and determining narrative dominance.

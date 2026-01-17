@@ -18,13 +18,13 @@ DOL provides powerful collection types and functional operations for working wit
 An ordered sequence of elements:
 
 ```dol
-pub gene MyceliumNode {
-  has id: UInt64
+pub gen MyceliumNode {
+  has id: u64
   has tips: List<HyphalTip>
-  has connections: List<UInt64>
+  has connections: List<Ui64>
   has stored_nutrients: Nutrient
 
-  exegesis {
+  docs {
     A node in the mycelium network graph.
     Can be a tip (edge), relay (path), or junction (branch).
   }
@@ -35,7 +35,7 @@ pub gene MyceliumNode {
 
 ```dol
 // Empty list
-val empty: List<Int64> = []
+val empty: List<i64> = []
 
 // List with elements
 val numbers = [1, 2, 3, 4, 5]
@@ -71,9 +71,9 @@ Key-value pairs:
 pub system MyceliumNetwork {
   state nodes: Map<UInt64, MyceliumNode>
   state edges: List<HyphalSegment>
-  state next_id: UInt64
+  state next_id: u64
 
-  exegesis {
+  docs {
     Complete mycelium network simulation.
   }
 }
@@ -83,7 +83,7 @@ pub system MyceliumNetwork {
 
 ```dol
 // Create a map
-var scores: Map<String, Int64> = Map.new()
+var scores: Map<String, i64> = Map.new()
 
 // Insert values
 scores.insert("Alice", 100)
@@ -107,7 +107,7 @@ for (name, score) in scores {
 Represents a value that may or may not exist:
 
 ```dol
-pub gene GeneDecl {
+pub gen GeneDecl {
   has name: String
   has type_def: Option<TypeExpr>
   has exegesis: Option<String>
@@ -118,8 +118,8 @@ pub gene GeneDecl {
 ### Working with Option
 
 ```dol
-val maybe_value: Option<Int64> = Some(42)
-val nothing: Option<Int64> = None
+val maybe_value: Option<i64> = Some(42)
+val nothing: Option<i64> = None
 
 // Pattern match
 match maybe_value {
@@ -186,7 +186,7 @@ val numbers = [1, 2, 3, 4, 5]
 val sum = numbers.reduce(0, |acc, n| acc + n)  // 15
 
 // From the codebase
-fun calculate_biomass() -> Float64 {
+fun calculate_biomass() -> f64 {
   val node_mass = sum(this.nodes.values().map(|n| n.stored_nutrients.total_mass()))
   val edge_mass = sum(this.edges.map(|e| e.length() * e.diameter * 0.1))
   return node_mass + edge_mass
@@ -250,7 +250,7 @@ val result = large_list
 ## Working with Nested Collections
 
 ```dol
-pub gene DolFile {
+pub gen DolFile {
   has declarations: List<Decl>
   has span: Span
 }
@@ -279,13 +279,13 @@ val all_fields = declarations
 Create a function that processes a list of nodes:
 
 ```dol
-pub gene Node {
-  has id: UInt64
-  has value: Int64
+pub gen Node {
+  has id: u64
+  has value: i64
   has active: Bool
 }
 
-pub fun process_nodes(nodes: List<Node>) -> Int64 {
+pub fun process_nodes(nodes: List<Node>) -> i64 {
   // Return the sum of values for all active nodes
   // whose value is greater than 10
   nodes

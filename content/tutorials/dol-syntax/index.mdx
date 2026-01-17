@@ -30,7 +30,7 @@ DOL (Design Ontology Language) is a **declarative specification language** for d
 mod example @ 0.3.0
 
 pub type User {
-    id: UInt64
+    id: u64
     name: String
     email: String
     created_at: Timestamp
@@ -132,8 +132,8 @@ This track covers the complete v0.3.0 syntax:
 | `system` | System architecture | `system OrderProcessing { ... }` |
 | `constraint` | Invariant rules | `constraint ValidOrder { ... }` |
 | `evolves` | Version migration | `evolves V1 > V2 @ 2.0.0 { ... }` |
-| `val` | Immutable binding | `val MAX_SIZE: UInt64 = 1000` |
-| `var` | Mutable binding | `var counter: UInt64 = 0` |
+| `val` | Immutable binding | `val MAX_SIZE: u64 = 1000` |
+| `var` | Mutable binding | `var counter: u64 = 0` |
 | `forall` | Universal quantifier | `forall item in items { ... }` |
 | `extends` | Trait extension | `trait Admin extends User { ... }` |
 

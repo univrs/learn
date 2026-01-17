@@ -37,13 +37,13 @@ The syntax:
 
 ## Methods on Genes
 
-Add methods inside gene declarations:
+Add methods inside gen declarations:
 
 ```dol
-pub gene MyceliumNode {
-  has id: UInt64
+pub gen MyceliumNode {
+  has id: u64
   has position: Vec3
-  has connections: List<UInt64>
+  has connections: List<Ui64>
 
   fun is_branching_point() -> Bool {
     return this.connections.len() > 2
@@ -53,7 +53,7 @@ pub gene MyceliumNode {
     return this.connections.len() == 1
   }
 
-  exegesis {
+  docs {
     A node in the mycelium network graph.
     Can be a tip (edge), relay (path), or junction (branch).
   }
@@ -67,9 +67,9 @@ Inside methods, `this` refers to the current instance.
 Methods follow the same visibility rules as fields:
 
 ```dol
-pub gene Counter {
-  has value: Int64
-  has max: Int64
+pub gen Counter {
+  has value: i64
+  has max: i64
 
   // Public method - accessible everywhere
   pub fun increment() -> Counter {
@@ -91,11 +91,11 @@ pub gene Counter {
 The last expression without a semicolon is returned:
 
 ```dol
-pub fun add(a: Int64, b: Int64) -> Int64 {
+pub fun add(a: i64, b: i64) -> i64 {
   a + b  // No semicolon = return this value
 }
 
-pub fun multiply(x: Int64, y: Int64) -> Int64 {
+pub fun multiply(x: i64, y: i64) -> i64 {
   val result = x * y
   result  // Explicitly return result
 }
@@ -104,7 +104,7 @@ pub fun multiply(x: Int64, y: Int64) -> Int64 {
 Use `return` for early returns:
 
 ```dol
-pub fun factorial(n: Int64) -> Int64 {
+pub fun factorial(n: i64) -> i64 {
   if n <= 1 {
     return 1
   }
@@ -132,7 +132,7 @@ Functions can work with multiple types:
 
 ```dol
 /// Create an integer literal expression
-pub fun int_lit(value: Int64, span: Span) -> Expr {
+pub fun int_lit(value: i64, span: Span) -> Expr {
   return Expr {
     type: Expr.IntLit { value: value, suffix: None },
     span: span
@@ -174,11 +174,11 @@ Anonymous functions use pipe syntax:
 
 ```dol
 // Lambda syntax: |params| body
-val double = |x: Int64| x * 2
-val add = |a: Int64, b: Int64| a + b
+val double = |x: i64| x * 2
+val add = |a: i64, b: i64| a + b
 
 // Block lambdas for complex logic
-val calculate = |x: Int64| {
+val calculate = |x: i64| {
   val squared = x * x
   val doubled = squared * 2
   doubled + 1
@@ -188,7 +188,7 @@ val calculate = |x: Int64| {
 Lambdas are commonly used with collection methods:
 
 ```dol
-pub fun find_nearby_nodes(pos: Vec3, max_dist: Float64) -> List<UInt64> {
+pub fun find_nearby_nodes(pos: Vec3, max_dist: f64) -> List<Ui64> {
   var result = []
   for (id, node) in this.nodes {
     val dx = pos.x - node.position.x
@@ -208,7 +208,7 @@ pub fun find_nearby_nodes(pos: Vec3, max_dist: Float64) -> List<UInt64> {
 Functions are first-class values:
 
 ```dol
-type BinaryOp = (Int64, Int64) -> Int64
+type BinaryOp = (i64, i64) -> i64
 type Predicate<T> = (T) -> Bool
 type Transformer = (Expr) -> Expr
 ```
@@ -216,7 +216,7 @@ type Transformer = (Expr) -> Expr
 Higher-order functions accept or return functions:
 
 ```dol
-pub fun apply_twice(f: (Int64) -> Int64, x: Int64) -> Int64 {
+pub fun apply_twice(f: (i64) -> i64, x: i64) -> i64 {
   f(f(x))
 }
 
@@ -235,7 +235,7 @@ pub system MyceliumNetwork {
 
   state nodes: Map<UInt64, MyceliumNode>
   state edges: List<HyphalSegment>
-  state next_id: UInt64
+  state next_id: u64
 
   pub fun from_spore(position: Vec3) -> MyceliumNetwork {
     val initial_tip = HyphalTip {
@@ -262,7 +262,7 @@ pub system MyceliumNetwork {
     // Complex growth logic...
   }
 
-  exegesis {
+  docs {
     Complete mycelium network simulation with hyphal tip
     extension, branching, and nutrient transport.
   }
@@ -283,18 +283,18 @@ pub system MyceliumNetwork {
 Add methods to a `Rectangle` gene:
 
 ```dol
-pub gene Rectangle {
-  has width: Float64
-  has height: Float64
+pub gen Rectangle {
+  has width: f64
+  has height: f64
 
   // Add these methods:
-  // 1. area() -> Float64
-  // 2. perimeter() -> Float64
+  // 1. area() -> f64
+  // 2. perimeter() -> f64
   // 3. is_square() -> Bool
-  // 4. scale(factor: Float64) -> Rectangle
+  // 4. scale(factor: f64) -> Rectangle
 }
 
-exegesis {
+docs {
   A rectangle with width and height dimensions.
 }
 ```

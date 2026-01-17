@@ -50,7 +50,7 @@ pub enum Essence {
 }
 
 /// Symbol is the base entity for mythological figures
-pub gene Symbol {
+pub gen Symbol {
     has name: String
     has essence: Essence
     has power: Int = 50
@@ -74,7 +74,7 @@ pub gene Symbol {
         return format!("{} of {}", this.role, this.name)
     }
 
-    exegesis {
+    docs {
         A Symbol represents a mythological entity with cosmic significance.
         Each Symbol has an essence that defines its material nature, a role
         that defines its function in the cosmic order, and domains that
@@ -95,7 +95,7 @@ Now define the Black Lion, the Keeper of Light:
   </div>
   <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
 {`/// BlackLion is the Keeper of Light, Guardian of Harmony
-pub gene BlackLion derives Symbol {
+pub gen BlackLion derives Symbol {
     // Override defaults with specific values
     has name: String = "Black Lion"
     has essence: Essence = Essence::Obsidian
@@ -124,7 +124,7 @@ pub gene BlackLion derives Symbol {
         target.receive_light(this.power * this.mane_luminosity)
     }
 
-    exegesis {
+    docs {
         The Black Lion is the supreme guardian of cosmic harmony. Despite
         its dark obsidian essence, it is paradoxically the Keeper of Light,
         demonstrating that true illumination comes from understanding darkness.
@@ -155,7 +155,7 @@ Define the White Swan, Spirit of Transformation:
   </div>
   <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
 {`/// WhiteSwan is the Spirit of Transformation, Weaver of Change
-pub gene WhiteSwan derives Symbol {
+pub gen WhiteSwan derives Symbol {
     has name: String = "White Swan"
     has essence: Essence = Essence::Pearl
     has power: Int = 85
@@ -194,7 +194,7 @@ pub gene WhiteSwan derives Symbol {
         }
     }
 
-    exegesis {
+    docs {
         The White Swan embodies the principle of graceful transformation.
         Unlike violent change, the Swan's transformations are gentle,
         beautiful, and inevitable. Each pearl-white feather carries a
@@ -254,7 +254,7 @@ pub trait Allegiance {
         }
     }
 
-    exegesis {
+    docs {
         Allegiance represents the cosmic alignment of an entity. While
         Symbols are fixed in their nature, other entities may choose
         their allegiance and change it over time. Devotion level affects
@@ -283,7 +283,7 @@ pub enum SceneType {
 }
 
 /// Scene represents a moment in the mythology
-pub gene Scene {
+pub gen Scene {
     has scene_type: SceneType
     has primary_symbol: Symbol
     has secondary_symbol: Symbol?
@@ -311,7 +311,7 @@ pub gene Scene {
         return base
     }
 
-    exegesis {
+    docs {
         A Scene captures a dramatic moment in the Lion & Swan mythology.
         Scenes are the primary unit of generated content, combining
         visual and narrative elements into a cohesive mythic expression.

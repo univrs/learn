@@ -45,8 +45,8 @@ mod examples.point @ 0.1.0
 
 /// A 2D point
 pub type Point2D {
-    x: Float64
-    y: Float64
+    x: f64
+    y: f64
 }
 ```
 
@@ -205,8 +205,8 @@ Note: DOL uses `val`/`var`, not `let`/`let mut` like Rust.
 
 ```dol
 type Point2D {
-    x: Float64
-    y: Float64
+    x: f64
+    y: f64
 }
 ```
 
@@ -237,12 +237,12 @@ mod examples.point @ 0.1.0
 
 /// A 2D point
 pub type Point2D {
-    x: Float64
-    y: Float64
+    x: f64
+    y: f64
 }
 
 /// Calculate distance between points
-fun distance(val a: Point2D, val b: Point2D) -> Float64 {
+fun distance(val a: Point2D, val b: Point2D) -> f64 {
     val dx = b.x - a.x
     val dy = b.y - a.y
     (dx * dx + dy * dy).sqrt()

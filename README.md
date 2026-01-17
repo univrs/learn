@@ -18,14 +18,14 @@ The Design Ontology Language (DOL) is a specification-first language for ontolog
 ### Quick Example
 
 ```dol
-gene hello.world {
+gen hello.world {
   message has content
   message has sender
   message has timestamp
 }
 
-exegesis {
-  The hello.world gene defines a message entity with three
+docs {
+  The hello.world gen defines a message entity with three
   essential properties: content, sender, and timestamp.
 }
 ```

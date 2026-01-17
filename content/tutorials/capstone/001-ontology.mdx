@@ -96,7 +96,7 @@ pub type symbol.archetype {
   name: String
   color: String
   meaning: String
-  power_level: UInt32
+  power_level: u32
 }
 ```
 
@@ -126,7 +126,7 @@ pub type symbol.lion {
 
   // Lion-specific attributes
   pride_name: String
-  generations_served: UInt32
+  generations_served: u32
   territories: List<String>
 }
 ```
@@ -155,7 +155,7 @@ pub type symbol.swan {
 
   // Swan-specific attributes
   flock_name: String
-  transformations_witnessed: UInt32
+  transformations_witnessed: u32
   prophecies: List<String>
 }
 ```
@@ -202,7 +202,7 @@ pub type narrative.story {
   epoch: String
   scenes: List<narrative.scene>
   moral: String
-  generation: UInt32
+  generation: u32
 }
 ```
 
@@ -256,7 +256,7 @@ When a constraint is violated, the VUDO runtime will prevent the operation. This
 The exegesis provides the philosophical foundation - the *why* behind the specification:
 
 ```dol
-exegesis {
+docs {
   The Lion & Swan mythology serves as a self-correcting
   narrative system for the Univrs.io ecosystem.
 
@@ -314,7 +314,7 @@ pub type symbol.archetype {
   name: String
   color: String
   meaning: String
-  power_level: UInt32
+  power_level: u32
 }
 
 /// The Black Lion archetype - Keepers of Light.
@@ -325,7 +325,7 @@ pub type symbol.lion {
   allegiance: String = "keeper"
 
   pride_name: String
-  generations_served: UInt32
+  generations_served: u32
   territories: List<String>
 }
 
@@ -337,7 +337,7 @@ pub type symbol.swan {
   allegiance: String = "variable"
 
   flock_name: String
-  transformations_witnessed: UInt32
+  transformations_witnessed: u32
   prophecies: List<String>
 }
 
@@ -355,7 +355,7 @@ pub type narrative.story {
   epoch: String
   scenes: List<narrative.scene>
   moral: String
-  generation: UInt32
+  generation: u32
 }
 
 /// Generation output from the Spirit.
@@ -363,8 +363,8 @@ pub type generation.output {
   image_url: String
   narrative_text: String
   archetype: String
-  credits_charged: UInt64
-  timestamp: UInt64
+  credits_charged: u64
+  timestamp: u64
 }
 
 constraint mythology.integrity {
@@ -381,7 +381,7 @@ constraint mythology.eternal_balance {
   exists swan in swans
 }
 
-exegesis {
+docs {
   The Lion & Swan mythology serves as a self-correcting
   narrative system for the Univrs.io ecosystem.
 

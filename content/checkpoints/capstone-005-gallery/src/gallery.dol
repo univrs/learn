@@ -29,7 +29,7 @@ pub trait Displayable {
   is description() -> String
 
   /// Get the display timestamp
-  is timestamp() -> UInt64
+  is timestamp() -> u64
 
   /// Get the allegiance (if applicable)
   is allegiance() -> Option<Allegiance>
@@ -39,10 +39,10 @@ pub trait Displayable {
 }
 
 /// Gallery item wrapper for images
-pub gene ImageGalleryItem {
+pub gen ImageGalleryItem {
   has image: GeneratedImage
   has symbol: Symbol
-  has view_count: UInt64 = 0
+  has view_count: u64 = 0
 
   impl Displayable {
     pub fun title() -> String {
@@ -53,7 +53,7 @@ pub gene ImageGalleryItem {
       return this.symbol.description
     }
 
-    pub fun timestamp() -> UInt64 {
+    pub fun timestamp() -> u64 {
       return this.image.created_at
     }
 
@@ -117,7 +117,7 @@ pub gene ImageGalleryItem {
     }
   }
 
-  exegesis {
+  docs {
     ImageGalleryItem wraps a GeneratedImage with its associated
     Symbol for display purposes. It tracks view counts and
     provides multiple rendering formats.
@@ -125,9 +125,9 @@ pub gene ImageGalleryItem {
 }
 
 /// Gallery item wrapper for narratives
-pub gene NarrativeGalleryItem {
+pub gen NarrativeGalleryItem {
   has narrative: Narrative
-  has view_count: UInt64 = 0
+  has view_count: u64 = 0
 
   impl Displayable {
     pub fun title() -> String {
@@ -139,7 +139,7 @@ pub gene NarrativeGalleryItem {
       return "A tale of {this.narrative.scenes.len()} scenes (Lion: {lion}, Swan: {swan})"
     }
 
-    pub fun timestamp() -> UInt64 {
+    pub fun timestamp() -> u64 {
       return this.narrative.created_at
     }
 
@@ -206,7 +206,7 @@ pub gene NarrativeGalleryItem {
   }
 
   /// Get a specific scene for display
-  pub fun get_scene(self, index: UInt32) -> Option<Scene> {
+  pub fun get_scene(self, index: u32) -> Option<Scene> {
     if index < this.narrative.scenes.len() as UInt32 {
       return Some(this.narrative.scenes[index as UInt64])
     }
@@ -221,7 +221,7 @@ pub gene NarrativeGalleryItem {
     }
   }
 
-  exegesis {
+  docs {
     NarrativeGalleryItem wraps a Narrative for display purposes.
     It provides multiple rendering formats including a slideshow
     mode that presents scenes one at a time.
@@ -229,7 +229,7 @@ pub gene NarrativeGalleryItem {
 }
 
 /// The main gallery container
-pub gene Gallery {
+pub gen Gallery {
   has images: List<ImageGalleryItem>
   has narratives: List<NarrativeGalleryItem>
   has name: String = "Lion & Swan Gallery"
@@ -293,7 +293,7 @@ pub gene Gallery {
   }
 
   /// Get total item count
-  pub fun total_items(self) -> UInt64 {
+  pub fun total_items(self) -> u64 {
     return self.images.len() + self.narratives.len()
   }
 
@@ -339,22 +339,22 @@ pub gene Gallery {
   }
 
   /// Get most viewed items
-  pub fun most_viewed_images(self, count: UInt32) -> List<ImageGalleryItem> {
+  pub fun most_viewed_images(self, count: u32) -> List<ImageGalleryItem> {
     return self.images
       .sort_by(|a, b| b.view_count.cmp(a.view_count))
-      .take(count as UInt64)
+      .take(count as Ui64)
       .collect()
   }
 
   /// Get most viewed narratives
-  pub fun most_viewed_narratives(self, count: UInt32) -> List<NarrativeGalleryItem> {
+  pub fun most_viewed_narratives(self, count: u32) -> List<NarrativeGalleryItem> {
     return self.narratives
       .sort_by(|a, b| b.view_count.cmp(a.view_count))
-      .take(count as UInt64)
+      .take(count as Ui64)
       .collect()
   }
 
-  exegesis {
+  docs {
     The Gallery is the main container for displaying images and
     narratives. It provides filtering, sorting, and multiple
     display format options.
@@ -371,7 +371,7 @@ pub trait GalleryStorage {
 }
 
 /// Implementation using host storage
-pub gene PersistentGallery {
+pub gen PersistentGallery {
   has storage_key: String = "lion_swan_gallery"
 
   impl GalleryStorage {
@@ -399,7 +399,7 @@ pub gene PersistentGallery {
     }
   }
 
-  exegesis {
+  docs {
     PersistentGallery uses host storage to persist gallery data
     across spirit invocations. This allows users to build up a
     collection over time.

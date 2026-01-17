@@ -58,10 +58,10 @@ Trait methods can have various signatures:
 ```dol
 trait Identifiable {
     -- Simple getter, returns a value
-    get_id: fun() -> UInt64
+    get_id: fun() -> u64
 
     -- Method with parameter
-    matches_id: fun(id: UInt64) -> Bool
+    matches_id: fun(id: u64) -> Bool
 
     -- Method that may fail
     validate_id: fun() -> Result<Void, Error>
@@ -85,7 +85,7 @@ Traits can have generic type parameters for flexibility:
 
 ```dol
 trait Collection<T> {
-    length: fun() -> UInt64
+    length: fun() -> u64
     is_empty: fun() -> Bool
     contains: fun(item: T) -> Bool
     add: fun(item: T) -> Void
@@ -101,9 +101,9 @@ pub type StringList uses Collection<String> {
     items: List<String>
 }
 
--- A type implementing Collection<UInt64>
-pub type IdSet uses Collection<UInt64> {
-    ids: Set<UInt64>
+-- A type implementing Collection<Ui64>
+pub type IdSet uses Collection<Ui64> {
+    ids: Set<Ui64>
 }
 ```
 
@@ -113,7 +113,7 @@ Traits can provide default implementations for methods:
 
 ```dol
 trait Collection<T> {
-    length: fun() -> UInt64
+    length: fun() -> u64
 
     -- Default implementation using length()
     is_empty: fun() -> Bool = { self.length() == 0 }
@@ -133,7 +133,7 @@ Here is a more complete example with several defaults:
 ```dol
 trait Comparable<T> {
     -- Required: must be implemented
-    compare: fun(other: T) -> Int64
+    compare: fun(other: T) -> i64
 
     -- Defaults: derived from compare()
     equals: fun(other: T) -> Bool = { self.compare(other) == 0 }
@@ -152,7 +152,7 @@ Traits can extend other traits using `extends`:
 
 ```dol
 trait Entity {
-    get_id: fun() -> UInt64
+    get_id: fun() -> u64
     get_created_at: fun() -> Timestamp
 }
 
@@ -162,7 +162,7 @@ trait Auditable extends Entity {
 }
 
 trait Versionable extends Auditable {
-    get_version: fun() -> UInt64
+    get_version: fun() -> u64
     increment_version: fun() -> Void
 }
 ```
@@ -181,7 +181,7 @@ mod container.traits @ 0.3.0
 
 -- Base trait for anything with an ID
 trait Identifiable {
-    get_id: fun() -> UInt64
+    get_id: fun() -> u64
 }
 
 -- Lifecycle management
@@ -203,10 +203,10 @@ trait HealthCheckable {
 
 -- Resource management
 trait ResourceManaged {
-    get_cpu_usage: fun() -> Float64
-    get_memory_usage: fun() -> UInt64
-    set_cpu_limit: fun(limit: Float64) -> Void
-    set_memory_limit: fun(limit: UInt64) -> Void
+    get_cpu_usage: fun() -> f64
+    get_memory_usage: fun() -> u64
+    set_cpu_limit: fun(limit: f64) -> Void
+    set_memory_limit: fun(limit: u64) -> Void
 }
 
 -- Complete container trait combining all behaviors
@@ -235,16 +235,16 @@ trait Repository<T, ID> {
 }
 
 trait PagedRepository<T, ID> extends Repository<T, ID> {
-    find_page: fun(page: UInt64, size: UInt64) -> Page<T>
-    count: fun() -> UInt64
+    find_page: fun(page: u64, size: u64) -> Page<T>
+    count: fun() -> u64
 }
 
 pub type Page<T> {
     items: List<T>
-    page_number: UInt64
-    page_size: UInt64
-    total_items: UInt64
-    total_pages: UInt64
+    page_number: u64
+    page_size: u64
+    total_items: u64
+    total_pages: u64
 }
 ```
 
@@ -280,7 +280,7 @@ Define traits for a notification system:
 mod notifications @ 0.3.0
 
 pub type Notification {
-    id: UInt64
+    id: u64
     title: String
     body: String
     sent_at: Timestamp
@@ -293,8 +293,8 @@ pub type Priority {
 
 trait Notifiable {
     receive: fun(notification: Notification) -> Result<Void, Error>
-    get_unread_count: fun() -> UInt64
-    mark_as_read: fun(notification_id: UInt64) -> Void
+    get_unread_count: fun() -> u64
+    mark_as_read: fun(notification_id: u64) -> Void
 }
 
 trait NotificationSender {
@@ -305,7 +305,7 @@ trait NotificationSender {
 trait NotificationChannel extends Notifiable, NotificationSender {
     get_channel_name: fun() -> String
     is_available: fun() -> Bool
-    get_delivery_status: fun(notification_id: UInt64) -> DeliveryStatus
+    get_delivery_status: fun(notification_id: u64) -> DeliveryStatus
 }
 
 pub type DeliveryStatus {

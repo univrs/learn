@@ -86,7 +86,7 @@ requires dol/std @ ^1.0.0
 system MyApp {
     uses domain.*
 
-    exegesis {
+    docs {
         Main system for the my-app project.
         This is where you compose your domain genes into a complete system.
     }
@@ -100,7 +100,7 @@ module my-app/domain @ 0.1.0
 
 // Domain entities go here
 
-pub gene Entity {
+pub gen Entity {
     has id: UUID
     has created_at: Timestamp
     has updated_at: Timestamp
@@ -108,8 +108,8 @@ pub gene Entity {
     is identifiable
     is auditable
 
-    exegesis {
-        Base entity gene with common fields.
+    docs {
+        Base entity gen with common fields.
         Extend this for your domain-specific entities.
     }
 }
@@ -196,12 +196,12 @@ module art-generator/prompts @ 0.1.0
 
 uses std/text
 
-pub gene Prompt {
+pub gen Prompt {
     has content: String
     has style: PromptStyle?
     has negative: String?
 
-    exegesis {
+    docs {
         A structured prompt for image generation.
         Supports style modifiers and negative prompts.
     }
@@ -222,7 +222,7 @@ pub trait PromptEngineer {
     fn combine(prompts: List<Prompt>) -> Prompt
     fn to_provider_format(prompt: Prompt, provider: String) -> String
 
-    exegesis {
+    docs {
         Utilities for prompt engineering.
         Transform and optimize prompts for different providers.
     }
@@ -349,20 +349,20 @@ pub enum MessageRole {
     Tool
 }
 
-pub gene Message {
+pub gen Message {
     has role: MessageRole
     has content: String
     has name: String?
     has tool_calls: List<ToolCall>?
     has tool_call_id: String?
 
-    exegesis {
+    docs {
         A single message in a conversation.
         Supports all standard chat completion formats.
     }
 }
 
-pub gene Conversation {
+pub gen Conversation {
     has id: UUID
     has messages: List<Message>
     has model: String
@@ -376,7 +376,7 @@ pub gene Conversation {
     fn get_context_window() -> List<Message>
     fn token_count() -> Int
 
-    exegesis {
+    docs {
         A complete conversation with history management.
         Handles context window limits and message truncation.
     }
@@ -388,23 +388,23 @@ pub gene Conversation {
 ```dol
 module chatbot/tools @ 0.1.0
 
-pub gene ToolDefinition {
+pub gen ToolDefinition {
     has name: String
     has description: String
     has parameters: JsonSchema
 
-    exegesis {
+    docs {
         Defines a tool that the LLM can invoke.
         Parameters follow JSON Schema format.
     }
 }
 
-pub gene ToolCall {
+pub gen ToolCall {
     has id: String
     has name: String
     has arguments: Json
 
-    exegesis {
+    docs {
         An invocation of a tool by the model.
     }
 }
@@ -413,7 +413,7 @@ pub trait ToolExecutor {
     fn execute(call: ToolCall) -> ToolResult
     fn validate(call: ToolCall) -> ValidationResult
 
-    exegesis {
+    docs {
         Executes tool calls from the model.
         Implement this trait for each tool.
     }
@@ -512,7 +512,7 @@ module {{project_name}} @ 0.1.0
 // License: {{license}}
 
 system {{project_name | pascal_case}} {
-    exegesis {
+    docs {
         Main system for {{project_name}}.
     }
 }

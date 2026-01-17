@@ -18,13 +18,13 @@ DOL uses explicit error handling with `Option` and `Result` types. This approach
 `Option<T>` represents a value that may or may not exist:
 
 ```dol
-pub gene Option<T> {
+pub gen Option<T> {
   type: enum {
     Some { value: T },
     None
   }
 
-  exegesis {
+  docs {
     Option represents an optional value. Some(value) indicates
     presence, None indicates absence. This eliminates null
     pointer errors by making optionality explicit.
@@ -35,25 +35,25 @@ pub gene Option<T> {
 ### Using Option in Genes
 
 ```dol
-pub gene GeneDecl {
+pub gen GeneDecl {
   has name: String
   has type_def: Option<TypeExpr>
   has exegesis: Option<String>
   has span: Span
 
-  exegesis {
-    A gene declaration with optional type definition
+  docs {
+    A gen declaration with optional type definition
     and optional exegesis block.
   }
 }
 
-pub gene UserProfile {
+pub gen UserProfile {
   has username: String
   has email: String
   has bio: Option<String>
   has avatar_url: Option<String>
 
-  exegesis {
+  docs {
     User profile where bio and avatar are optional.
   }
 }
@@ -79,8 +79,8 @@ pub fun greet_user(name: Option<String>) -> String {
 ### Option Methods
 
 ```dol
-val maybe_value: Option<Int64> = Some(42)
-val nothing: Option<Int64> = None
+val maybe_value: Option<i64> = Some(42)
+val nothing: Option<i64> = None
 
 // Unwrap with default
 val value = maybe_value.unwrap_or(0)  // 42
@@ -101,13 +101,13 @@ val result = maybe_value
 `Result<T, E>` represents an operation that may succeed or fail:
 
 ```dol
-pub gene Result<T, E> {
+pub gen Result<T, E> {
   type: enum {
     Ok { value: T },
     Err { error: E }
   }
 
-  exegesis {
+  docs {
     Result represents success (Ok) or failure (Err).
     Forces explicit error handling at compile time.
   }
@@ -117,17 +117,17 @@ pub gene Result<T, E> {
 ### Functions that Return Result
 
 ```dol
-pub gene ParseError {
+pub gen ParseError {
   has message: String
-  has position: UInt32
+  has position: u32
   has span: Span
 
-  exegesis {
+  docs {
     Error returned when parsing fails.
   }
 }
 
-pub fun parse_int(text: String) -> Result<Int64, ParseError> {
+pub fun parse_int(text: String) -> Result<i64, ParseError> {
   if text.is_empty() {
     return Err(ParseError {
       message: "Empty string",
@@ -161,8 +161,8 @@ pub fun process_input(text: String) -> String {
 ### Result Methods
 
 ```dol
-val success: Result<Int64, String> = Ok(42)
-val failure: Result<Int64, String> = Err("not found")
+val success: Result<i64, String> = Ok(42)
+val failure: Result<i64, String> = Err("not found")
 
 // Check status
 val is_ok = success.is_ok()    // true
@@ -220,12 +220,12 @@ pub fun parse_config_verbose(text: String) -> Result<Config, Error> {
 Define rich error types using enum variants:
 
 ```dol
-pub gene ValidationError {
+pub gen ValidationError {
   type: enum {
     /// Field is missing
     MissingField { name: String },
     /// Value out of range
-    OutOfRange { field: String, min: Int64, max: Int64, actual: Int64 },
+    OutOfRange { field: String, min: i64, max: i64, actual: i64 },
     /// Invalid format
     InvalidFormat { field: String, expected: String },
     /// Type mismatch
@@ -233,12 +233,12 @@ pub gene ValidationError {
   }
   has span: Span
 
-  exegesis {
+  docs {
     Validation errors with detailed context about what went wrong.
   }
 }
 
-pub fun validate_age(value: Int64) -> Result<Int64, ValidationError> {
+pub fun validate_age(value: i64) -> Result<i64, ValidationError> {
   if value < 0 || value > 150 {
     return Err(ValidationError {
       type: ValidationError.OutOfRange {
@@ -287,15 +287,15 @@ pub fun handle_validation(result: Result<User, ValidationError>) -> String {
 
 ```dol
 // Option to Result
-val maybe: Option<Int64> = Some(42)
-val result: Result<Int64, String> = maybe.ok_or("No value found")
+val maybe: Option<i64> = Some(42)
+val result: Result<i64, String> = maybe.ok_or("No value found")
 
 // Result to Option
-val res: Result<Int64, String> = Ok(42)
-val opt: Option<Int64> = res.ok()  // Some(42)
+val res: Result<i64, String> = Ok(42)
+val opt: Option<i64> = res.ok()  // Some(42)
 
-val err: Result<Int64, String> = Err("failed")
-val none: Option<Int64> = err.ok()  // None
+val err: Result<i64, String> = Err("failed")
+val none: Option<i64> = err.ok()  // None
 ```
 
 ## Chaining Fallible Operations
@@ -357,17 +357,17 @@ pub fun load_config(path: String) -> Result<Config, Error> {
 Create error handling for a user registration system:
 
 ```dol
-pub gene RegistrationError {
+pub gen RegistrationError {
   type: enum {
     // Add variants for:
     // - InvalidEmail { email: String }
     // - WeakPassword { reason: String }
     // - UsernameTaken { username: String }
-    // - AgeTooYoung { age: Int64, minimum: Int64 }
+    // - AgeTooYoung { age: i64, minimum: i64 }
   }
   has span: Span
 
-  exegesis {
+  docs {
     // Your explanation here
   }
 }
@@ -385,7 +385,7 @@ pub fun validate_password(password: String) -> Result<String, RegistrationError>
 pub fun register_user(
   email: String,
   password: String,
-  age: Int64
+  age: i64
 ) -> Result<User, RegistrationError> {
   // Use ? to chain validations
   let valid_email = validate_email(email)?

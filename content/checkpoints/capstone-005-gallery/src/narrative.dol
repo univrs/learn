@@ -28,7 +28,7 @@ pub enum SceneType {
 
 impl SceneType {
   /// Get the narrative weight of this scene type (affects story pacing)
-  pub fun weight(self) -> Float64 {
+  pub fun weight(self) -> f64 {
     match self {
       SceneType::Opening => 1.0,
       SceneType::Rising => 1.5,
@@ -55,7 +55,7 @@ impl SceneType {
     }
   }
 
-  exegesis {
+  docs {
     Scene types follow classical narrative structure while allowing
     for symbolic moments (Confrontation, Harmony, Transformation)
     that emerge from the allegiance dynamics.
@@ -63,13 +63,13 @@ impl SceneType {
 }
 
 /// A single scene in a narrative
-pub gene Scene {
-  has id: UInt64
+pub gen Scene {
+  has id: u64
   has scene_type: SceneType
   has primary_symbol: Symbol
   has secondary_symbol: Option<Symbol>
   has text: String
-  has created_at: UInt64
+  has created_at: u64
 
   constraint has_text {
     this.text.len() > 0
@@ -88,7 +88,7 @@ pub gene Scene {
     return self.primary_symbol.allegiance
   }
 
-  exegesis {
+  docs {
     A Scene represents a single narrative moment featuring one or two
     symbols. Dual-allegiance scenes create natural tension or harmony
     depending on the scene type.
@@ -96,11 +96,11 @@ pub gene Scene {
 }
 
 /// A complete narrative composed of scenes
-pub gene Narrative {
-  has id: UInt64
+pub gen Narrative {
+  has id: u64
   has title: String
   has scenes: List<Scene>
-  has created_at: UInt64
+  has created_at: u64
 
   constraint has_title {
     this.title.len() > 0
@@ -111,7 +111,7 @@ pub gene Narrative {
   }
 
   /// Get the total narrative weight (sum of scene weights)
-  pub fun total_weight(self) -> Float64 {
+  pub fun total_weight(self) -> f64 {
     return self.scenes
       .map(|s| s.scene_type.weight())
       .sum()
@@ -153,7 +153,7 @@ pub gene Narrative {
       .join("\n\n")
   }
 
-  exegesis {
+  docs {
     A Narrative is a complete story composed of scenes. It tracks the
     overall allegiance balance and provides methods for analyzing
     narrative structure.
@@ -161,7 +161,7 @@ pub gene Narrative {
 }
 
 /// Templates for generating scene text
-gene SceneTemplates {
+gen SceneTemplates {
   /// Opening templates keyed by allegiance
   pub fun opening(symbol: Symbol) -> String {
     let templates = match symbol.allegiance {
@@ -233,7 +233,7 @@ gene SceneTemplates {
     return templates[random::range(0, templates.len())]
   }
 
-  exegesis {
+  docs {
     SceneTemplates provides text templates for different scene types
     and allegiance combinations. Templates use symbol interpolation
     to create personalized narrative moments.
@@ -243,19 +243,19 @@ gene SceneTemplates {
 /// The narrative generator
 pub trait NarrativeGenerator {
   /// Generate a complete narrative from a symbol registry
-  is generate_narrative(registry: SymbolRegistry, scene_count: UInt32) -> Narrative
+  is generate_narrative(registry: SymbolRegistry, scene_count: u32) -> Narrative
 
   /// Generate a single scene
   is generate_scene(scene_type: SceneType, primary: Symbol, secondary: Option<Symbol>) -> Scene
 }
 
 /// Default narrative generator implementation
-pub gene StoryWeaver {
+pub gen StoryWeaver {
   has templates: SceneTemplates
 
   impl NarrativeGenerator {
     /// Generate a complete narrative
-    pub fun generate_narrative(registry: SymbolRegistry, scene_count: UInt32) -> Narrative {
+    pub fun generate_narrative(registry: SymbolRegistry, scene_count: u32) -> Narrative {
       log::info("Generating narrative with {scene_count} scenes")
 
       let lion_symbols = registry.by_allegiance(Allegiance::Lion)
@@ -355,7 +355,7 @@ pub gene StoryWeaver {
     }
   }
 
-  exegesis {
+  docs {
     StoryWeaver implements NarrativeGenerator to create symbolic
     narratives. It uses templates and symbol registries to generate
     coherent stories with proper pacing and allegiance balance.
@@ -366,7 +366,7 @@ pub gene StoryWeaver {
 pub fun generate_allegiance_story(
   registry: SymbolRegistry,
   allegiance: Allegiance,
-  scene_count: UInt32
+  scene_count: u32
 ) -> Narrative {
   let weaver = StoryWeaver { templates: SceneTemplates {} }
   let narrative = weaver.generate_narrative(registry, scene_count)

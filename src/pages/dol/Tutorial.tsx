@@ -15,7 +15,7 @@ const tutorials = [
     {
         slug: "002-values-types",
         title: "Values and Types",
-        description: "Learn about DOL's type system and typed gene declarations",
+        description: "Learn about DOL's type system and typed gen declarations",
         duration: "15 min",
     },
     {

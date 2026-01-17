@@ -36,14 +36,14 @@ As systems grow, types need to change:
 ```dol
 -- Version 1.0.0
 pub type User {
-    id: UInt64
+    id: u64
     name: String
     email: String
 }
 
 -- Version 2.0.0 needs more fields!
 pub type User {
-    id: UInt64
+    id: u64
     name: String
     email: String
     avatar_url: Option<String>     -- New!
@@ -91,7 +91,7 @@ Add new fields with default values:
 evolves ProductV1 > ProductV2 @ 1.1.0 {
     + description: String = ""
     + tags: List<String> = []
-    + rating: Option<Float64> = None
+    + rating: Option<f64> = None
     + is_active: Bool = true
 }
 ```
@@ -103,7 +103,7 @@ Remove deprecated fields:
 ```dol
 evolves ProductV2 > ProductV3 @ 2.0.0 {
     - legacy_code: String
-    - old_category_id: UInt64
+    - old_category_id: u64
 }
 ```
 
@@ -135,7 +135,7 @@ evolves OrderV1 > OrderV2 @ 2.0.0 {
     }
 
     -- Convert cents to decimal
-    => price_cents: UInt64 to price: Decimal {
+    => price_cents: u64 to price: Decimal {
         Decimal.from_cents(price_cents)
     }
 }
@@ -150,14 +150,14 @@ mod users @ 0.3.0
 
 -- Original type (v1.0.0)
 pub type UserV1 {
-    id: UInt64
+    id: u64
     name: String
     email: String
 }
 
 -- Version 1.1.0: Add optional profile fields
 pub type UserV1_1 {
-    id: UInt64
+    id: u64
     name: String
     email: String
     avatar_url: Option<String>
@@ -171,7 +171,7 @@ evolves UserV1 > UserV1_1 @ 1.1.0 {
 
 -- Version 2.0.0: Add authentication and settings
 pub type UserV2 {
-    id: UInt64
+    id: u64
     name: String
     email: String
     avatar_url: Option<String>
@@ -230,7 +230,7 @@ evolves ProductV2 > ProductV3 @ 2.0.0 {
 evolves ProductV3 > ProductV4 @ 3.0.0 {
     + variants: List<ProductVariant> = []
     + inventory: InventoryInfo = InventoryInfo.default()
-    => price: Float64 to pricing: PricingInfo {
+    => price: f64 to pricing: PricingInfo {
         PricingInfo { base_price: price, currency: "USD" }
     }
 }
@@ -249,7 +249,7 @@ Evolution can be classified by compatibility:
 evolves ConfigV1 > ConfigV2 @ 1.1.0 {
     -- Safe: optional with default
     + new_feature_enabled: Bool = false
-    + cache_ttl: Option<UInt64> = None
+    + cache_ttl: Option<Ui64> = None
 }
 ```
 
@@ -265,7 +265,7 @@ evolves DataV1 > DataV2 @ 2.0.0 {
     + required_field: String = compute_default()
 
     -- Requires migration: type change
-    => old_int: Int32 to new_int: Int64 { old_int.to_int64() }
+    => old_int: i32 to new_int: i64 { old_int.to_int64() }
 }
 ```
 
@@ -365,17 +365,17 @@ Define evolution for an `Article` type:
 mod blog.articles @ 0.3.0
 
 pub type ArticleV1 {
-    id: UInt64
+    id: u64
     title: String
     content: String
-    author_id: UInt64
+    author_id: u64
 }
 
 pub type ArticleV2 {
-    id: UInt64
+    id: u64
     title: String
     content: String
-    author_id: UInt64
+    author_id: u64
     published_at: Option<Timestamp>
     tags: List<String>
     slug: String
@@ -390,7 +390,7 @@ evolves ArticleV1 > ArticleV2 @ 1.1.0 {
 }
 
 pub type ArticleV3 {
-    id: UInt64
+    id: u64
     title: String
     content: String
     published_at: Option<Timestamp>
@@ -401,7 +401,7 @@ pub type ArticleV3 {
 }
 
 pub type Author {
-    id: UInt64
+    id: u64
     name: String
     email: String
     avatar_url: Option<String>
@@ -420,7 +420,7 @@ pub type Category {
 
 evolves ArticleV2 > ArticleV3 @ 2.0.0 {
     + category: Category = Category.Uncategorized
-    - author_id: UInt64
+    - author_id: u64
     + author: Author = lookup_author(author_id)
 }
 ```

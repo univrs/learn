@@ -9,7 +9,7 @@ objectives:
   - "Write type declarations with fields"
   - "Define traits with associated functions"
   - "Create versioned modules"
-  - "Understand gene syntax for compatibility"
+  - "Understand gen syntax for compatibility"
 tags:
   - "dol"
   - "type"
@@ -40,8 +40,8 @@ Type declarations define the entities in your domain. In DOL v0.3.0, `type` is t
 ```dol
 /// A 2D point
 pub type Point2D {
-    x: Float64
-    y: Float64
+    x: f64
+    y: f64
 }
 ```
 
@@ -78,8 +78,8 @@ pub type TypeName {
 
 ```dol
 pub type PublicPoint {
-    x: Float64
-    y: Float64
+    x: f64
+    y: f64
 }
 
 type InternalHelper {
@@ -111,7 +111,7 @@ pub type User {
     id: UUID
     email: String
     display_name: String
-    created_at: Int64
+    created_at: i64
     is_active: Bool
 }
 ```
@@ -123,8 +123,8 @@ Types can extend other types using `extends`:
 ```dol
 /// Base point type
 pub type Point2D {
-    x: Float64
-    y: Float64
+    x: f64
+    y: f64
 }
 
 /// Point with color extends Point2D
@@ -257,7 +257,7 @@ pub type User {
 pub type Product {
     id: UUID
     name: String
-    price: Int64
+    price: i64
 }
 
 /// Auditable behavior
@@ -274,7 +274,7 @@ Functions operate on types and values.
 
 ```dol
 /// Calculate distance between points
-fun distance(val a: Point2D, val b: Point2D) -> Float64 {
+fun distance(val a: Point2D, val b: Point2D) -> f64 {
     val dx = b.x - a.x
     val dy = b.y - a.y
     (dx * dx + dy * dy).sqrt()
@@ -329,14 +329,14 @@ The `gene` keyword is still supported for backward compatibility but `type` is p
 ```dol
 // Preferred v0.3.0 syntax
 type Point2D {
-    x: Float64
-    y: Float64
+    x: f64
+    y: f64
 }
 
 // Legacy syntax (still works)
-gene Point2D {
-    x: Float64
-    y: Float64
+gen Point2D {
+    x: f64
+    y: f64
 }
 ```
 
@@ -367,17 +367,17 @@ mod examples.point @ 0.1.0
 
 /// A 2D point
 pub type Point2D {
-    x: Float64
-    y: Float64
+    x: f64
+    y: f64
 }
 
 /// Points that can calculate distance
 pub trait Measurable {
-    fun distance_from_origin(val self) -> Float64
+    fun distance_from_origin(val self) -> f64
 }
 
 /// Calculate distance between two points
-pub fun distance(val a: Point2D, val b: Point2D) -> Float64 {
+pub fun distance(val a: Point2D, val b: Point2D) -> f64 {
     val dx = b.x - a.x
     val dy = b.y - a.y
     (dx * dx + dy * dy).sqrt()
@@ -399,7 +399,7 @@ This specification:
 
 1. **Type declarations** use `type` (preferred) or `gene` (compatible)
    ```dol
-   type Point2D { x: Float64, y: Float64 }
+   type Point2D { x: f64, y: f64 }
    ```
 
 2. **Trait declarations** define shared behavior
@@ -414,7 +414,7 @@ This specification:
 
 4. **Function declarations** use `fun` and `val`/`var` for parameters
    ```dol
-   fun distance(val a: Point2D, val b: Point2D) -> Float64
+   fun distance(val a: Point2D, val b: Point2D) -> f64
    ```
 
 5. **Inheritance** uses `extends`, quantifiers use `forall`

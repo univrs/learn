@@ -85,7 +85,7 @@ function evaluateDOL(code: string): ExecutionResult {
         continue
       }
 
-      // Handle gene declarations
+      // Handle gen declarations
       const geneMatch = line.match(/^(?:pub\s+)?gene\s+([\w.<>]+)\s*\{?/)
       if (geneMatch) {
         inBlock = true

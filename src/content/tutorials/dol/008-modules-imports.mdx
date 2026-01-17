@@ -20,15 +20,15 @@ Every DOL file can declare its module with a version. DOL v0.3.0 prefers `mod` o
 ```dol
 mod dol.token @ 0.4.0
 
-exegesis {
+docs {
   Token span tracks the location of tokens in source code.
 }
 
 /// Source location information
-pub gene Span {
-  has start: UInt32
-  has end: UInt32
-  has file_id: UInt32
+pub gen Span {
+  has start: u32
+  has end: u32
+  has file_id: u32
 }
 ```
 
@@ -48,14 +48,14 @@ mod dol.ast @ 0.4.0
 use dol.token.{ Span }
 use dol.types.{ TypeExpr, TypeParam }
 
-pub gene GeneDecl {
+pub gen GeneDecl {
   has name: String
   has type_params: List<TypeParam>
   has fields: List<Field>
   has span: Span
 
-  exegesis {
-    A gene declaration with type parameters and fields.
+  docs {
+    A gen declaration with type parameters and fields.
     Imports Span from dol.token module.
   }
 }
@@ -85,22 +85,22 @@ Items are private by default. Use `pub` to make them public:
 mod user.account @ 1.0.0
 
 // Public - accessible from other modules
-pub gene User {
-  has id: UInt64
+pub gen User {
+  has id: u64
   has name: String
   has email: String
   has password_hash: String  // Private field within public gene
 
-  exegesis {
+  docs {
     A user account in the system.
   }
 }
 
 // Private - only accessible within this module
-gene InternalCache {
+gen InternalCache {
   has entries: Map<UInt64, User>
 
-  exegesis {
+  docs {
     Internal caching mechanism, not exposed.
   }
 }
@@ -131,11 +131,11 @@ system greeting.service @0.1.0 {
   service has message.history
 }
 
-exegesis {
+docs {
   The greeting service orchestrates salutations across the Univrs platform.
   It depends on the greetable trait (any entity that can receive greetings)
   and the greeting protocol (standard formats and delivery mechanisms).
-  The service uses the hello.world gene for basic message structure.
+  The service uses the hello.world gen for basic message structure.
 
   Templates provide customizable greeting formats. History maintains
   an audit trail of all greetings sent, enabling replay and analysis.
@@ -159,7 +159,7 @@ system mycelium.network @0.2.0 {
   uses HyphalSegment
 }
 
-exegesis {
+docs {
   Mycelium network with versioned dependencies.
 }
 ```
@@ -197,7 +197,7 @@ pub use myproject.types.{ User, Config, Error }
 pub use myproject.traits.{ Lifecycle, Observable }
 pub use myproject.systems.{ NetworkSystem }
 
-exegesis {
+docs {
   My Project library - a DOL specification for [purpose].
   This mod re-exports the public API.
 }
@@ -211,7 +211,7 @@ mod myproject.types @ 1.0.0
 pub use myproject.types.core.{ User, Config }
 pub use myproject.types.errors.{ Error, ValidationError }
 
-exegesis {
+docs {
   Type definitions for myproject.
 }
 ```
@@ -229,10 +229,10 @@ evolves container.lifecycle @0.0.2 from @0.0.1 {
   rename status to state
 
   // Changed type
-  change timeout: Int32 to timeout: Int64
+  change timeout: i32 to timeout: i64
 }
 
-exegesis {
+docs {
   Evolution from v0.0.1 to v0.0.2 of the container lifecycle.
   Added pausing state for graceful pause support.
   Renamed status to state for clarity.
@@ -264,22 +264,22 @@ DOL has several visibility levels:
 mod myproject.internal @ 1.0.0
 
 // Private - only this mod
-gene PrivateHelper {
+gen PrivateHelper {
   has data: String
 }
 
 // Public to parent module only
-pub(super) gene ParentVisible {
-  has value: Int64
+pub(super) gen ParentVisible {
+  has value: i64
 }
 
 // Public within package
-pub(crate) gene PackageVisible {
+pub(crate) gen PackageVisible {
   has config: Config
 }
 
 // Fully public
-pub gene PublicAPI {
+pub gen PublicAPI {
   has result: Result<Data, Error>
 }
 ```
@@ -304,15 +304,15 @@ mod myproject.misc @ 1.0.0  // Too vague
 mod myproject.auth @ 1.0.0
 
 // Only expose what users need
-pub gene Session {
+pub gen Session {
   has token: String
-  has expires_at: UInt64
+  has expires_at: u64
 }
 
 pub fun authenticate(credentials: Credentials) -> Result<Session, AuthError>
 
 // Keep implementation private
-gene TokenCache {
+gen TokenCache {
   has entries: Map<String, Session>
 }
 
@@ -354,31 +354,31 @@ mod blog @ 1.0.0
 use blog.types.{ Post, Author, Comment }
 use blog.traits.{ Publishable, Commentable }
 
-exegesis {
+docs {
   Blog system module. Re-exports public API.
 }
 
 // In blog/types.dol:
 mod blog.types @ 1.0.0
 
-pub gene Post {
-  has id: UInt64
+pub gen Post {
+  has id: u64
   has title: String
   has content: String
-  has author_id: UInt64
-  has published_at: Option<UInt64>
+  has author_id: u64
+  has published_at: Option<Ui64>
   has tags: List<String>
 
-  exegesis {
+  docs {
     A blog post with optional publication date.
   }
 }
 
-pub gene Author {
+pub gen Author {
   // Add fields: id, name, email, bio
 }
 
-pub gene Comment {
+pub gen Comment {
   // Add fields: id, post_id, author_id, content, created_at
 }
 
@@ -397,7 +397,7 @@ pub trait Publishable {
   // Add transitions and constraints
 }
 
-exegesis {
+docs {
   // Your explanation
 }
 ```

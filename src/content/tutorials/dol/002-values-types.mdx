@@ -1,6 +1,6 @@
 ---
 title: "Values and Types"
-description: "Learn about DOL's type system and typed gene declarations"
+description: "Learn about DOL's type system and typed gen declarations"
 lesson: 2
 track: "dol-fundamentals"
 duration: "15 minutes"
@@ -19,7 +19,7 @@ DOL has two syntactic styles:
 
 **Simple (Metal DOL)** - untyped properties:
 ```dol
-gene hello.world {
+gen hello.world {
   message has content
   message has sender
 }
@@ -27,10 +27,10 @@ gene hello.world {
 
 **Typed (Full DOL)** - with type annotations:
 ```dol
-pub gene Message {
+pub gen Message {
   has content: String
   has sender: String
-  has timestamp: UInt64
+  has timestamp: u64
 }
 ```
 
@@ -52,26 +52,26 @@ DOL includes these primitive types:
 
 ## Typed Gene Example
 
-Here's a typed gene from the DOL codebase:
+Here's a typed gen from the DOL codebase:
 
 ```dol
 module dol.token @ 0.4.0
 
-exegesis {
+docs {
   Token span tracks the location of tokens in source code.
 }
 
 /// Source location information
-pub gene Span {
-  has start: UInt32
-  has end: UInt32
-  has file_id: UInt32
+pub gen Span {
+  has start: u32
+  has end: u32
+  has file_id: u32
 }
 ```
 
 Note the differences from simple genes:
 - `module ... @ version` declares the module and version
-- `pub` makes the gene publicly visible
+- `pub` makes the gen publicly visible
 - Fields use `has name: Type` syntax
 - `///` provides inline documentation
 
@@ -80,13 +80,13 @@ Note the differences from simple genes:
 DOL has built-in collection types:
 
 ```dol
-pub gene Container {
+pub gen Container {
   has tags: List<String>
   has metadata: Map<String, String>
   has resources: Option<ResourceSpec>
 }
 
-exegesis {
+docs {
   Containers can have multiple tags, key-value metadata,
   and an optional resource specification.
 }
@@ -105,7 +105,7 @@ Define enumerated types inline with `enum`:
 
 ```dol
 /// Container lifecycle states
-pub gene ContainerState {
+pub gen ContainerState {
   type: enum {
     Created,
     Starting,
@@ -118,7 +118,7 @@ pub gene ContainerState {
   }
 }
 
-exegesis {
+docs {
   ContainerState represents the discrete states a container
   can exist in during its lifecycle. Transitions between
   states are atomic and authenticated.
@@ -128,7 +128,7 @@ exegesis {
 Enum variants can also carry data:
 
 ```dol
-pub gene Change {
+pub gen Change {
   type: enum {
     /// Field added
     Added { name: String, ty: TypeExpr, default_value: Option<Expr> },
@@ -142,7 +142,7 @@ pub gene Change {
   has span: Span
 }
 
-exegesis {
+docs {
   A Change describes a single modification in an evolution,
   tracking schema migrations between versions.
 }
@@ -154,15 +154,15 @@ Define genes that work with any type using type parameters:
 
 ```dol
 /// Generic field within a gene
-pub gene Field<T> {
+pub gen Field<T> {
   has name: String
   has value: T
   has is_pub: Bool = false
   has span: Span
 }
 
-exegesis {
-  A Field represents a named component of a gene with an
+docs {
+  A Field represents a named component of a gen with an
   optional default value. The type parameter T allows
   fields to hold any type.
 }
@@ -173,7 +173,7 @@ exegesis {
 Fields can have default values:
 
 ```dol
-pub gene GeneDecl {
+pub gen GeneDecl {
   has name: String
   has is_pub: Bool = false
   has type_params: List<TypeParam> = []
@@ -192,7 +192,7 @@ When `is_pub` is not specified, it defaults to `false`. When `type_params` is no
 For types that reference themselves, use `Box<T>`:
 
 ```dol
-pub gene TypeExpr {
+pub gen TypeExpr {
   type: enum {
     /// Simple type
     Named { path: List<String> },
@@ -212,7 +212,7 @@ pub gene TypeExpr {
   has span: Span
 }
 
-exegesis {
+docs {
   TypeExpr represents types in DOL source code. Recursive
   types like Function and Optional use Box<T> to avoid
   infinite size at compile time.
@@ -224,11 +224,11 @@ exegesis {
 Inside genes and traits, `Self` refers to the current type:
 
 ```dol
-pub gene Point {
-  has x: Float64
-  has y: Float64
+pub gen Point {
+  has x: f64
+  has y: f64
 
-  fun distance_to(other: Self) -> Float64 {
+  fun distance_to(other: Self) -> f64 {
     val dx = this.x - other.x
     val dy = this.y - other.y
     return (dx * dx + dy * dy).sqrt()
@@ -241,7 +241,7 @@ pub gene Point {
 DOL supports references and pointers:
 
 ```dol
-pub gene TypeExpr {
+pub gen TypeExpr {
   type: enum {
     /// Reference: &T, &mut T
     Reference { inner: Box<TypeExpr>, is_mut: Bool },
@@ -261,7 +261,7 @@ type NodeId = UInt64
 type Position = (Float64, Float64, Float64)
 type Callback = (Event) -> Bool
 
-pub gene NetworkNode {
+pub gen NetworkNode {
   has id: NodeId
   has position: Position
   has on_message: Option<Callback>
@@ -274,28 +274,28 @@ pub gene NetworkNode {
 - Primitive types: integers, floats, strings, booleans
 - Collection types: `List<T>`, `Map<K,V>`, `Option<T>`
 - Define enums with `type: enum { ... }`
-- Use generics with type parameters: `gene Name<T> { ... }`
+- Use generics with type parameters: `gen Name<T> { ... }`
 - Default values: `has field: Type = default`
 - Recursive types use `Box<T>`
 
 ## Practice Exercise
 
-Create a typed gene for a "blog post" with:
-- `id: UInt64`
+Create a typed gen for a "blog post" with:
+- `id: u64`
 - `title: String`
 - `body: String`
 - `status: enum { Draft, Published, Archived }`
 - `tags: List<String>`
-- `published_at: Option<UInt64>`
+- `published_at: Option<Ui64>`
 
 ```dol
 module blog @ 1.0.0
 
-pub gene BlogPost {
+pub gen BlogPost {
   // Your typed fields here...
 }
 
-exegesis {
+docs {
   // Your explanation here...
 }
 ```

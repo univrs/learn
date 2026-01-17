@@ -21,24 +21,24 @@ Think of DOL as a way to write a "contract" that describes your system's structu
 
 ## Your First Gene
 
-The fundamental building block in DOL is the **gene**. A gene declares an entity and its properties.
+The fundamental building block in DOL is the **gene**. A gen declares an entity and its properties.
 
 Here is the simplest possible DOL specification:
 
 ```dol
-gene hello.world {
+gen hello.world {
   message has content
   message has sender
   message has timestamp
 }
 
-exegesis {
-  The hello.world gene is the simplest possible DOL example. It defines
+docs {
+  The hello.world gen is the simplest possible DOL example. It defines
   a message entity with three essential properties: content (what the
   message says), sender (who sent it), and timestamp (when it was sent).
 
   This demonstrates the basic pattern:
-  - gene <domain>.<name> declares a new gene
+  - gen <domain>.<name> declares a new gene
   - <entity> has <property> declares properties
   - exegesis explains the intent and usage
 }
@@ -51,12 +51,12 @@ Let's break down what we just wrote.
 ### The Gene Declaration
 
 ```dol
-gene hello.world {
+gen hello.world {
   ...
 }
 ```
 
-- `gene` is the keyword that starts a gene declaration
+- `gene` is the keyword that starts a gen declaration
 - `hello.world` is a **qualified identifier** - names in DOL use dot notation to create namespaces
 - The curly braces `{ }` contain the gene's body
 
@@ -78,12 +78,12 @@ This says: "A message has content, a message has sender, a message has timestamp
 ### The Exegesis
 
 ```dol
-exegesis {
-  Description of the gene goes here...
+docs {
+  Description of the gen goes here...
 }
 ```
 
-**Exegesis is mandatory** in DOL. Every declaration must include an `exegesis` block that explains:
+**Exegesis is mandatory** in DOL. Every declaration must include an `docs` block that explains:
 - What the declaration represents
 - Why it exists
 - How it should be used
@@ -95,7 +95,7 @@ Exegesis is not just documentation - it's a first-class part of the specificatio
 Here's a more complete example from the DOL codebase:
 
 ```dol
-gene container.exists {
+gen container.exists {
   container has identity
   container has status
   container has boundaries
@@ -103,8 +103,8 @@ gene container.exists {
   container has image
 }
 
-exegesis {
-  The container gene defines the essential properties of a container in
+docs {
+  The container gen defines the essential properties of a container in
   the Univrs platform. A container is an isolated execution environment
   that encapsulates a workload.
 
@@ -163,7 +163,7 @@ dol-check example.dol
 Besides `has`, DOL uses the `is` predicate to declare states or traits:
 
 ```dol
-gene identity.cryptographic {
+gen identity.cryptographic {
   identity has keypair
   identity has algorithm
 
@@ -171,7 +171,7 @@ gene identity.cryptographic {
   identity is verifiable
 }
 
-exegesis {
+docs {
   A cryptographic identity is an entity that cannot change (immutable)
   and can be verified through cryptographic proofs (verifiable).
 }
@@ -190,7 +190,7 @@ The `is` predicate says something **about the nature** of an entity, while `has`
 
 ## Practice Exercise
 
-Try writing a gene that describes a "user account" with these properties:
+Try writing a gen that describes a "user account" with these properties:
 - A user has username
 - A user has email
 - A user has created_at
@@ -199,11 +199,11 @@ Try writing a gene that describes a "user account" with these properties:
 Remember to include an exegesis block explaining what a user account represents!
 
 ```dol
-gene account.user {
+gen account.user {
   // Your declarations here...
 }
 
-exegesis {
+docs {
   // Your explanation here...
 }
 ```

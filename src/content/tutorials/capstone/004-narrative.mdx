@@ -40,7 +40,7 @@ pub enum NarrativeStyle {
 }
 
 /// Passage represents a generated text segment
-pub gene Passage {
+pub gen Passage {
     has content: String
     has style: NarrativeStyle
     has word_count: Int
@@ -62,7 +62,7 @@ pub gene Passage {
         return format!("\"{}\"\\n  — {}", this.content, ref)
     }
 
-    exegesis {
+    docs {
         A Passage is a mythic text segment generated to accompany visual
         content. Passages draw from the style and symbolism of TheBook,
         providing narrative context and deeper meaning to scenes.

@@ -60,12 +60,12 @@ mod examples.point @ 0.1.0
 
 /// A 2D point
 pub type Point2D {
-    x: Float64
-    y: Float64
+    x: f64
+    y: f64
 }
 
 /// Calculate distance between points
-fun distance(val a: Point2D, val b: Point2D) -> Float64 {
+fun distance(val a: Point2D, val b: Point2D) -> f64 {
     val dx = b.x - a.x
     val dy = b.y - a.y
     (dx * dx + dy * dy).sqrt()
@@ -123,7 +123,7 @@ DOL v0.3.0 uses exactly **22 canonical HIR node types**, organized into three ca
 
 | Node Type | Purpose |
 |-----------|---------|
-| `Type` | Type declarations (including gene syntax) |
+| `Type` | Type declarations (including gen syntax) |
 | `Trait` | Trait declarations |
 | `Function` | Function declarations |
 | `Module` | Module declarations with versioning |
@@ -203,14 +203,14 @@ In DOL v0.3.0, `type` is the preferred keyword for type declarations:
 ```dol
 // Preferred in v0.3.0
 type Point2D {
-    x: Float64
-    y: Float64
+    x: f64
+    y: f64
 }
 
 // Still supported for compatibility
-gene Point2D {
-    x: Float64
-    y: Float64
+gen Point2D {
+    x: f64
+    y: f64
 }
 ```
 
@@ -244,8 +244,8 @@ Type {
     name: "Point2D",
     visibility: Public,
     fields: [
-        Field { name: "x", type: Float64 },
-        Field { name: "y", type: Float64 },
+        Field { name: "x", type: f64 },
+        Field { name: "y", type: f64 },
     ]
 }
 ```
@@ -288,8 +288,8 @@ DOL Source                      AST                         HIR                 
 |   @ 0.1.0           |    |   name: ...,   |    |   name: "point",   |    |   mod point {    |
 |                     |    |   version: ... |    |   version: "0.1.0" |    |                  |
 | pub type Point2D {  |    | }              |    | }                  |    |     pub struct   |
-|   x: Float64        |    |                |    |                    |    |       Point2D {  |
-|   y: Float64        |    | TypeDecl {     |    | Type {             |    |         pub x:   |
+|   x: f64        |    |                |    |                    |    |       Point2D {  |
+|   y: f64        |    | TypeDecl {     |    | Type {             |    |         pub x:   |
 | }                   |    |   name: ...,   |    |   name: "Point2D", |    |           f64,   |
 |                     |    |   fields: ...  |    |   fields: [...]    |    |         pub y:   |
 |                     |    | }              |    | }                  |    |           f64,   |

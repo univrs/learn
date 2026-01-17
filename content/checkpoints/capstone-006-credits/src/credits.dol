@@ -6,18 +6,18 @@
 use std::host::{log, credits as host_credits, storage}
 
 /// Credit costs for different operations
-pub gene CreditCosts {
+pub gen CreditCosts {
   /// Cost to generate one image
-  has image_generation: UInt64 = 100
+  has image_generation: u64 = 100
 
   /// Cost to generate one narrative
-  has narrative_generation: UInt64 = 50
+  has narrative_generation: u64 = 50
 
   /// Cost to save gallery to storage
-  has gallery_save: UInt64 = 10
+  has gallery_save: u64 = 10
 
   /// Cost per scene in a narrative
-  has per_scene_cost: UInt64 = 10
+  has per_scene_cost: u64 = 10
 
   /// Create default costs
   pub fun default() -> CreditCosts {
@@ -30,16 +30,16 @@ pub gene CreditCosts {
   }
 
   /// Calculate narrative cost based on scene count
-  pub fun narrative_cost(self, scene_count: UInt32) -> UInt64 {
+  pub fun narrative_cost(self, scene_count: u32) -> u64 {
     return self.narrative_generation + (scene_count as UInt64 * self.per_scene_cost)
   }
 
   /// Calculate batch image generation cost
-  pub fun batch_image_cost(self, count: UInt32) -> UInt64 {
+  pub fun batch_image_cost(self, count: u32) -> u64 {
     return self.image_generation * count as UInt64
   }
 
-  exegesis {
+  docs {
     CreditCosts defines the economic model for the Lion & Swan spirit.
     Different operations have different costs to encourage efficient
     usage of generative resources.
@@ -47,12 +47,12 @@ pub gene CreditCosts {
 }
 
 /// A reservation for credits before an operation
-pub gene CreditReservation {
-  has id: UInt64
-  has amount: UInt64
+pub gen CreditReservation {
+  has id: u64
+  has amount: u64
   has operation: String
-  has created_at: UInt64
-  has expires_at: UInt64
+  has created_at: u64
+  has expires_at: u64
   has consumed: Bool = false
 
   constraint positive_amount {
@@ -64,16 +64,16 @@ pub gene CreditReservation {
   }
 
   /// Check if this reservation is expired
-  pub fun is_expired(self, current_time: UInt64) -> Bool {
+  pub fun is_expired(self, current_time: u64) -> Bool {
     return current_time >= self.expires_at
   }
 
   /// Check if this reservation can be consumed
-  pub fun can_consume(self, current_time: UInt64) -> Bool {
+  pub fun can_consume(self, current_time: u64) -> Bool {
     return !self.consumed && !self.is_expired(current_time)
   }
 
-  exegesis {
+  docs {
     CreditReservation represents a hold on credits for a planned
     operation. Reservations expire if not consumed within the
     timeout period, returning credits to the available balance.
@@ -83,13 +83,13 @@ pub gene CreditReservation {
 /// Error types for credit operations
 pub enum CreditError {
   /// Not enough credits available
-  InsufficientBalance { required: UInt64, available: UInt64 },
+  InsufficientBalance { required: u64, available: u64 },
   /// Reservation not found
-  ReservationNotFound { id: UInt64 },
+  ReservationNotFound { id: u64 },
   /// Reservation expired
-  ReservationExpired { id: UInt64 },
+  ReservationExpired { id: u64 },
   /// Reservation already consumed
-  ReservationAlreadyConsumed { id: UInt64 },
+  ReservationAlreadyConsumed { id: u64 },
   /// Host credit system error
   HostError { message: String },
 }
@@ -113,12 +113,12 @@ impl CreditError {
 }
 
 /// The credit manager for handling all credit operations
-pub gene CreditManager {
+pub gen CreditManager {
   has costs: CreditCosts
   has reservations: Map<UInt64, CreditReservation>
-  has reservation_timeout_ms: UInt64 = 300000  // 5 minutes
-  has total_spent: UInt64 = 0
-  has total_reserved: UInt64 = 0
+  has reservation_timeout_ms: u64 = 300000  // 5 minutes
+  has total_spent: u64 = 0
+  has total_reserved: u64 = 0
 
   /// Create a new credit manager with default costs
   pub fun new() -> CreditManager {
@@ -160,13 +160,13 @@ pub gene CreditManager {
   }
 
   /// Check if there are sufficient credits for an amount
-  pub fun check_balance(self, required: UInt64) -> Result<Bool, CreditError> {
+  pub fun check_balance(self, required: u64) -> Result<Bool, CreditError> {
     let available = self.available_balance()?
     return Ok(available >= required)
   }
 
   /// Reserve credits for an upcoming operation
-  pub fun reserve(self, amount: UInt64, operation: String) -> Result<(CreditManager, CreditReservation), CreditError> {
+  pub fun reserve(self, amount: u64, operation: String) -> Result<(CreditManager, CreditReservation), CreditError> {
     let available = self.available_balance()?
 
     if available < amount {
@@ -199,7 +199,7 @@ pub gene CreditManager {
   }
 
   /// Consume a reservation (actually spend the credits)
-  pub fun consume(self, reservation_id: UInt64) -> Result<CreditManager, CreditError> {
+  pub fun consume(self, reservation_id: u64) -> Result<CreditManager, CreditError> {
     let reservation = match self.reservations.get(reservation_id) {
       Some(r) => r,
       None => return Err(CreditError::ReservationNotFound { id: reservation_id }),
@@ -238,7 +238,7 @@ pub gene CreditManager {
   }
 
   /// Release a reservation without consuming (refund)
-  pub fun release(self, reservation_id: UInt64) -> Result<CreditManager, CreditError> {
+  pub fun release(self, reservation_id: u64) -> Result<CreditManager, CreditError> {
     let reservation = match self.reservations.get(reservation_id) {
       Some(r) => r,
       None => return Err(CreditError::ReservationNotFound { id: reservation_id }),
@@ -291,7 +291,7 @@ pub gene CreditManager {
     }
   }
 
-  exegesis {
+  docs {
     CreditManager handles all credit operations for the spirit.
     It implements a reservation system where credits are held
     before an operation and then consumed upon completion.
@@ -300,10 +300,10 @@ pub gene CreditManager {
 }
 
 /// Statistics about credit usage
-pub gene CreditStats {
-  has total_spent: UInt64
-  has total_reserved: UInt64
-  has active_reservations: UInt32
+pub gen CreditStats {
+  has total_spent: u64
+  has total_reserved: u64
+  has active_reservations: u32
 
   /// Display as a formatted string
   pub fun display(self) -> String {
@@ -319,7 +319,7 @@ pub gene CreditStats {
 /// Helper function to perform a credit-gated operation
 pub fun with_credits<T>(
   manager: CreditManager,
-  cost: UInt64,
+  cost: u64,
   operation: String,
   action: fn() -> Result<T, Error>
 ) -> Result<(CreditManager, T), CreditError> {

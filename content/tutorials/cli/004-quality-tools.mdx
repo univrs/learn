@@ -75,10 +75,10 @@ Error: src/broken.dol:18:1
    |
 18 | }
 19 |
-20 | gene Another {
+20 | gen Another {
    | ^^^^
    |
-   = Missing 'exegesis' block in gene 'Broken'
+   = Missing 'exegesis' block in gen 'Broken'
 
 Found 2 errors in src/broken.dol
 ```
@@ -117,7 +117,7 @@ $ vudo check --format json src/broken.dol
     {
       "line": 18,
       "column": 1,
-      "message": "Missing 'exegesis' block in gene 'Broken'",
+      "message": "Missing 'exegesis' block in gen 'Broken'",
       "severity": "error",
       "code": "E042"
     }
@@ -195,7 +195,7 @@ Warning: src/domain.dol:8:5
 
 Warning: src/traits.dol:20:1
    |
-20 | pub gene Internal {
+20 | pub gen Internal {
    | ^^^
    |
    = Gene 'Internal' is public but not exported in lib.dol
@@ -249,7 +249,7 @@ Formatted 5 files:
 
 <CodeBlock title="Before formatting" language="dol">
 ```dol
-gene User{has id:UUID
+gen User{has id:UUID
 has email:String has name:String
   is identifiable
    exegesis{A user.}}
@@ -258,14 +258,14 @@ has email:String has name:String
 
 <CodeBlock title="After formatting" language="dol">
 ```dol
-gene User {
+gen User {
     has id: UUID
     has email: String
     has name: String
 
     is identifiable
 
-    exegesis {
+    docs {
         A user.
     }
 }
@@ -449,11 +449,11 @@ $ vudo doc src/ -o docs/api.json --format json
 
 ### Documentation from Exegesis
 
-VUDO generates documentation from `exegesis` blocks:
+VUDO generates documentation from `docs` blocks:
 
 <CodeBlock title="Well-documented gene" language="dol">
 ```dol
-gene User @ 1.0.0 {
+gen User @ 1.0.0 {
     has id: UUID
     has email: String
     has name: String
@@ -465,7 +465,7 @@ gene User @ 1.0.0 {
     fn verify_email(token: String) -> Result<(), Error>
     fn update_profile(name: String, email: String) -> Result<(), Error>
 
-    exegesis {
+    docs {
         A registered user in the system.
 
         Users are created during the registration process and must
@@ -659,10 +659,10 @@ Remove 'indent_size' when using tabs, or switch to 'indent_style = "spaces"'.
 $ vudo doc src/
 Warning: src/domain.dol:45
    |
-45 | pub gene Config {
+45 | pub gen Config {
    |          ^^^^^^
    |
-   = Public gene 'Config' has minimal exegesis.
+   = Public gen 'Config' has minimal exegesis.
      Consider adding more documentation.
 
 Generated with 1 warning.

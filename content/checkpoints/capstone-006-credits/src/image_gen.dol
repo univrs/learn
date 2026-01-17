@@ -29,7 +29,7 @@ impl ImageStyle {
     }
   }
 
-  exegesis {
+  docs {
     Image styles affect the visual output of generated images.
     Each style produces a distinct aesthetic appropriate for
     different narrative contexts.
@@ -37,11 +37,11 @@ impl ImageStyle {
 }
 
 /// Configuration for image generation
-pub gene ImageConfig {
-  has width: UInt32 = 1024
-  has height: UInt32 = 1024
+pub gen ImageConfig {
+  has width: u32 = 1024
+  has height: u32 = 1024
   has style: ImageStyle = ImageStyle::Classical
-  has quality: Float64 = 0.8
+  has quality: f64 = 0.8
 
   constraint valid_dimensions {
     this.width >= 256 && this.width <= 4096 &&
@@ -66,7 +66,7 @@ pub gene ImageConfig {
     }
   }
 
-  exegesis {
+  docs {
     ImageConfig controls the parameters for image generation.
     Different allegiances default to different styles that
     match their symbolic associations.
@@ -74,24 +74,24 @@ pub gene ImageConfig {
 }
 
 /// A generated image with metadata
-pub gene GeneratedImage {
-  has id: UInt64
-  has symbol_id: UInt64
+pub gen GeneratedImage {
+  has id: u64
+  has symbol_id: u64
   has prompt: String
   has url: String
-  has created_at: UInt64
-  has width: UInt32
-  has height: UInt32
+  has created_at: u64
+  has width: u32
+  has height: u32
   has style: ImageStyle
 
-  exegesis {
+  docs {
     GeneratedImage stores the result of an image generation
     request, including the original prompt and resulting URL.
   }
 }
 
 /// Image generation request builder
-pub gene ImageRequest {
+pub gen ImageRequest {
   has symbol: Symbol
   has config: ImageConfig
   has additional_context: Option<String>
@@ -130,7 +130,7 @@ pub gene ImageRequest {
     }
   }
 
-  exegesis {
+  docs {
     ImageRequest provides a builder pattern for constructing
     image generation requests with appropriate context for
     the symbol's allegiance and narrative role.
@@ -150,9 +150,9 @@ pub trait ImageGenerator {
 }
 
 /// Implementation of ImageGenerator using the Imaginarium API
-pub gene ImaginatorClient {
+pub gen ImaginatorClient {
   has api_endpoint: String = "https://api.imaginarium.univrs.io/v1/generate"
-  has generated_count: UInt64 = 0
+  has generated_count: u64 = 0
 
   impl ImageGenerator {
     /// Generate an image using the Imaginarium API
@@ -210,7 +210,7 @@ pub gene ImaginatorClient {
     }
   }
 
-  exegesis {
+  docs {
     ImaginatorClient connects to the Imaginarium API to generate
     symbolic images. It handles request construction, API communication,
     and response parsing.

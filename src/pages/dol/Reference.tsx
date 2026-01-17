@@ -80,7 +80,7 @@ export default function DOLReference() {
             </p>
             <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
-{`gene scheduling.resources {
+{`gen scheduling.resources {
     // Node-level resource capacity
     node has cpu_capacity
     node has memory_capacity
@@ -110,8 +110,8 @@ export default function DOLReference() {
     memory is incompressible
 }
 
-exegesis {
-    The scheduling.resources gene defines the comprehensive resource model
+docs {
+    The scheduling.resources gen defines the comprehensive resource model
     for container orchestration. CPU is measured in millicores (1000m = 1 core),
     memory in bytes. Compressible resources (CPU) are throttled when exceeded;
     incompressible resources (memory) cause OOM-kill.
@@ -163,7 +163,7 @@ exegesis {
     filter phase reduces search_space
 }
 
-exegesis {
+docs {
     The scheduling filter trait defines the first phase of pod scheduling:
     node filtering. It eliminates nodes that cannot satisfy workload
     requirements, reducing the search space for scoring and selection.
@@ -210,7 +210,7 @@ exegesis {
     binding_conflict triggers reschedule
 }
 
-exegesis {
+docs {
     The scheduling.feasibility constraint defines invariants for pod placement.
     A node cannot accept a pod if capacity is exceeded, status is not ready,
     taints lack matching tolerations, or anti-affinity rules are violated.
@@ -242,7 +242,7 @@ exegesis {
     uses error.handling
 }
 
-exegesis {
+docs {
     The scheduling.scheduler system composes the complete pod scheduling
     pipeline: filter -> score -> select -> bind. Given a pending pod and
     available nodes, the scheduler determines optimal placement satisfying

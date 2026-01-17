@@ -8,7 +8,7 @@ const sections = [
         items: [
             { syntax: "module name @ version", desc: "Define a module" },
             { syntax: "use path.{ items }", desc: "Import from module" },
-            { syntax: "pub gen Name { ... }", desc: "Public gene (struct)" },
+            { syntax: "pub gen Name { ... }", desc: "Public gen (struct)" },
             { syntax: "pub trait Name { ... }", desc: "Public trait (interface)" },
             { syntax: "pub system Name { ... }", desc: "Public system (composed)" },
             { syntax: "rule name { ... }", desc: "Define constraint rule" },

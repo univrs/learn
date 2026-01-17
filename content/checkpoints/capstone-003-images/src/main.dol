@@ -136,7 +136,7 @@ pub system LionSwan @ 0.1.0 {
   pub fun images_by_allegiance(self, allegiance: Allegiance) -> List<GeneratedImage> {
     let symbol_ids = self.registry.by_allegiance(allegiance)
       .map(|s| s.id)
-      .collect::<Set<UInt64>>()
+      .collect::<Set<Ui64>>()
 
     return self.generated_images
       .filter(|img| symbol_ids.contains(img.symbol_id))
@@ -158,7 +158,7 @@ pub system LionSwan @ 0.1.0 {
     return self.registry.by_allegiance(allegiance)
   }
 
-  exegesis {
+  docs {
     The Lion & Swan is a generative storytelling spirit that explores
     the duality of symbols through two allegiances.
 

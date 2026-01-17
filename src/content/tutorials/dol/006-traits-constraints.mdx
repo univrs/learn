@@ -32,7 +32,7 @@ trait container.lifecycle {
   forall transition emits event
 }
 
-exegesis {
+docs {
   The container lifecycle defines the state machine that governs
   container execution. Transitions between states are atomic and
   emit events for observability. The lifecycle ensures predictable
@@ -46,7 +46,7 @@ A trait declaration includes:
 - `trait domain.name { }` - declares the trait
 - `uses gene.name` - depends on another gene
 - `entity is state` - declares possible states
-- `exegesis { }` - explains the trait's purpose
+- `docs { }` - explains the trait's purpose
 
 ### State Declarations
 
@@ -65,7 +65,7 @@ trait message.delivery {
   delivery has last_error
 }
 
-exegesis {
+docs {
   Message delivery tracks the state of message transmission.
   Messages start pending, transition to delivered on success,
   or to failed/retrying on error. The delivery state machine
@@ -86,7 +86,7 @@ trait container.observable {
   container emits traces
 }
 
-exegesis {
+docs {
   Observable containers emit telemetry data. This trait
   extends lifecycle to add observability requirements.
   All state transitions produce structured events.
@@ -105,7 +105,7 @@ constraint container.integrity {
   resources not exceeds
 }
 
-exegesis {
+docs {
   Container integrity constraints ensure that runtime behavior exactly matches
   the ontological declarations made at creation time. This prevents the common
   failure mode where containers drift from their intended specifications through
@@ -142,7 +142,7 @@ constraint resource.allocation {
   minimum not exceeds allocated
 }
 
-exegesis {
+docs {
   Resource allocation constraints ensure resources stay within
   defined bounds. Used resources cannot exceed allocation, and
   allocation must stay between minimum and maximum limits.
@@ -160,7 +160,7 @@ constraint identity.cryptographic {
   signature is verifiable
 }
 
-exegesis {
+docs {
   Cryptographic identity constraints ensure that identity remains
   stable and verifiable throughout an entity's lifetime. The keypair
   is generated once and not modified.
@@ -173,9 +173,9 @@ Traits can include typed declarations:
 
 ```dol
 pub trait Hashable {
-  fun hash() -> UInt64
+  fun hash() -> u64
 
-  exegesis {
+  docs {
     Hashable types can produce a deterministic hash value.
   }
 }
@@ -183,12 +183,12 @@ pub trait Hashable {
 pub trait Comparable {
   fun compare(other: Self) -> Ordering
 
-  exegesis {
+  docs {
     Comparable types can be ordered relative to each other.
   }
 }
 
-pub gene Ordering {
+pub gen Ordering {
   type: enum {
     Less,
     Equal,
@@ -202,18 +202,18 @@ pub gene Ordering {
 Genes can declare that they implement traits:
 
 ```dol
-pub gene MyceliumNode {
-  has id: UInt64
+pub gen MyceliumNode {
+  has id: u64
   has position: Vec3
-  has connections: List<UInt64>
+  has connections: List<Ui64>
 
   implements Hashable {
-    fun hash() -> UInt64 {
+    fun hash() -> u64 {
       return this.id
     }
   }
 
-  exegesis {
+  docs {
     A node in the mycelium network. Uses its unique ID
     as its hash value.
   }
@@ -225,7 +225,7 @@ pub gene MyceliumNode {
 A complete specification often uses both:
 
 ```dol
-gene container.exists {
+gen container.exists {
   container has identity
   container has status
   container has boundaries
@@ -233,8 +233,8 @@ gene container.exists {
   container has image
 }
 
-exegesis {
-  The container gene defines essential container properties.
+docs {
+  The container gen defines essential container properties.
 }
 
 trait container.lifecycle {
@@ -251,7 +251,7 @@ trait container.lifecycle {
   forall transition emits event
 }
 
-exegesis {
+docs {
   Container lifecycle manages state transitions.
 }
 
@@ -262,7 +262,7 @@ constraint container.integrity {
   resources not exceeds
 }
 
-exegesis {
+docs {
   Container integrity ensures runtime matches specification.
 }
 ```
@@ -277,7 +277,7 @@ pub fun sort<T: Comparable>(items: List<T>) -> List<T> {
   // implementation can use compare() method
 }
 
-pub fun store<T: Hashable + Comparable>(item: T) -> UInt64 {
+pub fun store<T: Hashable + Comparable>(item: T) -> u64 {
   // T must implement both Hashable and Comparable
   return item.hash()
 }
@@ -295,13 +295,13 @@ system mycelium.network @0.1.0 {
   state nodes: Map<UInt64, MyceliumNode>
   state edges: List<HyphalSegment>
 
-  constraint {
+  rule {
     nodes.len() <= 10000
     edges.len() <= nodes.len() * 10
   }
 }
 
-exegesis {
+docs {
   Mycelium network system with size constraints.
   Limits prevent unbounded growth.
 }
@@ -324,7 +324,7 @@ exegesis {
 Create a trait and constraint for a user authentication system:
 
 ```dol
-gene user.account {
+gen user.account {
   user has username
   user has email
   user has password_hash
@@ -332,7 +332,7 @@ gene user.account {
   user has last_login
 }
 
-exegesis {
+docs {
   User account with authentication credentials.
 }
 
@@ -346,7 +346,7 @@ trait user.authentication {
   // - session states
 }
 
-exegesis {
+docs {
   // Your explanation here
 }
 
@@ -357,7 +357,7 @@ constraint user.security {
   // - username not changes
 }
 
-exegesis {
+docs {
   // Your explanation here
 }
 ```

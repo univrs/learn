@@ -19,7 +19,7 @@ tags:
 
 # Defining Genes
 
-In DOL, **genes** are the fundamental building blocks of your ontology. A gene is a type definition that describes the structure of a concept in your domain. In v0.3.0, genes are defined using the `pub type` syntax.
+In DOL, **genes** are the fundamental building blocks of your ontology. A gen is a type definition that describes the structure of a concept in your domain. In v0.3.0, genes are defined using the `pub type` syntax.
 
 ## Learning Objectives
 
@@ -54,7 +54,7 @@ Types are defined with the `pub type` keyword followed by the type name and its 
 mod container.runtime @ 0.3.0
 
 pub type Container {
-    id: UInt64
+    id: u64
     name: String
     image: String
     created_at: Timestamp
@@ -87,7 +87,7 @@ DOL supports generic collection types:
 |------|-------------|---------|
 | `List<T>` | Ordered collection | `List<String>` |
 | `Map<K, V>` | Key-value mapping | `Map<String, String>` |
-| `Set<T>` | Unique values | `Set<UInt64>` |
+| `Set<T>` | Unique values | `Set<Ui64>` |
 | `Option<T>` | Optional value | `Option<String>` |
 
 ## Defining Enums
@@ -134,7 +134,7 @@ pub type ContainerStatus {
 }
 
 pub type Container {
-    id: UInt64
+    id: u64
     name: String
     image: String
     status: ContainerStatus
@@ -151,8 +151,8 @@ pub type ContainerConfig {
 }
 
 pub type PortMapping {
-    container_port: UInt64
-    host_port: UInt64
+    container_port: u64
+    host_port: u64
     protocol: String
 }
 
@@ -176,11 +176,11 @@ DOL v0.3.0 introduces `val` and `var` for bindings:
 mod config @ 0.3.0
 
 -- Immutable: cannot be changed after initialization
-val MAX_CONTAINERS: UInt64 = 100
+val MAX_CONTAINERS: u64 = 100
 val DEFAULT_IMAGE: String = "alpine:latest"
 
 -- Mutable: can be reassigned
-var active_count: UInt64 = 0
+var active_count: u64 = 0
 ```
 
 <Tip type="warning">
@@ -202,7 +202,7 @@ pub type Address {
 }
 
 pub type Customer {
-    id: UInt64
+    id: u64
     name: String
     email: String
     shipping_address: Address
@@ -210,16 +210,16 @@ pub type Customer {
 }
 
 pub type OrderItem {
-    product_id: UInt64
-    quantity: UInt64
-    unit_price: Float64
+    product_id: u64
+    quantity: u64
+    unit_price: f64
 }
 
 pub type Order {
-    id: UInt64
+    id: u64
     customer: Customer
     items: List<OrderItem>
-    total: Float64
+    total: f64
     status: OrderStatus
 }
 
@@ -249,12 +249,12 @@ pub type Book {
     isbn: String
     title: String
     author: String
-    publication_year: UInt64
+    publication_year: u64
     available: Bool
 }
 
 pub type Member {
-    id: UInt64
+    id: u64
     name: String
     email: String
     membership_date: Timestamp
@@ -262,9 +262,9 @@ pub type Member {
 }
 
 pub type Loan {
-    id: UInt64
+    id: u64
     book_isbn: String
-    member_id: UInt64
+    member_id: u64
     borrowed_at: Timestamp
     due_date: Timestamp
     returned_at: Option<Timestamp>

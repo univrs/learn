@@ -148,7 +148,7 @@ export default function DOLMetaprogramming() {
                                 style={{ color: "var(--text-primary)" }}
                             >
 {`// Quote captures expressions as AST
-ast = '(1 + 2 * 3)           // Quoted<Int64>
+ast = '(1 + 2 * 3)           // Quoted<i64>
 expr = '{ x + y }            // Quoted expression
 block = '{
     if condition { a } else { b }
@@ -202,11 +202,11 @@ fun transform(code: Quoted<Expr>) -> Quoted<Expr> {
                             >
 {`// Evaluate quoted expressions
 ast = '(1 + 2 * 3)
-result = !ast                // 7: Int64
+result = !ast                // 7: i64
 
 // Quote and eval are inverses
 x = 42
-'x                           // Quoted<Int64>
+'x                           // Quoted<i64>
 !'x                          // 42
 
 // Round-trip preservation
@@ -253,7 +253,7 @@ template = \`(1 + ~x)         // Splice x into template
 result = !template           // 6
 
 // Build expressions dynamically
-fun make_adder(n: Int64) -> Quoted<Expr> {
+fun make_adder(n: i64) -> Quoted<Expr> {
     return \`(x + ~n)
 }
 add_five = make_adder(5)
@@ -308,9 +308,9 @@ result = !add_five where { x = 10 }  // 15`}
                                 className="p-6 text-sm font-mono overflow-x-auto"
                                 style={{ color: "var(--text-primary)" }}
                             >
-{`gene Person {
+{`gen Person {
     has name: String
-    has age: Int64
+    has age: i64
 }
 
 info = ?Person
@@ -346,18 +346,18 @@ if ?Person.implements(Serializable) {
                                 className="p-6 text-sm font-mono overflow-x-auto"
                                 style={{ color: "var(--text-primary)" }}
                             >
-{`gene TypeInfo {
+{`gen TypeInfo {
     has name: String
     has kind: TypeKind
     has fields: List<FieldInfo>
     has methods: List<MethodInfo>
 
     fun implements(trait: Trait) -> Bool
-    fun size() -> UInt64
+    fun size() -> u64
     fun is_primitive() -> Bool
 }
 
-gene FieldInfo {
+gen FieldInfo {
     has name: String
     has type_name: String
     has is_public: Bool
@@ -495,8 +495,8 @@ parsed = [| create_user name_result age_result email_result |]
                                 style={{ color: "var(--text-primary)" }}
                             >
 {`#derive(Debug, Clone)
-gene Container {
-    has id: UInt64
+gen Container {
+    has id: u64
     has name: String
 }
 

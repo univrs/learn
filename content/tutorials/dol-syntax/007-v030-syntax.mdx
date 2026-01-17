@@ -70,7 +70,7 @@ pub type ContainerStatus {
 
 /// A runtime container instance
 pub type Container {
-    id: UInt64
+    id: u64
     name: String
     image: String
     status: ContainerStatus
@@ -83,8 +83,8 @@ Compare with the equivalent `gene` syntax:
 
 ```dol
 // Still works (for compatibility)
-pub gene Container {
-    has id: UInt64
+pub gen Container {
+    has id: u64
     has name: String
     has status: Status
 }
@@ -118,7 +118,7 @@ mod stdlib.collections @ 0.1.0
 
 /// Base collection trait
 trait Collection<T> {
-    length: fun() -> UInt64
+    length: fun() -> u64
     is_empty: fun() -> Bool = { self.length() == 0 }
 }
 
@@ -136,8 +136,8 @@ trait Iterable<T> extends Collection<T> {
 
 /// Indexed access
 trait Indexed<T> extends Collection<T> {
-    get: fun(index: UInt64) -> Option<T>
-    get_unchecked: fun(index: UInt64) -> T
+    get: fun(index: u64) -> Option<T>
+    get_unchecked: fun(index: u64) -> T
 
     first: fun() -> Option<T> = { self.get(0) }
     last: fun() -> Option<T> = {
@@ -180,12 +180,12 @@ mod examples.point @ 0.1.0
 
 /// A 2D point
 pub type Point2D {
-    x: Float64
-    y: Float64
+    x: f64
+    y: f64
 }
 
 /// Calculate distance between points
-fun distance(val a: Point2D, val b: Point2D) -> Float64 {
+fun distance(val a: Point2D, val b: Point2D) -> f64 {
     val dx = b.x - a.x
     val dy = b.y - a.y
     (dx * dx + dy * dy).sqrt()
@@ -203,11 +203,11 @@ mod biology.mycelium @ 0.1.0
 
 /// Simulation configuration
 pub type SimConfig {
-    growth_probability: Float64
-    prune_threshold: Float64
-    nutrient_decay_rate: Float64
+    growth_probability: f64
+    prune_threshold: f64
+    nutrient_decay_rate: f64
     time_step: Duration
-    max_nodes: UInt32
+    max_nodes: u32
 }
 
 /// Run one simulation step
@@ -313,14 +313,14 @@ constraint TopologyRules {
 DOL v0.3.0 supports exegesis blocks inside gene/type declarations:
 
 ```dol
-gene container.runtime {
+gen container.runtime {
     container has id
     container has name
     container has status
     container extends image
 }
 
-exegesis {
+docs {
     A runtime container instance.
 }
 ```
@@ -375,7 +375,7 @@ system OrderProcessing {
     }
 }
 
-exegesis {
+docs {
     Order processing system with event-driven architecture.
     The API gateway routes requests to the order service,
     which coordinates with inventory, payment, and notifications.
@@ -503,7 +503,7 @@ warning: `let` is deprecated, use `val` instead
 ```dol
 module greeting.service @ 0.2.0
 
-gene greeting.entity {
+gen greeting.entity {
     entity has identity
     entity has name: String
     entity derives from template
@@ -569,7 +569,7 @@ test "greeting works" {
    mod myapp @ 0.1.0
 
    pub type User {
-       id: UInt64
+       id: u64
        name: String
        email: String
    }
@@ -591,10 +591,10 @@ Migrate this v0.2.x code to v0.3.0 syntax:
 ```dol
 module inventory @ 0.2.0
 
-gene Product {
+gen Product {
     product has sku: String
     product has name: String
-    product has price: Float64
+    product has price: f64
     product derives from BaseItem
 }
 
@@ -613,7 +613,7 @@ mod inventory @ 0.3.0
 type Product {
     sku: String
     name: String
-    price: Float64
+    price: f64
     extends BaseItem
 }
 

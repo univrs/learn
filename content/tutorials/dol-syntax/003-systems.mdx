@@ -364,9 +364,9 @@ mod services @ 0.3.0
 
 pub type ApiGateway {
     host: String
-    port: UInt64
+    port: u64
     ssl_enabled: Bool
-    rate_limit: UInt64
+    rate_limit: u64
     routes: List<Route>
 }
 
@@ -384,15 +384,15 @@ pub type HttpMethod {
 pub type OrderService {
     name: String
     version: String
-    replicas: UInt64
+    replicas: u64
     health_endpoint: String
 }
 
 pub type InventoryService {
     name: String
     version: String
-    replicas: UInt64
-    stock_sync_interval: UInt64
+    replicas: u64
+    stock_sync_interval: u64
 }
 ```
 

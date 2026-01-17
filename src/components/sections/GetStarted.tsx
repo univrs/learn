@@ -7,7 +7,7 @@ const steps = [
     description: 'Start with the Design Ontology Language to define your system specifications.',
     href: '/dol/learn',
     code: `# Define a system gene
-gene Position {
+gen Position {
   x: Float
   y: Float
   z: Float

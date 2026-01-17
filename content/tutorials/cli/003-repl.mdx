@@ -106,9 +106,9 @@ Loading src/domain.dol...
 Parsed successfully.
 
 Definitions loaded:
-  gene User
-  gene Product
-  gene Order
+  gen User
+  gen Product
+  gen Order
   trait Lifecycle
   trait Auditable
 
@@ -148,19 +148,19 @@ Save your REPL work to a file:
 
 <Terminal title=":save command">
 ```
-dol> gene Counter {
+dol> gen Counter {
 ...>     has value: Int = 0
 ...>     fn increment() -> Int { this.value + 1 }
-...>     exegesis { A simple counter. }
+...>     docs { A simple counter. }
 ...> }
-Defined: gene Counter
+Defined: gen Counter
 
-dol> gene Timer {
+dol> gen Timer {
 ...>     has seconds: Int
 ...>     uses Counter
-...>     exegesis { A timer using Counter. }
+...>     docs { A timer using Counter. }
 ...> }
-Defined: gene Timer
+Defined: gen Timer
 
 dol> :save experiments.dol
 Saved 2 definitions to experiments.dol
@@ -202,7 +202,7 @@ The REPL automatically detects incomplete expressions:
 
 <Terminal title="Multi-line expressions">
 ```
-dol> gene Point {
+dol> gen Point {
 ...>     has x: Float
 ...>     has y: Float
 ...>
@@ -212,11 +212,11 @@ dol> gene Point {
 ...>         (dx * dx + dy * dy).sqrt()
 ...>     }
 ...>
-...>     exegesis {
+...>     docs {
 ...>         A 2D point with distance calculation.
 ...>     }
 ...> }
-Defined: gene Point
+Defined: gen Point
 
 dol>
 ```
@@ -319,7 +319,7 @@ IfExpr
 
 <Terminal title="Gene AST">
 ```
-dol> :ast gene Foo { has bar: Int exegesis { A foo. } }
+dol> :ast gen Foo { has bar: Int docs { A foo. } }
 GeneDecl
 +-- name: "Foo"
 +-- visibility: Private
@@ -364,7 +364,7 @@ The `:info` command provides detailed information about definitions:
 dol> :load src/domain.dol
 
 dol> :info User
-gene User @ 1.0.0
+gen User @ 1.0.0
 Location: src/domain.dol:5-25
 
 Properties:
@@ -453,9 +453,9 @@ Local definitions:
 
 dol> :list
 From std/collections:
-  gene List<T>
-  gene Map<K, V>
-  gene Set<T>
+  gen List<T>
+  gen Map<K, V>
+  gen Set<T>
   trait Iterable<T>
   trait Collection<T>
 ```
@@ -485,15 +485,15 @@ let u = User { id: uuid(), email: "test@example.com", name: "Test" }
 
 <Terminal title="Undo and reset">
 ```
-dol> gene Temp { has x: Int exegesis { Temporary. } }
-Defined: gene Temp
+dol> gen Temp { has x: Int docs { Temporary. } }
+Defined: gen Temp
 
 dol> :list
 Genes (1):
   Temp - Temporary.
 
 dol> :undo
-Removed: gene Temp
+Removed: gen Temp
 
 dol> :list
 Genes (0):
@@ -562,12 +562,12 @@ dol> User.<TAB>
 
 <Terminal title="Canceling multi-line input">
 ```
-dol> gene Broken {
+dol> gen Broken {
 ...>     has x: Int
 ...>     oops this is wrong
 Parse error at line 3: unexpected token 'oops'
 
-dol> gene Broken {
+dol> gen Broken {
 ...>     has x: Int
 ...> ^C
 (input canceled)

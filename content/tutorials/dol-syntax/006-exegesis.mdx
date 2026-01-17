@@ -74,11 +74,11 @@ mod ecommerce @ 0.3.0
 --- @see OrderItem, OrderStatus
 pub type Order {
     --- Unique identifier for this order
-    id: UInt64
+    id: u64
 
     --- Reference to the customer who placed the order
     --- @see Customer
-    customer_id: UInt64
+    customer_id: u64
 
     --- List of items in this order
     --- @invariant Must contain at least one item
@@ -86,7 +86,7 @@ pub type Order {
 
     --- Total amount in cents (to avoid floating point issues)
     --- @invariant Must equal sum of item subtotals plus shipping minus discounts
-    total_cents: UInt64
+    total_cents: u64
 
     --- Current status of the order
     status: OrderStatus
@@ -160,7 +160,7 @@ pub type OrderStatus {
         --- @param refund_amount Amount refunded in cents
         Returned {
             return_reason: String,
-            refund_amount: UInt64
+            refund_amount: u64
         }
     }
 }
@@ -355,7 +355,7 @@ Use markdown-style sections in exegesis:
 ---
 --- @since 1.0.0
 pub type User {
-    id: UInt64
+    id: u64
     email: String
     name: String
     created_at: Timestamp
@@ -409,8 +409,8 @@ Document this type with comprehensive exegesis:
 
 ```dol
 pub type Subscription {
-    id: UInt64
-    user_id: UInt64
+    id: u64
+    user_id: u64
     plan: SubscriptionPlan
     status: SubscriptionStatus
     started_at: Timestamp
@@ -445,11 +445,11 @@ pub type Subscription {
 --- @see SubscriptionPlan, User, PaymentMethod
 pub type Subscription {
     --- Unique identifier for this subscription
-    id: UInt64
+    id: u64
 
     --- The user who owns this subscription
     --- @see User
-    user_id: UInt64
+    user_id: u64
 
     --- The service plan this subscription provides access to
     --- @see SubscriptionPlan

@@ -274,12 +274,12 @@ pub fn greet(name: &str) -> String {
 ```dol
 module my-spirit @ 1.0.0
 
-exegesis {
+docs {
     A basic Spirit for demonstration purposes.
     This Spirit provides greeting functionality.
 }
 
-gene Greeting {
+gen Greeting {
     name: String
     message: String
 
@@ -287,7 +287,7 @@ gene Greeting {
         name.len() > 0
     }
 
-    exegesis {
+    docs {
         Represents a greeting with a name and generated message.
     }
 }
@@ -295,7 +295,7 @@ gene Greeting {
 trait Greeter {
     greet: fn(name: String) -> Greeting
 
-    exegesis {
+    docs {
         Trait for entities that can generate greetings.
     }
 }
@@ -303,7 +303,7 @@ trait Greeter {
 system GreetingSystem {
     uses Greeter
 
-    exegesis {
+    docs {
         Main system for greeting operations.
     }
 }

@@ -14,7 +14,7 @@ const tutorials = [
     {
         number: "02",
         title: "Values and Types",
-        description: "Learn about DOL's type system and typed gene declarations",
+        description: "Learn about DOL's type system and typed gen declarations",
         topics: ["primitive types", "typed fields", "generics", "type annotations"],
         link: "/dol/tutorials/002-values-types",
         duration: "15 min",
@@ -333,7 +333,7 @@ export default function DOLLearn() {
                             className="p-6 text-sm font-mono overflow-x-auto"
                             style={{ color: "var(--glow-cyan)" }}
                         >
-                            {`gene container.exists {
+                            {`gen container.exists {
   container has identifier
   container has name
   container has created_at
@@ -342,7 +342,7 @@ export default function DOLLearn() {
   container is persistent
 }
 
-exegesis {
+docs {
   A container exists in the system and has a unique identifier.
   This is the most basic property of any container.
 }`}
@@ -467,7 +467,7 @@ exegesis {
                         className="text-lg mb-8 max-w-xl mx-auto"
                         style={{ color: "var(--text-secondary)" }}
                     >
-                        Start with your first gene definition and build your
+                        Start with your first gen definition and build your
                         understanding step by step.
                     </p>
                     <div className="flex flex-wrap justify-center gap-4">

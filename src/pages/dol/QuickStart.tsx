@@ -232,7 +232,7 @@ pub gen Greeting {
                                 className="text-sm mt-2"
                                 style={{ color: "var(--text-secondary)" }}
                             >
-                                Public gene with properties and methods
+                                Public gen with properties and methods
                             </p>
                         </div>
                         <div className="card">

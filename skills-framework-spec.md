@@ -136,21 +136,21 @@ system skill.cross_platform_bridge @ 0.1.0 {
   provides command.execution
 }
 
-exegesis {
+docs {
   CrossPlatformBridge provides a unified interface for platform-specific
   operations. Code using this skill works identically on Windows, macOS,
   and Linux without conditional compilation.
 }
 
 // What this skill gives you
-gene cross_platform.path {
+gen cross_platform.path {
   path is string
   path uses forward_slash separator
   path is normalized
   path resolves to native format on use
 }
 
-gene cross_platform.environment {
+gen cross_platform.environment {
   environment has os_type
   environment has arch
   environment has home_directory

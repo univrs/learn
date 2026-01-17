@@ -235,14 +235,14 @@ function DOLOverview() {
                             className="p-6 text-sm font-mono overflow-x-auto"
                             style={{ color: "var(--glow-cyan)" }}
                         >
-                            {`gene hello.world {
+                            {`gen hello.world {
   message has content
   message has sender
   message has timestamp
 }
 
-exegesis {
-  The hello.world gene defines a message entity
+docs {
+  The hello.world gen defines a message entity
   with three essential properties.
 }`}
                         </pre>

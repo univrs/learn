@@ -72,7 +72,7 @@ pub system LionSwan @ 0.1.0 {
     return self.registry.by_allegiance(allegiance)
   }
 
-  exegesis {
+  docs {
     The Lion & Swan is a generative storytelling spirit that explores
     the duality of symbols through two allegiances: the noble Lion
     representing strength and courage, and the graceful Swan representing

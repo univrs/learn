@@ -18,7 +18,7 @@ DOL provides familiar control flow constructs with some powerful additions like 
 Unlike many languages, `if` in DOL is an **expression** that returns a value:
 
 ```dol
-pub fun max(a: Int64, b: Int64) -> Int64 {
+pub fun max(a: i64, b: i64) -> i64 {
   if a > b {
     a
   } else {
@@ -26,7 +26,7 @@ pub fun max(a: Int64, b: Int64) -> Int64 {
   }
 }
 
-pub fun describe_number(n: Int64) -> String {
+pub fun describe_number(n: i64) -> String {
   if n < 0 {
     "negative"
   } else if n == 0 {
@@ -99,7 +99,7 @@ pub fun type_name(ty: TypeExpr) -> Option<String> {
 Add conditions to match arms:
 
 ```dol
-pub fun categorize(n: Int64) -> String {
+pub fun categorize(n: i64) -> String {
   match n {
     x if x < 0 => "negative",
     0 => "zero",
@@ -115,7 +115,7 @@ pub fun categorize(n: Int64) -> String {
 Iterate over collections:
 
 ```dol
-pub fun find_nearby_nodes(pos: Vec3, max_dist: Float64) -> List<UInt64> {
+pub fun find_nearby_nodes(pos: Vec3, max_dist: f64) -> List<Ui64> {
   result = []
   for (id, node) in this.nodes {
     dx = pos.x - node.position.x
@@ -149,7 +149,7 @@ for i in 0..=10 {
 Continue while a condition is true:
 
 ```dol
-pub fun find_root(var n: Int64) -> Int64 {
+pub fun find_root(var n: i64) -> i64 {
   while n > 1 {
     n = n / 2
   }
@@ -273,7 +273,7 @@ pub fun parse_config(text: String) -> Result<Config, Error> {
 Write a function that categorizes container states:
 
 ```dol
-pub gene ContainerState {
+pub gen ContainerState {
   type: enum {
     Created,
     Starting,

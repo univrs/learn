@@ -86,7 +86,7 @@ pub system LionSwan @ 0.1.0 {
   // ============= Narrative Generation =============
 
   /// Generate a new narrative
-  pub fun generate_narrative(self, scene_count: UInt32) -> Result<LionSwan, Error> {
+  pub fun generate_narrative(self, scene_count: u32) -> Result<LionSwan, Error> {
     log::info("Generating narrative with {scene_count} scenes...")
 
     let narrative = self.story_weaver.generate_narrative(self.registry, scene_count)
@@ -102,7 +102,7 @@ pub system LionSwan @ 0.1.0 {
   }
 
   /// Generate a narrative focused on a specific allegiance
-  pub fun generate_allegiance_narrative(self, allegiance: Allegiance, scene_count: UInt32) -> Result<LionSwan, Error> {
+  pub fun generate_allegiance_narrative(self, allegiance: Allegiance, scene_count: u32) -> Result<LionSwan, Error> {
     log::info("Generating {allegiance} narrative with {scene_count} scenes...")
 
     let narrative = generate_allegiance_story(self.registry, allegiance, scene_count)
@@ -209,7 +209,7 @@ pub system LionSwan @ 0.1.0 {
     return self.registry.by_allegiance(allegiance)
   }
 
-  exegesis {
+  docs {
     The Lion & Swan is a generative storytelling spirit that explores
     the duality of symbols through two allegiances.
 
