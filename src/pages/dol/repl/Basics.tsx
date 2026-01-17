@@ -170,7 +170,7 @@ export default function ReplBasics() {
                                 style={{ color: "var(--glow-cyan)" }}
                             >
 {`[dependencies]
-metadol = { version = "0.8", features = ["wasm"] }`}
+dol = { version = "0.8", features = ["wasm"] }`}
                             </pre>
                         </div>
 
