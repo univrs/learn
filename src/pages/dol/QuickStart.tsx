@@ -35,7 +35,7 @@ export default function DOLQuickStart() {
     return (
         <>
             <Helmet>
-                <title>DOL v0.7.2 Quick Start | Univrs Learn</title>
+                <title>DOL v0.8.0 Quick Start | Univrs Learn</title>
                 <meta
                     name="description"
                     content="Get from zero to DOL in 5 minutes. Install, write your first gene, and start building ontology-first systems."
@@ -69,7 +69,7 @@ export default function DOLQuickStart() {
                             className="text-3xl sm:text-4xl font-light"
                             style={{ color: "var(--text-primary)" }}
                         >
-                            DOL v0.7.2 Quick Start
+                            DOL v0.8.0 Quick Start
                         </h1>
                     </div>
                     <p
@@ -193,14 +193,14 @@ export PATH="$PATH:$(pwd)/target/release"`}
                         >
                             {`module hello @ 1.0.0
 
-pub gene Greeting {
-    has message: String = "Hello, World!"
+pub gen Greeting {
+    has message: string = "Hello, World!"
 
-    fun display() -> String {
+    fun display() -> string {
         return this.message
     }
 
-    exegesis {
+    docs {
         A simple greeting demonstrating DOL basics.
     }
 }`}
@@ -226,7 +226,7 @@ pub gene Greeting {
                                 className="text-xs"
                                 style={{ color: "var(--spore-purple)" }}
                             >
-                                pub gene
+                                pub gen
                             </code>
                             <p
                                 className="text-sm mt-2"
@@ -240,7 +240,7 @@ pub gene Greeting {
                                 className="text-xs"
                                 style={{ color: "var(--glow-gold)" }}
                             >
-                                exegesis
+                                docs
                             </code>
                             <p
                                 className="text-sm mt-2"

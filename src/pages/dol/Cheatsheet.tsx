@@ -8,21 +8,21 @@ const sections = [
         items: [
             { syntax: "module name @ version", desc: "Define a module" },
             { syntax: "use path.{ items }", desc: "Import from module" },
-            { syntax: "pub gene Name { ... }", desc: "Public gene (struct)" },
+            { syntax: "pub gen Name { ... }", desc: "Public gene (struct)" },
             { syntax: "pub trait Name { ... }", desc: "Public trait (interface)" },
             { syntax: "pub system Name { ... }", desc: "Public system (composed)" },
-            { syntax: "constraint name { ... }", desc: "Define constraint rule" },
-            { syntax: "evolves Old > New @ version { ... }", desc: "Schema evolution" },
+            { syntax: "rule name { ... }", desc: "Define constraint rule" },
+            { syntax: "evo Old > New @ version { ... }", desc: "Schema evolution" },
         ],
     },
     {
         title: "Types",
         items: [
-            { syntax: "Int8, Int16, Int32, Int64", desc: "Signed integers" },
-            { syntax: "UInt8, UInt16, UInt32, UInt64", desc: "Unsigned integers" },
-            { syntax: "Float32, Float64", desc: "Floating point" },
-            { syntax: "Bool, String, Void", desc: "Primitives" },
-            { syntax: "List<T>", desc: "Dynamic array" },
+            { syntax: "i8, i16, i32, i64", desc: "Signed integers" },
+            { syntax: "u8, u16, u32, u64", desc: "Unsigned integers" },
+            { syntax: "f32, f64", desc: "Floating point" },
+            { syntax: "bool, string, ()", desc: "Primitives" },
+            { syntax: "Vec<T>", desc: "Dynamic array" },
             { syntax: "Map<K, V>", desc: "Hash map" },
             { syntax: "Option<T>", desc: "Optional value" },
             { syntax: "Result<T, E>", desc: "Success or error" },
@@ -31,13 +31,13 @@ const sections = [
         ],
     },
     {
-        title: "Gene Body",
+        title: "Gen Body",
         items: [
             { syntax: "type: enum { A, B, C }", desc: "Enum variants" },
             { syntax: "has field: Type = default", desc: "Field with default" },
-            { syntax: "constraint name { predicate }", desc: "Invariant rule" },
+            { syntax: "rule name { predicate }", desc: "Invariant rule" },
             { syntax: "fun method() -> Type { body }", desc: "Method definition" },
-            { syntax: "exegesis { documentation }", desc: "Required docs" },
+            { syntax: "docs { documentation }", desc: "Required docs" },
         ],
     },
     {
@@ -83,7 +83,7 @@ const sections = [
         items: [
             { syntax: "\\x -> x + 1", desc: "Lambda expression" },
             { syntax: "\\(x, y) -> x + y", desc: "Multi-param lambda" },
-            { syntax: "\\x: Int64 -> x * 2", desc: "Typed parameter" },
+            { syntax: "\\x: i64 -> x * 2", desc: "Typed parameter" },
             { syntax: "fun name(x: T) -> R { }", desc: "Pure function" },
             { syntax: "sex fun name() { }", desc: "Effectful function (IO)" },
             { syntax: "sex { ... }", desc: "Effect block in pure fn" },
@@ -223,7 +223,7 @@ export default function DOLCheatsheet() {
                         className="text-center text-sm"
                         style={{ color: "var(--soft-gray)" }}
                     >
-                        DOL v0.7.2 "WASM Pipeline" | 1,800+ tests passing
+                        DOL v0.8.0 | 1,800+ tests passing
                     </div>
                 </div>
             </section>

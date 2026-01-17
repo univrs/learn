@@ -29,7 +29,7 @@ const modules = [
   },
   {
     file: 'evolution.dol',
-    description: 'Speciation via evolves, genetic traits, lineage tracking',
+    description: 'Speciation via evo, genetic traits, lineage tracking',
     icon: Dna,
     color: 'var(--glow-gold)',
   },
@@ -64,7 +64,7 @@ export default function DOLExamples() {
             </h1>
           </div>
           <p className="text-xl max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
-            Real-world examples showcasing DOL v0.7.2 capabilities through a complete biological systems module.
+            Real-world examples showcasing DOL v0.8.0 capabilities through a complete biological systems module.
             Learn by exploring actual production code.
           </p>
         </div>
@@ -77,7 +77,7 @@ export default function DOLExamples() {
             Biology Module
           </h2>
           <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
-            A complete DOL v0.7.2 showcase modeling biological systems from molecular to ecosystem scales.
+            A complete DOL v0.8.0 showcase modeling biological systems from molecular to ecosystem scales.
             Located in the DOL repository at <code className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--glow-cyan)' }}>examples/stdlib/biology/</code>
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -115,12 +115,12 @@ export default function DOLExamples() {
             </div>
             <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-secondary)' }}>
 {`/// 3D position vector
-pub gene Vec3 {
-  has x: Float64
-  has y: Float64
-  has z: Float64
+pub gen Vec3 {
+  has x: f64
+  has y: f64
+  has z: f64
 
-  fun magnitude() -> Float64 {
+  fun magnitude() -> f64 {
     return (this.x * this.x + this.y * this.y + this.z * this.z).sqrt()
   }
 
@@ -129,7 +129,7 @@ pub gene Vec3 {
     return Vec3 { x: this.x / mag, y: this.y / mag, z: this.z / mag }
   }
 
-  exegesis {
+  docs {
     Three-dimensional vector for spatial positioning.
     Used for hyphal growth direction, nutrient gradients, etc.
   }
@@ -154,20 +154,20 @@ pub gene Vec3 {
             </div>
             <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-secondary)' }}>
 {`/// Elemental nutrients (Redfield ratio)
-pub gene Nutrient {
-  has carbon: Float64
-  has nitrogen: Float64
-  has phosphorus: Float64
-  has water: Float64
+pub gen Nutrient {
+  has carbon: f64
+  has nitrogen: f64
+  has phosphorus: f64
+  has water: f64
 
-  constraint non_negative {
+  rule non_negative {
     this.carbon >= 0.0 &&
     this.nitrogen >= 0.0 &&
     this.phosphorus >= 0.0 &&
     this.water >= 0.0
   }
 
-  constraint stoichiometry {
+  rule stoichiometry {
     // Redfield ratio: C:N:P ≈ 106:16:1
     this.nitrogen > 0.0 implies (
       this.carbon / this.nitrogen >= 6.0 &&
@@ -175,7 +175,7 @@ pub gene Nutrient {
     )
   }
 
-  exegesis {
+  docs {
     Nutrient package following ecological stoichiometry.
     The Redfield ratio (C:N:P ≈ 106:16:1) constrains valid
     nutrient compositions for biological realism.
@@ -205,7 +205,7 @@ pub gene Nutrient {
   is extend(gradient: Gradient<Nutrient>) -> Self
 
   /// Branch into multiple hyphae
-  is branch(factor: Float64) -> List<Self>
+  is branch(factor: f64) -> Vec<Self>
 
   /// Fuse with another hypha (anastomosis)
   is fuse(other: Self) -> Option<Self>
@@ -219,12 +219,12 @@ pub gene Nutrient {
 
   law branching_conserves_potential {
     // Branching distributes potential, doesn't create it
-    forall self: Self, factor: Float64.
+    forall self: Self, factor: f64.
       sum(this.branch(factor).map(|b| b.branching_potential))
         <= this.branching_potential
   }
 
-  exegesis {
+  docs {
     Hyphal trait encodes fungal growth behaviors:
     - Chemotropic extension toward nutrients
     - Branching to explore space
@@ -251,34 +251,34 @@ pub gene Nutrient {
             </div>
             <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-secondary)' }}>
 {`/// Species in an ecosystem
-pub gene Species {
-  has id: UInt64
-  has name: String
+pub gen Species {
+  has id: u64
+  has name: string
   has role: TrophicRole
-  has population: UInt64
-  has birth_rate: Float64
-  has death_rate: Float64
-  has carrying_capacity: UInt64
+  has population: u64
+  has birth_rate: f64
+  has death_rate: f64
+  has carrying_capacity: u64
 
   /// Logistic growth rate
-  fun growth_rate() -> Float64 {
+  fun growth_rate() -> f64 {
     r = this.birth_rate - this.death_rate
-    k = this.carrying_capacity as Float64
-    n = this.population as Float64
+    k = this.carrying_capacity as f64
+    n = this.population as f64
     return r * n * (1.0 - n / k)
   }
 }
 
 /// Predator-prey interaction
-pub gene Interaction {
-  has predator: UInt64
-  has prey: UInt64
-  has attack_rate: Float64
-  has handling_time: Float64
-  has conversion_efficiency: Float64
+pub gen Interaction {
+  has predator: u64
+  has prey: u64
+  has attack_rate: f64
+  has handling_time: f64
+  has conversion_efficiency: f64
 
   /// Holling Type II functional response
-  fun predation_rate(prey_density: Float64) -> Float64 {
+  fun predation_rate(prey_density: f64) -> f64 {
     return (this.attack_rate * prey_density) /
            (1.0 + this.attack_rate * this.handling_time * prey_density)
   }
@@ -292,7 +292,7 @@ pub gene Interaction {
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-light mb-6" style={{ color: 'var(--text-primary)' }}>
-            Pattern: Speciation with <code className="text-sm px-2 py-1 rounded" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--glow-gold)' }}>evolves</code>
+            Pattern: Speciation with <code className="text-sm px-2 py-1 rounded" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--glow-gold)' }}>evo</code>
           </h2>
           <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
             Model evolutionary transitions with geological timestamps and migration functions.
@@ -303,16 +303,16 @@ pub gene Interaction {
             </div>
             <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-secondary)' }}>
 {`/// Eukaryote evolved from Organism (via endosymbiosis)
-evolves Organism > Eukaryote @ 2.0Gya {
+evo Organism > Eukaryote @ 2.0Gya {
   added nucleus: Nucleus
-  added mitochondria: List<Mitochondrion>
-  added endomembrane_system: Bool = true
+  added mitochondria: Vec<Mitochondrion>
+  added endomembrane_system: bool = true
 
-  constraint has_nucleus {
+  rule has_nucleus {
     this.nucleus is not null
   }
 
-  constraint has_mitochondria {
+  rule has_mitochondria {
     // All eukaryotes have mitochondria (or remnants)
     this.mitochondria.len() >= 1
   }
@@ -333,7 +333,7 @@ evolves Organism > Eukaryote @ 2.0Gya {
     }
   }
 
-  exegesis {
+  docs {
     Eukaryotes: complex cells with membrane-bound organelles.
     Evolved ~2 billion years ago via endosymbiosis.
   }
@@ -362,12 +362,12 @@ evolves Organism > Eukaryote @ 2.0Gya {
   uses Transport<Nutrient>
   uses Evolvable
 
-  state nodes: Map<UInt64, MyceliumNode>
-  state edges: List<HyphalSegment>
-  state total_biomass: Float64
-  state generation: UInt64
+  state nodes: Map<u64, MyceliumNode>
+  state edges: Vec<HyphalSegment>
+  state total_biomass: f64
+  state generation: u64
 
-  constraint network_connected {
+  rule network_connected {
     // Network must be fully connected
     forall node1, node2 in this.nodes.values().
       exists_path(node1, node2)
@@ -393,7 +393,7 @@ evolves Organism > Eukaryote @ 2.0Gya {
     // ...
   }
 
-  exegesis {
+  docs {
     Complete mycelium network simulation combining:
     - Hyphal tip extension toward nutrients
     - Branching at high-nutrient locations

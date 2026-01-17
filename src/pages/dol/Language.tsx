@@ -3,19 +3,19 @@ import { Helmet } from 'react-helmet-async'
 import { BookText, ChevronRight } from 'lucide-react'
 
 const primitiveTypes = [
-  { type: 'Int8', description: 'Signed 8-bit integer', rust: 'i8', range: '-128 to 127' },
-  { type: 'Int16', description: 'Signed 16-bit integer', rust: 'i16', range: '-32,768 to 32,767' },
-  { type: 'Int32', description: 'Signed 32-bit integer', rust: 'i32', range: '-2^31 to 2^31-1' },
-  { type: 'Int64', description: 'Signed 64-bit integer', rust: 'i64', range: '-2^63 to 2^63-1' },
-  { type: 'UInt8', description: 'Unsigned 8-bit integer', rust: 'u8', range: '0 to 255' },
-  { type: 'UInt16', description: 'Unsigned 16-bit integer', rust: 'u16', range: '0 to 65,535' },
-  { type: 'UInt32', description: 'Unsigned 32-bit integer', rust: 'u32', range: '0 to 2^32-1' },
-  { type: 'UInt64', description: 'Unsigned 64-bit integer', rust: 'u64', range: '0 to 2^64-1' },
-  { type: 'Float32', description: 'IEEE 754 single-precision', rust: 'f32', range: '±3.4E38' },
-  { type: 'Float64', description: 'IEEE 754 double-precision', rust: 'f64', range: '±1.7E308' },
-  { type: 'Bool', description: 'Boolean value', rust: 'bool', range: 'true | false' },
-  { type: 'String', description: 'UTF-8 encoded text', rust: 'String', range: 'Variable length' },
-  { type: 'Void', description: 'Unit type (no value)', rust: '()', range: 'N/A' },
+  { type: 'i8', description: 'Signed 8-bit integer', rust: 'i8', range: '-128 to 127' },
+  { type: 'i16', description: 'Signed 16-bit integer', rust: 'i16', range: '-32,768 to 32,767' },
+  { type: 'i32', description: 'Signed 32-bit integer', rust: 'i32', range: '-2^31 to 2^31-1' },
+  { type: 'i64', description: 'Signed 64-bit integer', rust: 'i64', range: '-2^63 to 2^63-1' },
+  { type: 'u8', description: 'Unsigned 8-bit integer', rust: 'u8', range: '0 to 255' },
+  { type: 'u16', description: 'Unsigned 16-bit integer', rust: 'u16', range: '0 to 65,535' },
+  { type: 'u32', description: 'Unsigned 32-bit integer', rust: 'u32', range: '0 to 2^32-1' },
+  { type: 'u64', description: 'Unsigned 64-bit integer', rust: 'u64', range: '0 to 2^64-1' },
+  { type: 'f32', description: 'IEEE 754 single-precision', rust: 'f32', range: '±3.4E38' },
+  { type: 'f64', description: 'IEEE 754 double-precision', rust: 'f64', range: '±1.7E308' },
+  { type: 'bool', description: 'Boolean value', rust: 'bool', range: 'true | false' },
+  { type: 'string', description: 'UTF-8 encoded text', rust: 'String', range: 'Variable length' },
+  { type: '()', description: 'Unit type (no value)', rust: '()', range: 'N/A' },
 ]
 
 const operatorCategories = [
@@ -74,7 +74,7 @@ export default function DOLLanguage() {
         <title>DOL Language Guide | Univrs Learn</title>
         <meta
           name="description"
-          content="Complete language guide for DOL v0.7.2 syntax including declarations, types, generics, operators, and control flow."
+          content="Complete language guide for DOL v0.8.0 syntax including declarations, types, generics, operators, and control flow."
         />
       </Helmet>
 
@@ -95,7 +95,7 @@ export default function DOLLanguage() {
             </h1>
           </div>
           <p className="text-xl max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
-            Complete reference for DOL v0.7.2 syntax, covering declarations, types, generics, operators, and control flow.
+            Complete reference for DOL v0.8.0 syntax, covering declarations, types, generics, operators, and control flow.
           </p>
         </div>
       </section>
@@ -191,11 +191,11 @@ use system.orchestration.{ scheduler, allocator }`}
               style={{ backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)' }}
             >
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
-                {`pub gene container.exists @ 1.0.0 { /* ... */ }
+                {`pub gen container.exists @ 1.0.0 { /* ... */ }
 
 pub(spirit) trait internal.helper @ 0.1.0 { /* ... */ }
 
-pub(parent) constraint local.invariant @ 1.0.0 { /* ... */ }`}
+pub(parent) rule local.invariant @ 1.0.0 { /* ... */ }`}
               </pre>
             </div>
           </div>
@@ -212,13 +212,13 @@ pub(parent) constraint local.invariant @ 1.0.0 { /* ... */ }`}
           <div className="grid md:grid-cols-2 gap-6">
             <div className="card">
               <h3 className="text-lg font-normal mb-3" style={{ color: 'var(--glow-cyan)' }}>
-                gene
+                gen
               </h3>
               <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
-                Atomic type definitions with fields and constraints. Cannot be decomposed further.
+                Atomic type definitions with fields and rules. Cannot be decomposed further.
               </p>
               <code className="text-xs" style={{ color: 'var(--soft-gray)' }}>
-                gene name @ version &#123; /* statements */ &#125;
+                gen name @ version &#123; /* statements */ &#125;
               </code>
             </div>
 
@@ -236,13 +236,13 @@ pub(parent) constraint local.invariant @ 1.0.0 { /* ... */ }`}
 
             <div className="card">
               <h3 className="text-lg font-normal mb-3" style={{ color: 'var(--spore-purple)' }}>
-                constraint
+                rule
               </h3>
               <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
                 Named invariants that must always hold. Express business rules and system guarantees.
               </p>
               <code className="text-xs" style={{ color: 'var(--soft-gray)' }}>
-                constraint name @ version &#123; /* invariants */ &#125;
+                rule name @ version &#123; /* invariants */ &#125;
               </code>
             </div>
 
@@ -260,13 +260,13 @@ pub(parent) constraint local.invariant @ 1.0.0 { /* ... */ }`}
 
             <div className="card">
               <h3 className="text-lg font-normal mb-3" style={{ color: 'var(--glow-cyan)' }}>
-                evolves
+                evo
               </h3>
               <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
                 Version migrations defining how declarations change over time.
               </p>
               <code className="text-xs" style={{ color: 'var(--soft-gray)' }}>
-                evolves name from X.Y.Z to X.Y.Z+1 &#123; /* changes */ &#125;
+                evo name from X.Y.Z to X.Y.Z+1 &#123; /* changes */ &#125;
               </code>
             </div>
           </div>
@@ -330,7 +330,7 @@ pub(parent) constraint local.invariant @ 1.0.0 { /* ... */ }`}
             <div className="grid md:grid-cols-3 gap-4">
               <div className="card">
                 <code className="text-sm" style={{ color: 'var(--glow-cyan)' }}>
-                  List&lt;T&gt;
+                  Vec&lt;T&gt;
                 </code>
                 <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
                   Ordered sequence of elements
@@ -390,9 +390,9 @@ pub(parent) constraint local.invariant @ 1.0.0 { /* ... */ }`}
                 style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}
               >
                 <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
-                  {`gene Container<T> @ 1.0.0 {
-    has items: List<T>
-    has capacity: UInt64
+                  {`gen Container<T> @ 1.0.0 {
+    has items: Vec<T>
+    has capacity: u64
 }`}
                 </pre>
               </div>
@@ -407,8 +407,8 @@ pub(parent) constraint local.invariant @ 1.0.0 { /* ... */ }`}
                 style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}
               >
                 <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
-                  {`gene SortedList<T: Comparable> @ 1.0.0 {
-    has items: List<T>
+                  {`gen SortedList<T: Comparable> @ 1.0.0 {
+    has items: Vec<T>
     is sorted
 }`}
                 </pre>
@@ -424,9 +424,9 @@ pub(parent) constraint local.invariant @ 1.0.0 { /* ... */ }`}
                 style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}
               >
                 <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
-                  {`gene Buffer<T = UInt8> @ 1.0.0 {
-    has data: List<T>
-    has size: UInt64
+                  {`gen Buffer<T = u8> @ 1.0.0 {
+    has data: Vec<T>
+    has size: u64
 }`}
                 </pre>
               </div>
@@ -441,9 +441,9 @@ pub(parent) constraint local.invariant @ 1.0.0 { /* ... */ }`}
                 style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}
               >
                 <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
-                  {`gene Cache<K, V> @ 1.0.0 {
+                  {`gen Cache<K, V> @ 1.0.0 {
     has store: Map<K, Option<V>>
-    has history: List<Result<V, Error>>
+    has history: Vec<Result<V, Error>>
 }`}
                 </pre>
               </div>
@@ -460,8 +460,8 @@ pub(parent) constraint local.invariant @ 1.0.0 { /* ... */ }`}
             >
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
                 {`trait Serializable<T: Clone + Hash + Eq> @ 1.0.0 {
-    fun to_bytes(value: T) -> List<UInt8>
-    fun from_bytes(bytes: List<UInt8>) -> Option<T>
+    fun to_bytes(value: T) -> Vec<u8>
+    fun from_bytes(bytes: Vec<u8>) -> Option<T>
 }`}
               </pre>
             </div>
@@ -704,12 +704,12 @@ for user in users if user.active {
             >
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
                 {`// Pure function
-fun add(x: Int64, y: Int64) -> Int64 {
+fun add(x: i64, y: i64) -> i64 {
     return x + y
 }
 
 // Generic function
-fun first<T>(items: List<T>) -> Option<T> {
+fun first<T>(items: Vec<T>) -> Option<T> {
     if items.is_empty() {
         None
     } else {
@@ -717,18 +717,18 @@ fun first<T>(items: List<T>) -> Option<T> {
     }
 }
 
-// Function with constraints
-fun sort<T: Comparable>(items: List<T>) -> List<T> {
+// Function with rules
+fun sort<T: Comparable>(items: Vec<T>) -> Vec<T> {
     // implementation
 }
 
 // Effectful function (IO/side effects)
-sex fun print_message(msg: String) {
+sex fun print_message(msg: string) {
     vudo_print(msg)
 }
 
 // Effect block in pure function
-fun compute_with_log(x: Int64) -> Int64 {
+fun compute_with_log(x: i64) -> i64 {
     let result = x * 2
     sex {
         vudo_print("computed: " + result.to_string())
@@ -778,7 +778,7 @@ fun compute_with_log(x: Int64) -> Int64 {
                 Documentation
               </h3>
               <ul className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                <li>Every declaration must include exegesis</li>
+                <li>Every declaration must include docs</li>
                 <li>Document public APIs with triple-quoted strings</li>
                 <li>Explain the "why" not just the "what"</li>
                 <li>Include examples in documentation</li>
@@ -791,7 +791,7 @@ fun compute_with_log(x: Int64) -> Int64 {
               </h3>
               <ul className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <li>Follow semantic versioning (major.minor.patch)</li>
-                <li>Use <code>evolves</code> declarations for breaking changes</li>
+                <li>Use <code>evo</code> declarations for breaking changes</li>
                 <li>Document migration paths</li>
                 <li>Deprecate before removing</li>
               </ul>
