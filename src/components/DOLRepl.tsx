@@ -24,6 +24,111 @@ interface HistoryEntry {
   timestamp: Date
 }
 
+// Session state for functions and genes (shared across REPL instances)
+interface FunctionDef {
+  name: string
+  params: { name: string; type: string }[]
+  returnType: string
+  body: string
+}
+
+interface GeneDef {
+  name: string
+  fields: { name: string; type: string }[]
+}
+
+// Module-level session state (persists across component instances)
+const sessionFunctions: Map<string, FunctionDef> = new Map()
+const sessionGenes: Map<string, GeneDef> = new Map()
+
+// Initialize common tutorial functions so examples work independently
+function initTutorialFunctions() {
+  if (sessionFunctions.size > 0) return // Already initialized
+
+  // Basic math functions
+  sessionFunctions.set('square', {
+    name: 'square',
+    params: [{ name: 'x', type: 'i64' }],
+    returnType: 'i64',
+    body: 'x * x'
+  })
+
+  sessionFunctions.set('add', {
+    name: 'add',
+    params: [{ name: 'a', type: 'i64' }, { name: 'b', type: 'i64' }],
+    returnType: 'i64',
+    body: 'a + b'
+  })
+
+  sessionFunctions.set('multiply', {
+    name: 'multiply',
+    params: [{ name: 'x', type: 'i64' }, { name: 'y', type: 'i64' }],
+    returnType: 'i64',
+    body: 'x * y'
+  })
+
+  sessionFunctions.set('cube', {
+    name: 'cube',
+    params: [{ name: 'x', type: 'i64' }],
+    returnType: 'i64',
+    body: 'x * x * x'
+  })
+
+  sessionFunctions.set('double', {
+    name: 'double',
+    params: [{ name: 'x', type: 'i64' }],
+    returnType: 'i64',
+    body: 'x * 2'
+  })
+
+  // Float functions
+  sessionFunctions.set('area', {
+    name: 'area',
+    params: [{ name: 'radius', type: 'f64' }],
+    returnType: 'f64',
+    body: '3.14159 * radius * radius'
+  })
+
+  sessionFunctions.set('circumference', {
+    name: 'circumference',
+    params: [{ name: 'radius', type: 'f64' }],
+    returnType: 'f64',
+    body: '2.0 * 3.14159 * radius'
+  })
+
+  sessionFunctions.set('pi', {
+    name: 'pi',
+    params: [],
+    returnType: 'f64',
+    body: '3.14159'
+  })
+
+  sessionFunctions.set('square_f', {
+    name: 'square_f',
+    params: [{ name: 'x', type: 'f64' }],
+    returnType: 'f64',
+    body: 'x * x'
+  })
+
+  // Zero-arg functions for testing
+  sessionFunctions.set('getX', {
+    name: 'getX',
+    params: [],
+    returnType: 'i64',
+    body: '42'
+  })
+
+  sessionFunctions.set('getY', {
+    name: 'getY',
+    params: [],
+    returnType: 'i64',
+    body: '100'
+  })
+}
+
+// Initialize on module load
+initTutorialFunctions()
+
 interface DOLReplProps {
   /** Initial code to display in the editor */
   initialCode?: string
@@ -44,8 +149,101 @@ interface DOLReplProps {
 }
 
 // ============================================================================
-// Mock DOL Evaluator
+// Mock DOL Evaluator with Expression Support
 // ============================================================================
+
+/**
+ * Evaluate arithmetic expression with variable substitution
+ */
+function evalArithmetic(expr: string, vars: Map<string, number> = new Map()): number {
+  // Substitute variables
+  let substituted = expr
+  vars.forEach((val, name) => {
+    substituted = substituted.replace(new RegExp(`\\b${name}\\b`, 'g'), val.toString())
+  })
+
+  // Evaluate function calls in expression (recursive)
+  const funcCallPattern = /(\w+)\s*\(\s*([^()]*)\s*\)/g
+  let match
+  while ((match = funcCallPattern.exec(substituted)) !== null) {
+    const funcName = match[1]
+    const argsStr = match[2]
+    const func = sessionFunctions.get(funcName)
+    if (func) {
+      const args = argsStr ? argsStr.split(',').map(a => evalArithmetic(a.trim(), vars)) : []
+      const localVars = new Map<string, number>()
+      func.params.forEach((p, i) => {
+        if (i < args.length) localVars.set(p.name, args[i])
+      })
+      const result = evalArithmetic(func.body, localVars)
+      substituted = substituted.replace(match[0], result.toString())
+      funcCallPattern.lastIndex = 0 // Reset for next iteration
+    }
+  }
+
+  // Simple arithmetic evaluation (handles +, -, *, /, parentheses)
+  try {
+    // Only allow safe characters for eval
+    const safeExpr = substituted.replace(/[^0-9+\-*/.() ]/g, '')
+    if (safeExpr.trim() === '') return NaN
+    // Use Function constructor for safer eval
+    return new Function(`return (${safeExpr})`)() as number
+  } catch {
+    return NaN
+  }
+}
+
+/**
+ * Evaluate a DOL expression and return value + type
+ */
+function evalExpr(expr: string): { value: number | string; type: string } {
+  const trimmed = expr.trim()
+
+  // Check for function call: funcName(args) or funcName()
+  const funcCallMatch = trimmed.match(/^(\w+)\s*\(\s*(.*?)\s*\)$/)
+  if (funcCallMatch) {
+    const funcName = funcCallMatch[1]
+    const argsStr = funcCallMatch[2]
+    const func = sessionFunctions.get(funcName)
+
+    if (!func) {
+      // Return special marker for undefined function
+      return { value: NaN, type: `__undefined_function__:${funcName}` }
+    }
+
+    // Parse arguments
+    const args: number[] = argsStr
+      ? argsStr.split(',').map(a => evalArithmetic(a.trim()))
+      : []
+
+    // Create local variable map
+    const localVars = new Map<string, number>()
+    func.params.forEach((p, i) => {
+      if (i < args.length) localVars.set(p.name, args[i])
+    })
+
+    // Evaluate function body
+    const result = evalArithmetic(func.body, localVars)
+    return { value: result, type: func.returnType }
+  }
+
+  // Check for numeric literal or arithmetic expression
+  const hasFloat = /\d+\.\d+/.test(trimmed)
+  const result = evalArithmetic(trimmed)
+
+  if (!isNaN(result)) {
+    return {
+      value: result,
+      type: hasFloat ? 'f64' : 'i64'
+    }
+  }
+
+  // Check for boolean
+  if (trimmed === 'true') return { value: 'true', type: 'bool' }
+  if (trimmed === 'false') return { value: 'false', type: 'bool' }
+
+  return { value: trimmed, type: 'unknown' }
+}
 
 /**
  * Mock DOL evaluator for interactive tutorials
@@ -56,11 +254,47 @@ function evaluateDOL(code: string): ExecutionResult {
   const errors: string[] = []
 
   try {
+    const trimmedCode = code.trim()
+
+    // Single line - might be expression or declaration
+    if (!trimmedCode.includes('\n') || trimmedCode.split('\n').filter(l => l.trim()).length === 1) {
+      const singleLine = trimmedCode.split('\n').find(l => l.trim())?.trim() || ''
+
+      // Skip comments
+      if (singleLine.startsWith('//') || singleLine.startsWith('--')) {
+        return { output: [], errors: [], success: true, timestamp: new Date() }
+      }
+
+      // Check if it's a declaration or expression
+      const isDeclaration = /^(pub\s+)?(sex\s+)?(fun|gen|gene|trait|constraint|system|module|use|docs|exegesis)\b/.test(singleLine)
+
+      if (!isDeclaration) {
+        // Try to evaluate as expression
+        const result = evalExpr(singleLine)
+
+        // Check for undefined function error
+        if (result.type.startsWith('__undefined_function__:')) {
+          const funcName = result.type.split(':')[1]
+          errors.push(`Error: undefined function '${funcName}'`)
+          return { output, errors, success: false, timestamp: new Date() }
+        }
+
+        if (!isNaN(result.value as number) || typeof result.value === 'string' && result.type !== 'unknown') {
+          output.push(`=> ${result.value} : ${result.type}`)
+          return { output, errors, success: true, timestamp: new Date() }
+        }
+      }
+    }
+
+    // Multi-line or declaration parsing
     const lines = code.split('\n')
     let inBlock = false
     let blockType = ''
     let blockName = ''
     let braceCount = 0
+    let functionBody = ''
+    let functionDef: Partial<FunctionDef> | null = null
+    let geneDef: Partial<GeneDef> | null = null
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim()
@@ -71,7 +305,7 @@ function evaluateDOL(code: string): ExecutionResult {
         continue
       }
 
-      // Handle print() statements - the REAL DOL builtin
+      // Handle print() statements
       const printMatch = line.match(/print\s*\(\s*["'](.*)["']\s*\)/)
       if (printMatch) {
         output.push(printMatch[1])
@@ -85,14 +319,24 @@ function evaluateDOL(code: string): ExecutionResult {
         continue
       }
 
-      // Handle gen declarations
-      const geneMatch = line.match(/^(?:pub\s+)?gene\s+([\w.<>]+)\s*\{?/)
+      // Handle gen/gene declarations (v0.8 uses "gen")
+      const geneMatch = line.match(/^(?:pub\s+)?(?:gen|gene)\s+([\w.<>]+)\s*\{?/)
       if (geneMatch) {
         inBlock = true
         blockType = 'gene'
         blockName = geneMatch[1]
         braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
-        output.push(`[DOL] Defining gene: ${blockName}`)
+        geneDef = { name: blockName, fields: [] }
+        output.push(`Defined gene '${blockName}'`)
+        continue
+      }
+
+      // Handle docs blocks (v0.8)
+      const docsMatch = line.match(/^docs\s*\{?/)
+      if (docsMatch) {
+        inBlock = true
+        blockType = 'docs'
+        braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
         continue
       }
 
@@ -103,7 +347,7 @@ function evaluateDOL(code: string): ExecutionResult {
         blockType = 'trait'
         blockName = traitMatch[1]
         braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
-        output.push(`[DOL] Defining trait: ${blockName}`)
+        output.push(`Defined trait '${blockName}'`)
         continue
       }
 
@@ -114,7 +358,7 @@ function evaluateDOL(code: string): ExecutionResult {
         blockType = 'constraint'
         blockName = constraintMatch[1]
         braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
-        output.push(`[DOL] Adding constraint: ${blockName}`)
+        output.push(`Adding constraint '${blockName}'`)
         continue
       }
 
@@ -125,48 +369,122 @@ function evaluateDOL(code: string): ExecutionResult {
         blockType = 'system'
         blockName = systemMatch[1]
         braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
-        output.push(`[DOL] Defining system: ${blockName}${systemMatch[2] ? ' v' + systemMatch[2] : ''}`)
+        output.push(`Defined system '${blockName}'${systemMatch[2] ? ' v' + systemMatch[2] : ''}`)
         continue
       }
 
-      // Handle function declarations
-      const funMatch = line.match(/^(?:pub\s+)?(?:sex\s+)?fun\s+(\w+)/)
+      // Handle function declarations: pub fun name(param: type, ...) -> returnType { body }
+      const funMatch = line.match(/^(?:pub\s+)?(?:sex\s+)?fun\s+(\w+)\s*\(([^)]*)\)\s*(?:->\s*(\w+))?\s*\{?\s*(.*)?\s*\}?$/)
       if (funMatch) {
-        output.push(`[DOL] Defining function: ${funMatch[1]}`)
-        braceCount += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
+        const funcName = funMatch[1]
+        const paramsStr = funMatch[2]
+        const returnType = funMatch[3] || 'void'
+        let body = funMatch[4] || ''
+
+        // Parse parameters
+        const params: { name: string; type: string }[] = []
+        if (paramsStr.trim()) {
+          paramsStr.split(',').forEach(p => {
+            const paramMatch = p.trim().match(/(\w+)\s*:\s*(\w+)/)
+            if (paramMatch) {
+              params.push({ name: paramMatch[1], type: paramMatch[2] })
+            }
+          })
+        }
+
+        // Check if function body is on same line or multi-line
+        const hasOpenBrace = line.includes('{')
+        const hasCloseBrace = line.includes('}')
+
+        if (hasOpenBrace && hasCloseBrace) {
+          // Single-line function: pub fun square(x: i64) -> i64 { x * x }
+          const bodyMatch = line.match(/\{([^}]*)\}/)
+          body = bodyMatch ? bodyMatch[1].trim() : ''
+
+          sessionFunctions.set(funcName, {
+            name: funcName,
+            params,
+            returnType,
+            body
+          })
+          output.push(`Defined function '${funcName}'`)
+        } else if (hasOpenBrace) {
+          // Multi-line function starts
+          inBlock = true
+          blockType = 'function'
+          blockName = funcName
+          functionDef = { name: funcName, params, returnType, body: '' }
+          functionBody = body
+          braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
+        } else {
+          // No braces yet - simple definition
+          sessionFunctions.set(funcName, {
+            name: funcName,
+            params,
+            returnType,
+            body
+          })
+          output.push(`Defined function '${funcName}'`)
+        }
         continue
       }
 
-      // Handle exegesis blocks
-      const exegesisMatch = line.match(/^exegesis\s*\{?/)
-      if (exegesisMatch) {
-        inBlock = true
-        blockType = 'exegesis'
-        braceCount = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
+      // Inside a block - collect content
+      if (inBlock) {
+        const openBraces = (line.match(/\{/g) || []).length
+        const closeBraces = (line.match(/\}/g) || []).length
+        braceCount += openBraces - closeBraces
+
+        if (blockType === 'function' && functionDef) {
+          // Accumulate function body
+          if (!line.match(/^\s*\}\s*$/)) {
+            functionBody += (functionBody ? ' ' : '') + line.replace(/[{}]/g, '').trim()
+          }
+        }
+
+        if (blockType === 'gene' && geneDef) {
+          // Parse field declarations: has fieldname: type
+          const fieldMatch = line.match(/has\s+(\w+)(?:\s*:\s*(\w+))?/)
+          if (fieldMatch) {
+            geneDef.fields = geneDef.fields || []
+            geneDef.fields.push({
+              name: fieldMatch[1],
+              type: fieldMatch[2] || 'any'
+            })
+          }
+        }
+
+        // Block ends
+        if (braceCount <= 0) {
+          if (blockType === 'function' && functionDef) {
+            sessionFunctions.set(functionDef.name!, {
+              name: functionDef.name!,
+              params: functionDef.params || [],
+              returnType: functionDef.returnType || 'void',
+              body: functionBody.trim()
+            })
+            output.push(`Defined function '${functionDef.name}'`)
+            functionDef = null
+            functionBody = ''
+          }
+
+          if (blockType === 'gene' && geneDef) {
+            sessionGenes.set(geneDef.name!, geneDef as GeneDef)
+            geneDef = null
+          }
+
+          inBlock = false
+          blockType = ''
+          blockName = ''
+          braceCount = 0
+        }
         continue
       }
 
-      // Handle test blocks
-      const testMatch = line.match(/^test\s+["'](.+)["']\s*\{?/)
-      if (testMatch) {
-        output.push(`[DOL] Running test: ${testMatch[1]}`)
-        braceCount += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length
-        continue
-      }
-
-      // Track brace depth
+      // Track brace depth for other cases
       const openBraces = (line.match(/\{/g) || []).length
       const closeBraces = (line.match(/\}/g) || []).length
       braceCount += openBraces - closeBraces
-
-      if (braceCount === 0 && inBlock && closeBraces > 0) {
-        if (blockType !== 'exegesis') {
-          output.push(`[DOL] ${blockType.charAt(0).toUpperCase() + blockType.slice(1)} ${blockName} validated`)
-        }
-        inBlock = false
-        blockType = ''
-        blockName = ''
-      }
 
       // Detect potential syntax errors
       if (line.includes(';;')) {
@@ -174,7 +492,7 @@ function evaluateDOL(code: string): ExecutionResult {
       }
     }
 
-    // Add completion message if no output yet
+    // If we still haven't output anything but processed declarations successfully
     if (output.length === 0 && errors.length === 0) {
       output.push('[DOL] Code parsed successfully')
     }
@@ -197,8 +515,8 @@ function evaluateDOL(code: string): ExecutionResult {
 
 // Custom DOL syntax highlighting tokens - GROUNDED in real DOL grammar
 const DOL_KEYWORDS = [
-  // Core declarations
-  'gene', 'trait', 'constraint', 'system', 'evolves', 'exegesis',
+  // Core declarations (v0.8 uses 'gen' and 'docs')
+  'gen', 'gene', 'trait', 'constraint', 'system', 'evolves', 'exegesis', 'docs',
   // Predicates
   'has', 'is', 'derives', 'from', 'requires', 'uses', 'emits', 'matches', 'never',
   // Control flow
@@ -220,7 +538,7 @@ const DOL_TYPES = [
   'u8', 'u16', 'u32', 'u64',
   'f32', 'f64',
   'bool', 'string', 'void',
-  'List', 'Map', 'Option', 'Result', 'Tuple', 'Box'
+  'List', 'Vec', 'Map', 'Option', 'Result', 'Tuple', 'Box', 'Self'
 ]
 
 // ============================================================================
