@@ -116,8 +116,8 @@ Build a complete Spirit from DOL to deployment:
 |---------|-------|--------|
 | v0.5.0 | MLIR Dialect, HIR → MLIR, WASM Emission | ✅ Complete |
 | v0.7.0 | Live Compiler, Browser Editor, Execution Simulation | ✅ Complete |
-| v0.7.2 | `this` keyword, Instance self-reference | ✅ Current |
-| v0.8.0 | MCP Server, Full Bootstrap, Spirit Runtime | 🎯 Next |
+| v0.8.0 | MVS (gen, rule, Vec, docs), REPL Tutorials | ✅ Current |
+| v0.9.0 | MCP Server, Full Bootstrap, Spirit Runtime | 🎯 Next |
 
 ---
 

@@ -51,7 +51,7 @@ const phases: Phase[] = [
   },
   {
     id: 'phase2a',
-    name: 'Phase 2a: HIR v0.7.0',
+    name: 'Phase 2a: HIR v0.8.0',
     status: 'complete',
     tests: 466,
     description: 'High-level Intermediate Representation',
