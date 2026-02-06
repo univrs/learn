@@ -177,7 +177,7 @@ A type implementing `Versionable` must provide all methods from:
 Here is a complete example modeling container behavior:
 
 ```dol
-mod container.traits @ 0.8.0
+mod container.traits @ 0.8.1
 
 // Base trait for anything with an ID
 trait Identifiable {
@@ -222,7 +222,7 @@ trait Container extends Identifiable, Lifecycle, HealthCheckable, ResourceManage
 Traits are ideal for defining data access patterns:
 
 ```dol
-mod repository @ 0.8.0
+mod repository @ 0.8.1
 
 trait Repository<T, ID> {
     find_by_id: fun(id: ID) -> Option<T>
@@ -253,7 +253,7 @@ gen Page<T> {
 Traits can model event-driven patterns:
 
 ```dol
-mod events @ 0.8.0
+mod events @ 0.8.1
 
 trait EventEmitter<E> {
     emit: fun(event: E) -> ()
@@ -277,7 +277,7 @@ Define traits for a notification system:
 
 <Collapsible title="Solution">
 ```dol
-mod notifications @ 0.8.0
+mod notifications @ 0.8.1
 
 gen Notification {
     has id: u64

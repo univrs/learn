@@ -74,7 +74,7 @@ export default function DOLLanguage() {
         <title>DOL Language Guide | Univrs Learn</title>
         <meta
           name="description"
-          content="Complete language guide for DOL v0.8.0 syntax including declarations, types, generics, operators, and control flow."
+          content="Complete language guide for DOL v0.8.1 syntax including declarations, types, generics, operators, and control flow."
         />
       </Helmet>
 
@@ -95,7 +95,7 @@ export default function DOLLanguage() {
             </h1>
           </div>
           <p className="text-xl max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
-            Complete reference for DOL v0.8.0 syntax, covering declarations, types, generics, operators, and control flow.
+            Complete reference for DOL v0.8.1 syntax, covering declarations, types, generics, operators, and control flow.
           </p>
         </div>
       </section>

@@ -35,7 +35,7 @@ By the end of this lesson, you will be able to:
 Every DOL file begins with a module declaration that establishes namespace and version:
 
 ```dol
-mod container.runtime @ 0.8.0
+mod container.runtime @ 0.8.1
 ```
 
 This declares:
@@ -51,7 +51,7 @@ Module names use dot notation for hierarchy. Version numbers follow semantic ver
 Types are defined with the `gen` keyword followed by the type name and its fields:
 
 ```dol
-mod container.runtime @ 0.8.0
+mod container.runtime @ 0.8.1
 
 gen Container {
     has id: u64
@@ -95,7 +95,7 @@ DOL supports generic collection types:
 Enums model discrete states or variants. They can be simple or carry associated data:
 
 ```dol
-mod container.runtime @ 0.8.0
+mod container.runtime @ 0.8.1
 
 gen ContainerStatus {
     kind: enum {
@@ -121,7 +121,7 @@ Use enums to model finite states. The `Failed` variant with associated data is a
 Here is a complete module defining container-related types:
 
 ```dol
-mod container.runtime @ 0.8.0
+mod container.runtime @ 0.8.1
 
 gen ContainerStatus {
     kind: enum {
@@ -173,7 +173,7 @@ Notice how:
 DOL supports `val` and `var` for bindings:
 
 ```dol
-mod config @ 0.8.0
+mod config @ 0.8.1
 
 // Immutable: cannot be changed after initialization
 val MAX_CONTAINERS: u64 = 100
@@ -192,7 +192,7 @@ Prefer `val` over `var` for most cases. Immutability makes specifications easier
 Types can be composed to model complex domains:
 
 ```dol
-mod ecommerce @ 0.8.0
+mod ecommerce @ 0.8.1
 
 gen Address {
     has street: string
@@ -243,7 +243,7 @@ Define a `Library` module with types for:
 
 <Collapsible title="Solution">
 ```dol
-mod library @ 0.8.0
+mod library @ 0.8.1
 
 gen Book {
     has isbn: string

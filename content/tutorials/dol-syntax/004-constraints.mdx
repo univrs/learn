@@ -125,7 +125,7 @@ rule NonEmptyCollections {
 Here is a complete order validation specification:
 
 ```dol
-mod ecommerce.rules @ 0.8.0
+mod ecommerce.rules @ 0.8.1
 
 rule ValidOrder {
     forall order in orders {
@@ -172,7 +172,7 @@ rule ValidDiscount {
 Rules for user management:
 
 ```dol
-mod users.rules @ 0.8.0
+mod users.rules @ 0.8.1
 
 rule ValidUser {
     forall user in users {
@@ -229,7 +229,7 @@ rule RoleConstraints {
 Rules for inventory management:
 
 ```dol
-mod inventory.rules @ 0.8.0
+mod inventory.rules @ 0.8.1
 
 rule ValidStock {
     forall product in products {
@@ -275,7 +275,7 @@ rule ValidTransfer {
 Rules for financial operations:
 
 ```dol
-mod finance.rules @ 0.8.0
+mod finance.rules @ 0.8.1
 
 rule ValidTransaction {
     forall txn in transactions {
@@ -326,7 +326,7 @@ rule AuditTrail {
 Rules can apply to entire systems:
 
 ```dol
-mod system.rules @ 0.8.0
+mod system.rules @ 0.8.1
 
 rule ServiceHealth {
     forall service in system.services {
@@ -364,7 +364,7 @@ rule SecurityConstraints {
 Rules involving time:
 
 ```dol
-mod temporal.rules @ 0.8.0
+mod temporal.rules @ 0.8.1
 
 rule ValidDateRange {
     forall event in events {
@@ -400,7 +400,7 @@ Define rules for a library system:
 
 <Collapsible title="Solution">
 ```dol
-mod library.rules @ 0.8.0
+mod library.rules @ 0.8.1
 
 rule ValidBook {
     forall book in books {

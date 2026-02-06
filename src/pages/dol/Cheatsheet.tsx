@@ -223,7 +223,7 @@ export default function DOLCheatsheet() {
                         className="text-center text-sm"
                         style={{ color: "var(--soft-gray)" }}
                     >
-                        DOL v0.8.0 | 1,800+ tests passing
+                        DOL v0.8.1 | 1,800+ tests passing
                     </div>
                 </div>
             </section>

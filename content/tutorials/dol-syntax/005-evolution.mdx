@@ -147,7 +147,7 @@ evo OrderV1 > OrderV2 @ 2.0.0 {
 Here is a comprehensive user type evolution:
 
 ```dol
-mod users @ 0.8.0
+mod users @ 0.8.1
 
 // Original type (v1.0.0)
 gen UserV1 {
@@ -213,7 +213,7 @@ gen AuthProvider {
 Track evolution across multiple versions:
 
 ```dol
-mod products @ 0.8.0
+mod products @ 0.8.1
 
 // Evolution chain: V1 -> V2 -> V3 -> V4
 
@@ -309,7 +309,7 @@ evo OrderV1 > OrderV2 @ 2.0.0 {
 Include metadata with versions:
 
 ```dol
-mod api @ 0.8.0
+mod api @ 0.8.1
 
 version_history {
     1.0.0: "Initial release"
@@ -331,7 +331,7 @@ deprecation_schedule {
 For larger systems, track all evolutions:
 
 ```dol
-mod schema.registry @ 0.8.0
+mod schema.registry @ 0.8.1
 
 schema_registry {
     User: [UserV1, UserV1_1, UserV2, UserV3]
@@ -363,7 +363,7 @@ Define evolution for an `Article` type:
 
 <Collapsible title="Solution">
 ```dol
-mod blog.articles @ 0.8.0
+mod blog.articles @ 0.8.1
 
 gen ArticleV1 {
     has id: u64

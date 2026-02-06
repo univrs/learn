@@ -86,7 +86,7 @@ exegesis {
 ### New v0.8.0 Style
 
 ```dol
-mod messaging @ 0.8.0
+mod messaging @ 0.8.1
 
 gen Message {
     has content: string
@@ -127,7 +127,7 @@ dol-parse --tree-shake --roots "PublicAPI,ConfigType" src/
 3. **Elimination** — Unreachable declarations removed from output
 
 ```dol
-mod example @ 0.8.0
+mod example @ 0.8.1
 
 // This is a root (public)
 pub gen User {
@@ -152,7 +152,7 @@ gen OldLegacyType {
 v0.8.0 lays groundwork for CRDT integration in v0.9.0:
 
 ```dol
-mod collaborative @ 0.8.0
+mod collaborative @ 0.8.1
 
 // CRDT-backed document (coming in v0.9.0)
 gen Document {

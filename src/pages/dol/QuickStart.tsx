@@ -35,7 +35,7 @@ export default function DOLQuickStart() {
     return (
         <>
             <Helmet>
-                <title>DOL v0.8.0 Quick Start | Univrs Learn</title>
+                <title>DOL v0.8.1 Quick Start | Univrs Learn</title>
                 <meta
                     name="description"
                     content="Get from zero to DOL in 5 minutes. Install, write your first gene, and start building ontology-first systems."
@@ -69,7 +69,7 @@ export default function DOLQuickStart() {
                             className="text-3xl sm:text-4xl font-light"
                             style={{ color: "var(--text-primary)" }}
                         >
-                            DOL v0.8.0 Quick Start
+                            DOL v0.8.1 Quick Start
                         </h1>
                     </div>
                     <p
