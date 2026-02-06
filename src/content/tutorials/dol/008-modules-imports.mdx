@@ -49,9 +49,9 @@ use dol.token.{ Span }
 use dol.types.{ TypeExpr, TypeParam }
 
 pub gen GeneDecl {
-  has name: String
-  has type_params: List<TypeParam>
-  has fields: List<Field>
+  has name: string
+  has type_params<Vec<TypeParam>
+  has fields<Vec<Field>
   has span: Span
 
   docs {
@@ -87,9 +87,9 @@ mod user.account @ 1.0.0
 // Public - accessible from other modules
 pub gen User {
   has id: u64
-  has name: String
-  has email: String
-  has password_hash: String  // Private field within public gene
+  has name: string
+  has email: string
+  has password_hash: string  // Private field within public gene
 
   docs {
     A user account in the system.
@@ -106,12 +106,12 @@ gen InternalCache {
 }
 
 // Public function
-pub fun create_user(name: String, email: String) -> User {
+pub fun create_user(name: string, email: string) -> User {
   // implementation
 }
 
 // Private function
-fun hash_password(password: String) -> String {
+fun hash_password(password: string) -> string {
   // internal implementation
 }
 ```
@@ -265,7 +265,7 @@ mod myproject.internal @ 1.0.0
 
 // Private - only this mod
 gen PrivateHelper {
-  has data: String
+  has data: string
 }
 
 // Public to parent module only
@@ -305,7 +305,7 @@ mod myproject.auth @ 1.0.0
 
 // Only expose what users need
 pub gen Session {
-  has token: String
+  has token: string
   has expires_at: u64
 }
 
@@ -313,10 +313,10 @@ pub fun authenticate(credentials: Credentials) -> Result<Session, AuthError>
 
 // Keep implementation private
 gen TokenCache {
-  has entries: Map<String, Session>
+  has entries: Map<string, Session>
 }
 
-fun validate_token(token: String) -> Bool {
+fun validate_token(token: string) -> Bool {
   // internal logic
 }
 ```
@@ -363,11 +363,11 @@ mod blog.types @ 1.0.0
 
 pub gen Post {
   has id: u64
-  has title: String
-  has content: String
+  has title: string
+  has content: string
   has author_id: u64
   has published_at: Option<Ui64>
-  has tags: List<String>
+  has tags<Vec<string>
 
   docs {
     A blog post with optional publication date.

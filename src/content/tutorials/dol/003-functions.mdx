@@ -19,7 +19,7 @@ DOL uses the `fun` keyword for functions:
 
 ```dol
 /// Create a simple identifier expression
-pub fun ident(name: String, span: Span) -> Expr {
+pub fun ident(name: string, span: Span) -> Expr {
   return Expr {
     type: Expr.Ident { name: name },
     span: span
@@ -31,7 +31,7 @@ The syntax:
 - `pub` (optional) - makes the function public
 - `fun` - keyword for function definition
 - `ident` - function name
-- `(name: String, span: Span)` - parameters with types
+- `(name: string, span: Span)` - parameters with types
 - `-> Expr` - return type
 - `{ ... }` - function body
 
@@ -43,7 +43,7 @@ Add methods inside gen declarations:
 pub gen MyceliumNode {
   has id: u64
   has position: Vec3
-  has connections: List<Ui64>
+  has connections<Vec<Ui64>
 
   fun is_branching_point() -> Bool {
     return this.connections.len() > 2
@@ -117,7 +117,7 @@ pub fun factorial(n: i64) -> i64 {
 Provide default values for optional parameters:
 
 ```dol
-pub fun greet(name: String, greeting: String = "Hello") -> String {
+pub fun greet(name: string, greeting: string = "Hello") -> string {
   return greeting + ", " + name + "!"
 }
 
@@ -140,7 +140,7 @@ pub fun int_lit(value: i64, span: Span) -> Expr {
 }
 
 /// Create a string literal expression
-pub fun string_lit(value: String, span: Span) -> Expr {
+pub fun string_lit(value: string, span: Span) -> Expr {
   return Expr {
     type: Expr.StringLit { value: value, is_raw: false },
     span: span
@@ -148,7 +148,7 @@ pub fun string_lit(value: String, span: Span) -> Expr {
 }
 
 /// Create a boolean literal expression
-pub fun bool_lit(value: Bool, span: Span) -> Expr {
+pub fun bool_lit(value: bool, span: Span) -> Expr {
   return Expr {
     type: Expr.BoolLit { value: value },
     span: span
@@ -234,7 +234,7 @@ pub system MyceliumNetwork {
   uses Transport<Nutrient>
 
   state nodes: Map<u64, MyceliumNode>
-  state edges: List<HyphalSegment>
+  state edges<Vec<HyphalSegment>
   state next_id: u64
 
   pub fun from_spore(position: Vec3) -> MyceliumNetwork {

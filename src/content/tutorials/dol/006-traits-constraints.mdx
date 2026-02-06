@@ -205,7 +205,7 @@ Genes can declare that they implement traits:
 pub gen MyceliumNode {
   has id: u64
   has position: Vec3
-  has connections: List<Ui64>
+  has connections<Vec<Ui64>
 
   implements Hashable {
     fun hash() -> u64 {
@@ -272,7 +272,7 @@ docs {
 Use traits as type constraints:
 
 ```dol
-pub fun sort<T: Comparable>(items: List<T>) -> List<T> {
+pub fun sort<T: Comparable>(items<Vec<T>) -> Vec<T> {
   // T must implement Comparable
   // implementation can use compare() method
 }
@@ -293,7 +293,7 @@ system mycelium.network @0.1.0 {
   uses MyceliumNode
 
   state nodes: Map<u64, MyceliumNode>
-  state edges: List<HyphalSegment>
+  state edges<Vec<HyphalSegment>
 
   rule {
     nodes.len() <= 10000

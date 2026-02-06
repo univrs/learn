@@ -36,9 +36,9 @@ pub gen Option<T> {
 
 ```dol
 pub gen GeneDecl {
-  has name: String
+  has name: string
   has type_def: Option<TypeExpr>
-  has exegesis: Option<String>
+  has exegesis: Option<string>
   has span: Span
 
   docs {
@@ -48,10 +48,10 @@ pub gen GeneDecl {
 }
 
 pub gen UserProfile {
-  has username: String
-  has email: String
-  has bio: Option<String>
-  has avatar_url: Option<String>
+  has username: string
+  has email: string
+  has bio: Option<string>
+  has avatar_url: Option<string>
 
   docs {
     User profile where bio and avatar are optional.
@@ -64,7 +64,7 @@ pub gen UserProfile {
 Pattern match to safely extract values:
 
 ```dol
-pub fun greet_user(name: Option<String>) -> String {
+pub fun greet_user(name: Option<string>) -> string {
   match name {
     Some(n) => {
       return "Hello, " + n + "!"
@@ -118,7 +118,7 @@ pub gen Result<T, E> {
 
 ```dol
 pub gen ParseError {
-  has message: String
+  has message: string
   has position: u32
   has span: Span
 
@@ -127,7 +127,7 @@ pub gen ParseError {
   }
 }
 
-pub fun parse_int(text: String) -> Result<i64, ParseError> {
+pub fun parse_int(text: string) -> Result<i64, ParseError> {
   if text.is_empty() {
     return Err(ParseError {
       message: "Empty string",
@@ -144,7 +144,7 @@ pub fun parse_int(text: String) -> Result<i64, ParseError> {
 ### Pattern Matching on Result
 
 ```dol
-pub fun process_input(text: String) -> String {
+pub fun process_input(text: string) -> string {
   val result = parse_int(text)
 
   match result {
@@ -161,8 +161,8 @@ pub fun process_input(text: String) -> String {
 ### Result Methods
 
 ```dol
-val success: Result<i64, String> = Ok(42)
-val failure: Result<i64, String> = Err("not found")
+val success: Result<i64, string> = Ok(42)
+val failure: Result<i64, string> = Err("not found")
 
 // Check status
 val is_ok = success.is_ok()    // true
@@ -183,7 +183,7 @@ val with_context = failure.map_err(|e| "Parse failed: " + e)
 The `?` operator provides clean error propagation:
 
 ```dol
-pub fun parse_config(text: String) -> Result<Config, Error> {
+pub fun parse_config(text: string) -> Result<Config, Error> {
   val name = parse_name(text)?   // Returns Err early if parse fails
   val port = parse_port(text)?   // Returns Err early if parse fails
   val host = parse_host(text)?   // Returns Err early if parse fails
@@ -195,7 +195,7 @@ pub fun parse_config(text: String) -> Result<Config, Error> {
 Without `?`, the same code would be verbose:
 
 ```dol
-pub fun parse_config_verbose(text: String) -> Result<Config, Error> {
+pub fun parse_config_verbose(text: string) -> Result<Config, Error> {
   val name = match parse_name(text) {
     Ok(n) => n,
     Err(e) => { return Err(e) }
@@ -223,13 +223,13 @@ Define rich error types using enum variants:
 pub gen ValidationError {
   type: enum {
     /// Field is missing
-    MissingField { name: String },
+    MissingField { name: string },
     /// Value out of range
-    OutOfRange { field: String, min: i64, max: i64, actual: i64 },
+    OutOfRange { field: string, min: i64, max: i64, actual: i64 },
     /// Invalid format
-    InvalidFormat { field: String, expected: String },
+    InvalidFormat { field: string, expected: string },
     /// Type mismatch
-    TypeMismatch { expected: String, actual: String }
+    TypeMismatch { expected: string, actual: string }
   }
   has span: Span
 
@@ -257,7 +257,7 @@ pub fun validate_age(value: i64) -> Result<i64, ValidationError> {
 ### Handling Different Error Variants
 
 ```dol
-pub fun handle_validation(result: Result<User, ValidationError>) -> String {
+pub fun handle_validation(result: Result<User, ValidationError>) -> string {
   match result {
     Ok(user) => {
       return "Valid user: " + user.name
@@ -288,20 +288,20 @@ pub fun handle_validation(result: Result<User, ValidationError>) -> String {
 ```dol
 // Option to Result
 val maybe: Option<i64> = Some(42)
-val result: Result<i64, String> = maybe.ok_or("No value found")
+val result: Result<i64, string> = maybe.ok_or("No value found")
 
 // Result to Option
-val res: Result<i64, String> = Ok(42)
+val res: Result<i64, string> = Ok(42)
 val opt: Option<i64> = res.ok()  // Some(42)
 
-val err: Result<i64, String> = Err("failed")
+val err: Result<i64, string> = Err("failed")
 val none: Option<i64> = err.ok()  // None
 ```
 
 ## Chaining Fallible Operations
 
 ```dol
-pub fun process_data(input: String) -> Result<Output, Error> {
+pub fun process_data(input: string) -> Result<Output, Error> {
   parse(input)
     .and_then(|parsed| validate(parsed))
     .and_then(|valid| transform(valid))
@@ -312,7 +312,7 @@ pub fun process_data(input: String) -> Result<Output, Error> {
 Or with the `?` operator:
 
 ```dol
-pub fun process_data(input: String) -> Result<Output, Error> {
+pub fun process_data(input: string) -> Result<Output, Error> {
   val parsed = parse(input)?
   val valid = validate(parsed)?
   val transformed = transform(valid)?
@@ -325,7 +325,7 @@ pub fun process_data(input: String) -> Result<Output, Error> {
 Add context to errors for better debugging:
 
 ```dol
-pub fun load_config(path: String) -> Result<Config, Error> {
+pub fun load_config(path: string) -> Result<Config, Error> {
   val content = read_file(path)
     .map_err(|e| Error {
       message: "Failed to read config file: " + e.message,
@@ -360,9 +360,9 @@ Create error handling for a user registration system:
 pub gen RegistrationError {
   type: enum {
     // Add variants for:
-    // - InvalidEmail { email: String }
-    // - WeakPassword { reason: String }
-    // - UsernameTaken { username: String }
+    // - InvalidEmail { email: string }
+    // - WeakPassword { reason: string }
+    // - UsernameTaken { username: string }
     // - AgeTooYoung { age: i64, minimum: i64 }
   }
   has span: Span
@@ -372,19 +372,19 @@ pub gen RegistrationError {
   }
 }
 
-pub fun validate_email(email: String) -> Result<String, RegistrationError> {
+pub fun validate_email(email: string) -> Result<string, RegistrationError> {
   // Check email contains @
   // Return Ok(email) or Err(InvalidEmail)
 }
 
-pub fun validate_password(password: String) -> Result<String, RegistrationError> {
+pub fun validate_password(password: string) -> Result<string, RegistrationError> {
   // Check password length >= 8
   // Return Ok(password) or Err(WeakPassword)
 }
 
 pub fun register_user(
-  email: String,
-  password: String,
+  email: string,
+  password: string,
   age: i64
 ) -> Result<User, RegistrationError> {
   // Use ? to chain validations

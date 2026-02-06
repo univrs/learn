@@ -26,7 +26,7 @@ pub fun max(a: i64, b: i64) -> i64 {
   }
 }
 
-pub fun describe_number(n: i64) -> String {
+pub fun describe_number(n: i64) -> string {
   if n < 0 {
     "negative"
   } else if n == 0 {
@@ -76,7 +76,7 @@ The `_` is a wildcard that matches anything.
 Extract values while matching:
 
 ```dol
-pub fun type_name(ty: TypeExpr) -> Option<String> {
+pub fun type_name(ty: TypeExpr) -> Option<string> {
   match ty.type {
     Named { path } {
       if path.length() > 0 {
@@ -99,7 +99,7 @@ pub fun type_name(ty: TypeExpr) -> Option<String> {
 Add conditions to match arms:
 
 ```dol
-pub fun categorize(n: i64) -> String {
+pub fun categorize(n: i64) -> string {
   match n {
     x if x < 0 => "negative",
     0 => "zero",
@@ -162,7 +162,7 @@ pub fun find_root(var n: i64) -> i64 {
 Infinite loop until explicitly broken:
 
 ```dol
-pub fun find_first_match(items: List<Item>, predicate: (Item) -> Bool) -> Option<Item> {
+pub fun find_first_match(items<Vec<Item>, predicate: (Item) -> Bool) -> Option<Item> {
   var index = 0
   loop {
     if index >= items.len() {
@@ -250,7 +250,7 @@ match state {
 The `?` operator for early returns on `Option` and `Result`:
 
 ```dol
-pub fun parse_config(text: String) -> Result<Config, Error> {
+pub fun parse_config(text: string) -> Result<Config, Error> {
   let name = parse_name(text)?  // Returns Err if parse fails
   let port = parse_port(text)?
   let host = parse_host(text)?
@@ -286,7 +286,7 @@ pub gen ContainerState {
   }
 }
 
-pub fun describe_state(state: ContainerState) -> String {
+pub fun describe_state(state: ContainerState) -> string {
   // Use match to return:
   // - "initializing" for Created, Starting
   // - "active" for Running

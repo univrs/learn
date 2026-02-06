@@ -20,8 +20,8 @@ An ordered sequence of elements:
 ```dol
 pub gen MyceliumNode {
   has id: u64
-  has tips: List<HyphalTip>
-  has connections: List<Ui64>
+  has tips<Vec<HyphalTip>
+  has connections<Vec<Ui64>
   has stored_nutrients: Nutrient
 
   docs {
@@ -35,7 +35,7 @@ pub gen MyceliumNode {
 
 ```dol
 // Empty list
-val empty: List<i64> = []
+val empty<Vec<i64> = []
 
 // List with elements
 val numbers = [1, 2, 3, 4, 5]
@@ -70,7 +70,7 @@ Key-value pairs:
 ```dol
 pub system MyceliumNetwork {
   state nodes: Map<u64, MyceliumNode>
-  state edges: List<HyphalSegment>
+  state edges<Vec<HyphalSegment>
   state next_id: u64
 
   docs {
@@ -83,7 +83,7 @@ pub system MyceliumNetwork {
 
 ```dol
 // Create a map
-var scores: Map<String, i64> = Map.new()
+var scores: Map<string, i64> = Map.new()
 
 // Insert values
 scores.insert("Alice", 100)
@@ -108,9 +108,9 @@ Represents a value that may or may not exist:
 
 ```dol
 pub gen GeneDecl {
-  has name: String
+  has name: string
   has type_def: Option<TypeExpr>
-  has exegesis: Option<String>
+  has exegesis: Option<string>
   has span: Span
 }
 ```
@@ -251,7 +251,7 @@ val result = large_list
 
 ```dol
 pub gen DolFile {
-  has declarations: List<Decl>
+  has declarations<Vec<Decl>
   has span: Span
 }
 
@@ -267,7 +267,7 @@ val all_fields = declarations
 
 ## Key Takeaways
 
-- `List<T>` is an ordered sequence with `push`, `len`, `get`
+- `Vec<T>` is an ordered sequence with `push`, `len`, `get`
 - `Map<K, V>` is key-value storage with `insert`, `get`, `contains_key`
 - `Option<T>` represents optional values (`Some(v)` or `None`)
 - Use `map`, `filter`, `reduce` for functional transformations
@@ -282,10 +282,10 @@ Create a function that processes a list of nodes:
 pub gen Node {
   has id: u64
   has value: i64
-  has active: Bool
+  has active: bool
 }
 
-pub fun process_nodes(nodes: List<Node>) -> i64 {
+pub fun process_nodes(nodes<Vec<Node>) -> i64 {
   // Return the sum of values for all active nodes
   // whose value is greater than 10
   nodes

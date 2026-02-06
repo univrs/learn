@@ -28,8 +28,8 @@ gen hello.world {
 **Typed (Full DOL)** - with type annotations:
 ```dol
 pub gen Message {
-  has content: String
-  has sender: String
+  has content: string
+  has sender: string
   has timestamp: u64
 }
 ```
@@ -81,8 +81,8 @@ DOL has built-in collection types:
 
 ```dol
 pub gen Container {
-  has tags: List<String>
-  has metadata: Map<String, String>
+  has tags<Vec<string>
+  has metadata: Map<string, string>
   has resources: Option<ResourceSpec>
 }
 
@@ -94,7 +94,7 @@ docs {
 
 | Type | Description |
 |------|-------------|
-| `List<T>` | Ordered sequence of T |
+| `Vec<T>` | Ordered sequence of T |
 | `Map<K, V>` | Key-value mapping |
 | `Option<T>` | Optional value (Some or None) |
 | `Box<T>` | Heap-allocated value (for recursive types) |
@@ -131,13 +131,13 @@ Enum variants can also carry data:
 pub gen Change {
   type: enum {
     /// Field added
-    Added { name: String, ty: TypeExpr, default_value: Option<Expr> },
+    Added { name: string, ty: TypeExpr, default_value: Option<Expr> },
     /// Field removed
-    Removed { name: String },
+    Removed { name: string },
     /// Field type changed
-    Changed { name: String, from: TypeExpr, to: TypeExpr },
+    Changed { name: string, from: TypeExpr, to: TypeExpr },
     /// Field renamed
-    Renamed { old_name: String, new_name: String }
+    Renamed { old_name: string, new_name: string }
   }
   has span: Span
 }
@@ -155,9 +155,9 @@ Define genes that work with any type using type parameters:
 ```dol
 /// Generic field within a gene
 pub gen Field<T> {
-  has name: String
+  has name: string
   has value: T
-  has is_pub: Bool = false
+  has is_pub: bool = false
   has span: Span
 }
 
@@ -174,13 +174,13 @@ Fields can have default values:
 
 ```dol
 pub gen GeneDecl {
-  has name: String
-  has is_pub: Bool = false
-  has type_params: List<TypeParam> = []
-  has fields: List<Field>
-  has methods: List<FunctionDecl>
-  has constraints: List<ConstraintDecl>
-  has exegesis: Option<String>
+  has name: string
+  has is_pub: bool = false
+  has type_params<Vec<TypeParam> = []
+  has fields<Vec<Field>
+  has methods<Vec<FunctionDecl>
+  has constraints<Vec<ConstraintDecl>
+  has exegesis: Option<string>
   has span: Span
 }
 ```
@@ -195,16 +195,16 @@ For types that reference themselves, use `Box<T>`:
 pub gen TypeExpr {
   type: enum {
     /// Simple type
-    Named { path: List<String> },
+    Named { path<Vec<string> },
 
-    /// Generic: List<T>, Map<K, V>
-    Generic { name: String, args: List<TypeExpr> },
+    /// Generic<Vec<T>, Map<K, V>
+    Generic { name: string, args<Vec<TypeExpr> },
 
     /// Function: (A, B) -> C
-    Function { params: List<TypeExpr>, ret: Box<TypeExpr> },
+    Function { params<Vec<TypeExpr>, ret: Box<TypeExpr> },
 
     /// Tuple: (A, B, C)
-    Tuple { elements: List<TypeExpr> },
+    Tuple { elements<Vec<TypeExpr> },
 
     /// Optional: T?
     Optional { inner: Box<TypeExpr> }
@@ -244,10 +244,10 @@ DOL supports references and pointers:
 pub gen TypeExpr {
   type: enum {
     /// Reference: &T, &mut T
-    Reference { inner: Box<TypeExpr>, is_mut: Bool },
+    Reference { inner: Box<TypeExpr>, is_mut: bool },
 
     /// Pointer: *T, *mut T
-    Pointer { inner: Box<TypeExpr>, is_mut: Bool }
+    Pointer { inner: Box<TypeExpr>, is_mut: bool }
   }
 }
 ```
@@ -272,7 +272,7 @@ pub gen NetworkNode {
 
 - DOL has two styles: simple (untyped) and full (typed)
 - Primitive types: integers, floats, strings, booleans
-- Collection types: `List<T>`, `Map<K,V>`, `Option<T>`
+- Collection types: `Vec<T>`, `Map<K,V>`, `Option<T>`
 - Define enums with `type: enum { ... }`
 - Use generics with type parameters: `gen Name<T> { ... }`
 - Default values: `has field: Type = default`
@@ -282,10 +282,10 @@ pub gen NetworkNode {
 
 Create a typed gen for a "blog post" with:
 - `id: u64`
-- `title: String`
-- `body: String`
+- `title: string`
+- `body: string`
 - `status: enum { Draft, Published, Archived }`
-- `tags: List<String>`
+- `tags<Vec<string>`
 - `published_at: Option<Ui64>`
 
 ```dol
