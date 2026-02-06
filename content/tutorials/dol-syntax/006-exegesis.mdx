@@ -1,32 +1,32 @@
 ---
-title: "Exegesis Documentation"
-description: "Write self-documenting specifications with structured comments and semantic documentation"
+title: "Documentation Blocks"
+description: "Write self-documenting specifications with docs blocks and structured comments"
 track: "dol-syntax"
 tutorial: 6
 duration: "15 min"
 objectives:
   - "Understand DOL's documentation philosophy"
-  - "Write exegesis comments for types and fields"
-  - "Document traits, constraints, and systems"
+  - "Write docs comments for types and fields"
+  - "Document traits, rules, and systems"
   - "Generate documentation from specs"
 tags:
-  - "exegesis"
+  - "docs"
   - "documentation"
   - "comments"
   - "self-documenting"
 ---
 
-# Exegesis Documentation
+# Documentation Blocks
 
-DOL treats documentation as a **first-class concern**. The term "exegesis" (critical explanation or interpretation) reflects DOL's philosophy: specifications should explain themselves. Well-documented specs serve as both technical reference and domain knowledge base.
+DOL treats documentation as a **first-class concern**. The `docs` keyword and documentation comments reflect DOL's philosophy: specifications should explain themselves. Well-documented specs serve as both technical reference and domain knowledge base.
 
 ## Learning Objectives
 
 By the end of this lesson, you will be able to:
 
 - Apply DOL's documentation philosophy
-- Write exegesis comments for types and fields
-- Document traits, constraints, and systems
+- Write documentation comments for types and fields
+- Document traits, rules, and systems
 - Structure documentation for automatic generation
 
 ## Documentation Philosophy
@@ -46,57 +46,78 @@ A well-written DOL spec should be understandable to domain experts, not just pro
 DOL supports multiple comment styles:
 
 ```dol
--- Single line comment (preferred for brief notes)
+// Single line comment (preferred for brief notes)
 
-{-
+/*
   Multi-line comment block
   for longer explanations
--}
+*/
 
---- Exegesis comment (triple dash)
---- Used for structured documentation
---- Processed by documentation generators
+/// Doc comment (triple slash)
+/// Used for structured documentation
+/// Processed by documentation generators
+```
+
+## The docs Block
+
+The `docs` keyword creates semantic documentation blocks:
+
+```dol
+mod ecommerce @ 0.8.0
+
+docs {
+    E-commerce domain model for order processing.
+    
+    This module defines the core types for customers,
+    orders, and fulfillment workflows.
+}
+
+gen Order {
+    has id: u64
+    has customer_id: u64
+    has items: Vec<OrderItem>
+}
 ```
 
 ## Documenting Types
 
-Add exegesis comments before type definitions:
+Add doc comments before type definitions:
 
 ```dol
-mod ecommerce @ 0.3.0
+mod ecommerce @ 0.8.0
 
---- Represents a customer order in the e-commerce system.
----
---- Orders are created when a customer completes checkout and
---- progress through various statuses from Pending to Delivered.
----
---- @since 1.0.0
---- @see OrderItem, OrderStatus
-pub type Order {
-    --- Unique identifier for this order
-    id: u64
+/// Represents a customer order in the e-commerce system.
+///
+/// Orders are created when a customer completes checkout and
+/// progress through various statuses from Pending to Delivered.
+///
+/// @since 1.0.0
+/// @see OrderItem, OrderStatus
+gen Order {
+    /// Unique identifier for this order
+    has id: u64
 
-    --- Reference to the customer who placed the order
-    --- @see Customer
-    customer_id: u64
+    /// Reference to the customer who placed the order
+    /// @see Customer
+    has customer_id: u64
 
-    --- List of items in this order
-    --- @invariant Must contain at least one item
-    items: List<OrderItem>
+    /// List of items in this order
+    /// @invariant Must contain at least one item
+    has items: Vec<OrderItem>
 
-    --- Total amount in cents (to avoid floating point issues)
-    --- @invariant Must equal sum of item subtotals plus shipping minus discounts
-    total_cents: u64
+    /// Total amount in cents (to avoid floating point issues)
+    /// @invariant Must equal sum of item subtotals plus shipping minus discounts
+    has total_cents: u64
 
-    --- Current status of the order
-    status: OrderStatus
+    /// Current status of the order
+    has status: OrderStatus
 
-    --- When the order was created
-    created_at: Timestamp
+    /// When the order was created
+    has created_at: Timestamp
 
-    --- Shipping address for physical goods
-    --- Required for orders containing physical products
-    shipping_address: Option<Address>
+    /// Shipping address for physical goods
+    /// Required for orders containing physical products
+    has shipping_address: Option<Address>
 }
 ```
 
@@ -119,47 +140,47 @@ Use semantic tags for structured information:
 Document each variant with its meaning:
 
 ```dol
---- Represents the lifecycle status of an order.
----
---- Orders progress through these statuses as they are
---- processed, shipped, and delivered.
----
---- @since 1.0.0
-pub type OrderStatus {
+/// Represents the lifecycle status of an order.
+///
+/// Orders progress through these statuses as they are
+/// processed, shipped, and delivered.
+///
+/// @since 1.0.0
+gen OrderStatus {
     kind: enum {
-        --- Order created but payment not confirmed
-        --- This is the initial state for all new orders
+        /// Order created but payment not confirmed
+        /// This is the initial state for all new orders
         Pending,
 
-        --- Payment confirmed, awaiting fulfillment
-        --- Inventory has been reserved at this point
+        /// Payment confirmed, awaiting fulfillment
+        /// Inventory has been reserved at this point
         Confirmed,
 
-        --- Order is being prepared for shipping
-        --- Cannot be cancelled once in this state
+        /// Order is being prepared for shipping
+        /// Cannot be cancelled once in this state
         Processing,
 
-        --- Order has been handed to carrier
-        --- @param tracking_number Carrier tracking reference
-        Shipped { tracking_number: String },
+        /// Order has been handed to carrier
+        /// @param tracking_number Carrier tracking reference
+        Shipped { tracking_number: string },
 
-        --- Order successfully delivered to customer
-        --- @param delivered_at When delivery was confirmed
+        /// Order successfully delivered to customer
+        /// @param delivered_at When delivery was confirmed
         Delivered { delivered_at: Timestamp },
 
-        --- Order was cancelled before shipping
-        --- @param reason Why the order was cancelled
-        --- @param cancelled_by Who initiated cancellation
+        /// Order was cancelled before shipping
+        /// @param reason Why the order was cancelled
+        /// @param cancelled_by Who initiated cancellation
         Cancelled {
-            reason: String,
-            cancelled_by: String
+            reason: string,
+            cancelled_by: string
         },
 
-        --- Order returned after delivery
-        --- @param return_reason Customer's stated reason
-        --- @param refund_amount Amount refunded in cents
+        /// Order returned after delivery
+        /// @param return_reason Customer's stated reason
+        /// @param refund_amount Amount refunded in cents
         Returned {
-            return_reason: String,
+            return_reason: string,
             refund_amount: u64
         }
     }
@@ -171,76 +192,76 @@ pub type OrderStatus {
 Explain the contract and its purpose:
 
 ```dol
---- Defines the lifecycle operations for manageable entities.
----
---- Types implementing this trait can be started, stopped, and
---- restarted. This is commonly used for services, containers,
---- and long-running processes.
----
---- @since 1.0.0
---- @see HealthCheckable, Monitorable
+/// Defines the lifecycle operations for manageable entities.
+///
+/// Types implementing this trait can be started, stopped, and
+/// restarted. This is commonly used for services, containers,
+/// and long-running processes.
+///
+/// @since 1.0.0
+/// @see HealthCheckable, Monitorable
 trait Lifecycle {
-    --- Start the entity.
-    ---
-    --- Transitions from Stopped/Created to Running state.
-    --- No-op if already running.
-    ---
-    --- @returns Ok if started successfully
-    --- @returns Err if start failed (e.g., resource unavailable)
-    start: fun() -> Result<Void, Error>
+    /// Start the entity.
+    ///
+    /// Transitions from Stopped/Created to Running state.
+    /// No-op if already running.
+    ///
+    /// @returns Ok if started successfully
+    /// @returns Err if start failed (e.g., resource unavailable)
+    start: fun() -> Result<(), Error>
 
-    --- Stop the entity gracefully.
-    ---
-    --- Attempts graceful shutdown before forceful termination.
-    --- Timeout is implementation-defined.
-    ---
-    --- @returns Ok if stopped successfully
-    --- @returns Err if stop failed
-    stop: fun() -> Result<Void, Error>
+    /// Stop the entity gracefully.
+    ///
+    /// Attempts graceful shutdown before forceful termination.
+    /// Timeout is implementation-defined.
+    ///
+    /// @returns Ok if stopped successfully
+    /// @returns Err if stop failed
+    stop: fun() -> Result<(), Error>
 
-    --- Restart the entity.
-    ---
-    --- Equivalent to stop() followed by start(), but may be
-    --- optimized for faster restart in implementations.
-    ---
-    --- @returns Ok if restarted successfully
-    --- @returns Err if restart failed
-    restart: fun() -> Result<Void, Error> = {
+    /// Restart the entity.
+    ///
+    /// Equivalent to stop() followed by start(), but may be
+    /// optimized for faster restart in implementations.
+    ///
+    /// @returns Ok if restarted successfully
+    /// @returns Err if restart failed
+    restart: fun() -> Result<(), Error> = {
         self.stop()?
         self.start()
     }
 }
 ```
 
-## Documenting Constraints
+## Documenting Rules
 
 Explain the business rule and its rationale:
 
 ```dol
---- Ensures all orders are valid and internally consistent.
----
---- This constraint encodes core business rules for the order
---- domain. Violations indicate data corruption or bugs in
---- order creation/modification logic.
----
---- @since 1.0.0
---- @see ValidOrderItem, PricingRules
-constraint ValidOrder {
+/// Ensures all orders are valid and internally consistent.
+///
+/// This rule encodes core business requirements for the order
+/// domain. Violations indicate data corruption or bugs in
+/// order creation/modification logic.
+///
+/// @since 1.0.0
+/// @see ValidOrderItem, PricingRules
+rule ValidOrder {
     forall order in orders {
-        --- Every order must have at least one item.
-        --- Empty orders should be deleted, not persisted.
+        /// Every order must have at least one item.
+        /// Empty orders should be deleted, not persisted.
         order.items.length > 0
 
-        --- Order total must match calculated total.
-        --- Prevents tampering and calculation errors.
+        /// Order total must match calculated total.
+        /// Prevents tampering and calculation errors.
         order.total_cents == calculate_total(order.items)
 
-        --- Shipped orders must have shipping address.
-        --- Physical fulfillment requires destination.
+        /// Shipped orders must have shipping address.
+        /// Physical fulfillment requires destination.
         order.status.is_shipped() implies order.shipping_address.is_some()
 
-        --- Order date cannot be in the future.
-        --- Timestamps are server-generated, future dates indicate bugs.
+        /// Order date cannot be in the future.
+        /// Timestamps are server-generated, future dates indicate bugs.
         order.created_at <= Timestamp.now()
     }
 }
@@ -251,45 +272,45 @@ constraint ValidOrder {
 Explain the architecture and component roles:
 
 ```dol
---- E-commerce platform architecture.
----
---- This system defines the core services and infrastructure
---- for a scalable e-commerce application. Services communicate
---- via gRPC for internal calls and expose REST APIs for clients.
----
---- ## Architecture Decisions
----
---- - **API Gateway**: Single entry point for all client traffic
---- - **Service Mesh**: Istio for inter-service communication
---- - **Event Sourcing**: Kafka for order and inventory events
----
---- @since 2.0.0
---- @see DeploymentConfig, ScalingPolicy
+/// E-commerce platform architecture.
+///
+/// This system defines the core services and infrastructure
+/// for a scalable e-commerce application. Services communicate
+/// via gRPC for internal calls and expose REST APIs for clients.
+///
+/// ## Architecture Decisions
+///
+/// - **API Gateway**: Single entry point for all client traffic
+/// - **Service Mesh**: Istio for inter-service communication
+/// - **Event Sourcing**: Kafka for order and inventory events
+///
+/// @since 2.0.0
+/// @see DeploymentConfig, ScalingPolicy
 system EcommercePlatform {
     components {
-        --- Kong API Gateway handling routing and rate limiting
+        /// Kong API Gateway handling routing and rate limiting
         api_gateway: ApiGateway
 
-        --- Core ordering service - processes all order operations
-        --- Owns: Order, OrderItem tables
+        /// Core ordering service - processes all order operations
+        /// Owns: Order, OrderItem tables
         order_service: OrderService
 
-        --- Inventory management and stock tracking
-        --- Owns: Product, Inventory, Warehouse tables
+        /// Inventory management and stock tracking
+        /// Owns: Product, Inventory, Warehouse tables
         inventory_service: InventoryService
 
-        --- Payment processing integration
-        --- Integrates: Stripe, PayPal, Apple Pay
+        /// Payment processing integration
+        /// Integrates: Stripe, PayPal, Apple Pay
         payment_service: PaymentService
     }
 
     connections {
-        --- Client traffic through gateway
+        /// Client traffic through gateway
         api_gateway -> order_service: gRPC
         api_gateway -> inventory_service: gRPC
 
-        --- Order processing pipeline
-        --- Orders reserve inventory before payment
+        /// Order processing pipeline
+        /// Orders reserve inventory before payment
         order_service -> inventory_service: gRPC
         order_service -> payment_service: gRPC
     }
@@ -301,64 +322,64 @@ system EcommercePlatform {
 Document the entire module:
 
 ```dol
---- E-Commerce Domain Model
----
---- This module defines the core domain types for the e-commerce
---- platform, including customers, orders, products, and inventory.
----
---- ## Overview
----
---- The domain is organized around three aggregates:
---- - **Customer**: User accounts and profiles
---- - **Order**: Purchase transactions and fulfillment
---- - **Product**: Catalog items and inventory
----
---- ## Version History
----
---- - 1.0.0: Initial domain model
---- - 1.1.0: Added customer preferences
---- - 2.0.0: Redesigned order status enum
----
---- @author E-Commerce Team
---- @since 1.0.0
+/// E-Commerce Domain Model
+///
+/// This module defines the core domain types for the e-commerce
+/// platform, including customers, orders, products, and inventory.
+///
+/// ## Overview
+///
+/// The domain is organized around three aggregates:
+/// - **Customer**: User accounts and profiles
+/// - **Order**: Purchase transactions and fulfillment
+/// - **Product**: Catalog items and inventory
+///
+/// ## Version History
+///
+/// - 1.0.0: Initial domain model
+/// - 1.1.0: Added customer preferences
+/// - 2.0.0: Redesigned order status enum
+///
+/// @author E-Commerce Team
+/// @since 1.0.0
 mod ecommerce.domain @ 2.0.0
 ```
 
 ## Documentation Sections
 
-Use markdown-style sections in exegesis:
+Use markdown-style sections in doc comments:
 
 ```dol
---- User account in the system.
----
---- ## Overview
----
---- Represents a registered user with authentication credentials
---- and profile information.
----
---- ## Security Notes
----
---- - Passwords are stored as bcrypt hashes
---- - Email requires verification before account is active
---- - Failed login attempts are tracked for rate limiting
----
---- ## Example
----
---- ```dol
---- val user = User {
----     id: 12345,
----     email: "user@example.com",
----     name: "Alice Smith",
----     created_at: Timestamp.now()
---- }
---- ```
----
---- @since 1.0.0
-pub type User {
-    id: u64
-    email: String
-    name: String
-    created_at: Timestamp
+/// User account in the system.
+///
+/// ## Overview
+///
+/// Represents a registered user with authentication credentials
+/// and profile information.
+///
+/// ## Security Notes
+///
+/// - Passwords are stored as bcrypt hashes
+/// - Email requires verification before account is active
+/// - Failed login attempts are tracked for rate limiting
+///
+/// ## Example
+///
+/// ```dol
+/// val user = User {
+///     id: 12345,
+///     email: "user@example.com",
+///     name: "Alice Smith",
+///     created_at: Timestamp.now()
+/// }
+/// ```
+///
+/// @since 1.0.0
+gen User {
+    has id: u64
+    has email: string
+    has name: string
+    has created_at: Timestamp
 }
 ```
 
@@ -380,7 +401,7 @@ vudo doc --serve
 Generated documentation includes:
 - Type definitions with field descriptions
 - Trait contracts with method signatures
-- Constraint rules with explanations
+- Rule definitions with explanations
 - System diagrams with connection maps
 - Cross-references and navigation
 
@@ -405,73 +426,73 @@ Generated documentation includes:
 
 ## Practice Exercise
 
-Document this type with comprehensive exegesis:
+Document this type with comprehensive doc comments:
 
 ```dol
-pub type Subscription {
-    id: u64
-    user_id: u64
-    plan: SubscriptionPlan
-    status: SubscriptionStatus
-    started_at: Timestamp
-    expires_at: Option<Timestamp>
-    auto_renew: Bool
+gen Subscription {
+    has id: u64
+    has user_id: u64
+    has plan: SubscriptionPlan
+    has status: SubscriptionStatus
+    has started_at: Timestamp
+    has expires_at: Option<Timestamp>
+    has auto_renew: bool
 }
 ```
 
 <Collapsible title="Solution">
 ```dol
---- Represents a user's subscription to a service plan.
----
---- Subscriptions track the billing relationship between a user
---- and their chosen service tier. They manage plan access,
---- renewal, and expiration.
----
---- ## Lifecycle
----
---- 1. Created with status `Active` when user subscribes
---- 2. Renewed automatically if `auto_renew` is true
---- 3. Transitions to `Expired` when `expires_at` passes
---- 4. Can be `Cancelled` by user or `Suspended` for payment issues
----
---- ## Billing Integration
----
---- Subscriptions integrate with the payment system for:
---- - Initial charge on creation
---- - Recurring charges on renewal
---- - Refunds on early cancellation (prorated)
----
---- @since 1.0.0
---- @see SubscriptionPlan, User, PaymentMethod
-pub type Subscription {
-    --- Unique identifier for this subscription
-    id: u64
+/// Represents a user's subscription to a service plan.
+///
+/// Subscriptions track the billing relationship between a user
+/// and their chosen service tier. They manage plan access,
+/// renewal, and expiration.
+///
+/// ## Lifecycle
+///
+/// 1. Created with status `Active` when user subscribes
+/// 2. Renewed automatically if `auto_renew` is true
+/// 3. Transitions to `Expired` when `expires_at` passes
+/// 4. Can be `Cancelled` by user or `Suspended` for payment issues
+///
+/// ## Billing Integration
+///
+/// Subscriptions integrate with the payment system for:
+/// - Initial charge on creation
+/// - Recurring charges on renewal
+/// - Refunds on early cancellation (prorated)
+///
+/// @since 1.0.0
+/// @see SubscriptionPlan, User, PaymentMethod
+gen Subscription {
+    /// Unique identifier for this subscription
+    has id: u64
 
-    --- The user who owns this subscription
-    --- @see User
-    user_id: u64
+    /// The user who owns this subscription
+    /// @see User
+    has user_id: u64
 
-    --- The service plan this subscription provides access to
-    --- @see SubscriptionPlan
-    plan: SubscriptionPlan
+    /// The service plan this subscription provides access to
+    /// @see SubscriptionPlan
+    has plan: SubscriptionPlan
 
-    --- Current status of the subscription
-    --- @see SubscriptionStatus
-    status: SubscriptionStatus
+    /// Current status of the subscription
+    /// @see SubscriptionStatus
+    has status: SubscriptionStatus
 
-    --- When the subscription began
-    --- Used for calculating prorated refunds
-    started_at: Timestamp
+    /// When the subscription began
+    /// Used for calculating prorated refunds
+    has started_at: Timestamp
 
-    --- When the subscription expires
-    --- None for lifetime subscriptions
-    --- @invariant Must be after started_at if present
-    expires_at: Option<Timestamp>
+    /// When the subscription expires
+    /// None for lifetime subscriptions
+    /// @invariant Must be after started_at if present
+    has expires_at: Option<Timestamp>
 
-    --- Whether to automatically renew before expiration
-    --- If true, charges payment method before expires_at
-    --- If false, subscription expires and downgrades to free tier
-    auto_renew: Bool
+    /// Whether to automatically renew before expiration
+    /// If true, charges payment method before expires_at
+    /// If false, subscription expires and downgrades to free tier
+    has auto_renew: bool
 }
 ```
 </Collapsible>
@@ -481,42 +502,49 @@ pub type Subscription {
 In this lesson, you learned:
 
 - **DOL's documentation philosophy** - specs as living documentation
-- **Comment syntax** - single line, multi-line, and exegesis
+- **Comment syntax** - single line, multi-line, and doc comments
 - **Semantic tags** - @since, @see, @invariant, @deprecated
-- **Documenting all constructs** - types, traits, constraints, systems
+- **Documenting all constructs** - types, traits, rules, systems
 - **Best practices** - document intent, not implementation
 
 ## Next Steps
 
-Continue learning with the v0.3.0 syntax features:
+Continue learning with the syntax evolution history:
 
 <NextTutorial
-  title="v0.3.0 New Syntax"
+  title="v0.3.0 Syntax History"
   href="/tutorials/dol-syntax/007-v030-syntax"
-  description="Learn the type keyword, extends clause, val/var bindings, and HIR architecture"
+  description="Understand the HIR architecture and legacy syntax migration"
+/>
+
+Or jump to the latest:
+
+<NextTutorial
+  title="v0.8.0 Clarity Release"
+  href="/tutorials/dol-syntax/008-v080-syntax"
+  description="Learn the new gen, rule, evo, docs keywords and Rust-aligned types"
 />
 
 ## Track Complete!
 
 Congratulations on completing the DOL Syntax track! You now have a solid foundation in:
 
-1. **Genes/Types** - Defining structured data with `pub type`
+1. **Genomes** - Defining structured data with `gen`
 2. **Traits** - Creating behavior contracts with generics and defaults
 3. **Systems** - Modeling architectures with components and connections
-4. **Constraints** - Enforcing invariants with `forall` and rules
-5. **Evolution** - Managing version changes with `evolves`
-6. **Exegesis** - Writing self-documenting specifications
-7. **v0.3.0 Syntax** - Using `type`, `extends`, `val`/`var`, and understanding HIR
+4. **Rules** - Enforcing invariants with `forall` and constraints
+5. **Evolution** - Managing version changes with `evo`
+6. **Documentation** - Writing self-documenting specifications with `docs`
 
 ## What's Next?
 
 <TutorialGrid>
   <TutorialCard
     number="Next"
-    title="CLI Mastery"
+    title="Local-First Architecture"
     duration="2 hours"
-    description="Master the VUDO command-line tools for DOL development"
-    href="/tutorials/cli"
+    description="Build offline-capable apps with CRDTs and P2P sync"
+    href="/tutorials/local-first"
   />
   <TutorialCard
     number="Next"

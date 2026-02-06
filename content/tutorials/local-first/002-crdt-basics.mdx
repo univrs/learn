@@ -1,0 +1,388 @@
+---
+title: "CRDT Fundamentals"
+description: "Understand Conflict-free Replicated Data Types and how they enable automatic merge without coordination"
+track: "local-first"
+tutorial: 2
+duration: "30 min"
+objectives:
+  - "Understand what CRDTs are and why they matter"
+  - "Learn the different types of CRDTs"
+  - "Understand eventual consistency guarantees"
+  - "Apply CRDT concepts to real problems"
+tags:
+  - "crdt"
+  - "conflict-free"
+  - "merge"
+  - "distributed"
+---
+
+# CRDT Fundamentals
+
+CRDTs (Conflict-free Replicated Data Types) are data structures that can be **modified independently on different devices and merged automatically** without conflicts. They're the foundation of local-first software.
+
+## Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+- Define CRDTs and their key properties
+- Distinguish between state-based and operation-based CRDTs
+- Work with common CRDT types (counters, sets, registers)
+- Understand eventual consistency semantics
+
+## The Merge Problem
+
+When two people edit the same data offline, what happens when they reconnect?
+
+```
+Initial state: counter = 10
+
+Device A (offline):    Device B (offline):
+  counter += 5           counter += 3
+  counter = 15           counter = 13
+
+When they sync... what is the correct value?
+```
+
+### Naive approaches fail:
+
+| Approach | Result | Problem |
+|----------|--------|---------|
+| Last-write-wins | 13 or 15 | Lost increment |
+| First-write-wins | 15 or 13 | Lost increment |
+| Error | Conflict! | Bad UX |
+
+### CRDT approach:
+
+```
+G-Counter CRDT:
+  A: {A: 5}           B: {B: 3}
+  
+Merge:
+  {A: 5, B: 3} → sum = 18
+
+Final value: 10 + 5 + 3 = 18 ✓
+```
+
+No data lost. No conflicts. Mathematically guaranteed.
+
+## What Makes a CRDT?
+
+A CRDT has three properties:
+
+### 1. Associativity
+Order of merging doesn't matter:
+```
+(A merge B) merge C = A merge (B merge C)
+```
+
+### 2. Commutativity
+Direction of merge doesn't matter:
+```
+A merge B = B merge A
+```
+
+### 3. Idempotency
+Merging the same thing twice has no effect:
+```
+A merge A = A
+```
+
+These properties form a **semilattice** — a mathematical structure that guarantees conflict-free merging.
+
+## Types of CRDTs
+
+### State-based (CvRDTs)
+
+Send the entire state, merge states together:
+
+```rust
+// G-Counter (Grow-only Counter)
+struct GCounter {
+    counts: HashMap<NodeId, u64>
+}
+
+impl GCounter {
+    fn increment(&mut self, node: NodeId) {
+        *self.counts.entry(node).or_insert(0) += 1;
+    }
+    
+    fn value(&self) -> u64 {
+        self.counts.values().sum()
+    }
+    
+    fn merge(&mut self, other: &GCounter) {
+        for (node, count) in &other.counts {
+            let entry = self.counts.entry(*node).or_insert(0);
+            *entry = (*entry).max(*count);
+        }
+    }
+}
+```
+
+### Operation-based (CmRDTs)
+
+Send operations, apply in any order:
+
+```rust
+// Operation-based Counter
+enum CounterOp {
+    Increment { node: NodeId, timestamp: u64 },
+    Decrement { node: NodeId, timestamp: u64 },
+}
+
+fn apply(state: &mut i64, op: CounterOp) {
+    match op {
+        CounterOp::Increment { .. } => *state += 1,
+        CounterOp::Decrement { .. } => *state -= 1,
+    }
+}
+```
+
+<Tip type="info">
+State-based CRDTs are simpler but send more data. Operation-based CRDTs are more efficient but require reliable delivery. Automerge uses a hybrid approach.
+</Tip>
+
+## Common CRDT Types
+
+### G-Counter (Grow-only Counter)
+
+Can only increment:
+
+```
+Node A: {A: 5}
+Node B: {B: 3}
+Merge:  {A: 5, B: 3} → value = 8
+```
+
+### PN-Counter (Positive-Negative Counter)
+
+Two G-Counters: one for increments, one for decrements:
+
+```
+Increments: {A: 5, B: 3}  → 8
+Decrements: {A: 1, B: 0}  → 1
+Value: 8 - 1 = 7
+```
+
+### LWW-Register (Last-Writer-Wins Register)
+
+Simple value with timestamp. Latest timestamp wins:
+
+```
+A: {value: "Hello", ts: 100}
+B: {value: "World", ts: 150}
+Merge: "World" (ts 150 > ts 100)
+```
+
+### MV-Register (Multi-Value Register)
+
+Keeps concurrent values until resolved:
+
+```
+A: {value: "Hello", ts: 100}  // concurrent with B
+B: {value: "World", ts: 100}  // same timestamp
+Merge: ["Hello", "World"]     // both kept!
+```
+
+Application decides how to resolve (show both, pick one, etc.)
+
+### G-Set (Grow-only Set)
+
+Can only add elements:
+
+```
+A: {1, 2, 3}
+B: {2, 3, 4}
+Merge: {1, 2, 3, 4}  // union
+```
+
+### 2P-Set (Two-Phase Set)
+
+Add-set and remove-set. Remove wins if in both:
+
+```
+Adds:    {1, 2, 3, 4}
+Removes: {3}
+Value:   {1, 2, 4}
+```
+
+<Tip type="warning">
+Once removed from a 2P-Set, an element cannot be re-added. For re-addable elements, use an OR-Set.
+</Tip>
+
+### OR-Set (Observed-Remove Set)
+
+Each add gets a unique tag. Remove only removes observed tags:
+
+```
+A adds "apple" with tag t1
+B adds "apple" with tag t2
+A removes "apple" (removes t1)
+
+Result: "apple" with tag t2 remains!
+```
+
+### LWW-Element-Set
+
+Set where each element has a timestamp. Latest operation wins:
+
+```
+A adds "x" at ts=100
+B removes "x" at ts=150
+Merge: "x" is removed (150 > 100)
+
+A adds "x" at ts=200
+Merge: "x" is back (200 > 150)
+```
+
+## Text CRDTs
+
+Text editing requires position-aware CRDTs:
+
+### RGA (Replicated Growable Array)
+
+Each character has a unique ID. Insertions reference the ID they follow:
+
+```
+Initial: "AC"  → [A@1, C@2]
+
+User 1 inserts "B" after A: [A@1, B@3, C@2]
+User 2 inserts "X" after A: [A@1, X@4, C@2]
+
+Merge: [A@1, B@3, X@4, C@2] or [A@1, X@4, B@3, C@2]
+       (deterministic ordering based on IDs)
+```
+
+### YATA (Yet Another Transformation Approach)
+
+Used by Yjs. Similar to RGA with optimizations.
+
+### Automerge Text
+
+Automerge's text type is a sequence CRDT optimized for collaborative editing.
+
+## Eventual Consistency
+
+CRDTs provide **strong eventual consistency**:
+
+1. **Eventual delivery** — All updates eventually reach all replicas
+2. **Convergence** — Replicas that have received the same updates have identical state
+3. **Termination** — All operations eventually terminate
+
+```
+Time →
+Node A: [v0] → [v1] → [v2] ------→ [v4]
+                ↘              ↗
+Node B: [v0] ----→ [v1'] → [v3] → [v4]
+
+Both converge to v4, regardless of order
+```
+
+## Designing with CRDTs
+
+### Think in Terms of Operations
+
+Instead of "set value to X", think:
+
+- "Increment counter"
+- "Add element to set"  
+- "Insert character at position"
+
+### Use Appropriate Types
+
+| Need | CRDT |
+|------|------|
+| Counter that only goes up | G-Counter |
+| Counter that goes up/down | PN-Counter |
+| Single value, last writer wins | LWW-Register |
+| Single value, keep conflicts | MV-Register |
+| Collection, add-only | G-Set |
+| Collection, add/remove | OR-Set |
+| Ordered text | Automerge Text |
+
+### Handle Semantic Conflicts
+
+CRDTs prevent *syntactic* conflicts, but *semantic* conflicts can still occur:
+
+```
+// Both users book the same time slot
+User A: books meeting at 2pm
+User B: books meeting at 2pm
+
+CRDT merges both → calendar shows double-booking!
+```
+
+Solution: Application-level conflict detection and resolution.
+
+## Practice Exercise
+
+Design a collaborative shopping list using CRDTs:
+
+Requirements:
+- Users can add items
+- Users can remove items
+- Users can mark items as "purchased"
+- Removed items can be re-added
+
+<Collapsible title="Solution">
+```rust
+// Use an OR-Set for items (supports re-adding)
+// Each item has a "purchased" LWW-Register
+
+struct ShoppingItem {
+    name: String,
+    purchased: LwwRegister<bool>,
+}
+
+struct ShoppingList {
+    items: OrSet<ShoppingItem>,
+}
+
+impl ShoppingList {
+    fn add_item(&mut self, name: String) {
+        self.items.add(ShoppingItem {
+            name,
+            purchased: LwwRegister::new(false),
+        });
+    }
+    
+    fn remove_item(&mut self, name: &str) {
+        self.items.remove(|item| item.name == name);
+    }
+    
+    fn mark_purchased(&mut self, name: &str) {
+        if let Some(item) = self.items.get_mut(name) {
+            item.purchased.set(true);
+        }
+    }
+    
+    fn merge(&mut self, other: &ShoppingList) {
+        self.items.merge(&other.items);
+        // LWW-Registers inside items merge automatically
+    }
+}
+```
+
+Key decisions:
+- **OR-Set** for items → allows re-adding
+- **LWW-Register** for purchased → last toggle wins
+- Could use MV-Register if we want to show conflicts
+</Collapsible>
+
+## Summary
+
+In this lesson, you learned:
+
+- **CRDTs defined** — Conflict-free data structures with merge operations
+- **Semilattice properties** — Associative, commutative, idempotent
+- **CRDT types** — Counters, registers, sets, sequences
+- **Eventual consistency** — All replicas converge to same state
+- **Design principles** — Think in operations, choose appropriate types
+
+## Next Steps
+
+<NextTutorial
+  title="Automerge Documents"
+  href="/tutorials/local-first/003-automerge"
+  description="Work with Automerge for JSON-like document synchronization"
+/>

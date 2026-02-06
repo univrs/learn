@@ -1,0 +1,249 @@
+---
+title: "Local-First Principles"
+description: "Understand the philosophy, benefits, and trade-offs of local-first software architecture"
+track: "local-first"
+tutorial: 1
+duration: "20 min"
+objectives:
+  - "Understand what local-first software means"
+  - "Learn the seven ideals of local-first design"
+  - "Compare local-first with traditional architectures"
+  - "Identify when to use local-first approaches"
+tags:
+  - "local-first"
+  - "architecture"
+  - "principles"
+  - "offline"
+---
+
+# Local-First Principles
+
+Local-first software puts **user ownership and offline capability** at the center of its design. This lesson introduces the philosophy and helps you understand when and why to build local-first applications.
+
+## Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+- Define local-first software and its key characteristics
+- Apply the seven ideals of local-first design
+- Compare architectures and choose the right approach
+- Identify trade-offs and challenges
+
+## What is Local-First?
+
+**Local-first** is a software architecture where:
+
+1. Data lives primarily on the user's device
+2. The app works fully offline
+3. Sync happens in the background, when available
+4. No server is required for core functionality
+
+<Tip type="info">
+The term was coined by Ink & Switch in their 2019 paper ["Local-first software: You own your data, in spite of the cloud"](https://www.inkandswitch.com/local-first/).
+</Tip>
+
+## The Problem with Cloud-First
+
+Traditional cloud-first apps have issues:
+
+### 1. No Offline Support
+```
+User: *opens app on airplane*
+App: "No internet connection. Please try again."
+User: *frustrated*
+```
+
+### 2. Latency
+Every action requires a server round-trip (100-500ms minimum).
+
+### 3. Data Hostage
+Your data lives on someone else's servers. If the service shuts down, your data may be lost.
+
+### 4. Privacy Concerns
+Your documents, notes, and personal data are readable by the service provider.
+
+### 5. Single Point of Failure
+Server down = app down for everyone.
+
+## The Seven Ideals
+
+Ink & Switch defined seven ideals for local-first software:
+
+### 1. No Spinners: Fast Response
+
+```
+Cloud-first:                Local-first:
+┌───────────────────────┐   ┌───────────────────────┐
+│ Saving...             │   │ Saved ✓               │
+│ ████████░░░░  80%     │   │ (Syncing in bg...)    │
+│                       │   │                       │
+│ Please wait...        │   │ Keep working!         │
+└───────────────────────┘   └───────────────────────┘
+```
+
+Local-first apps respond instantly because they write to local storage first.
+
+### 2. Your Work is Not Trapped
+
+Export your data anytime. No vendor lock-in.
+
+### 3. The Network is Optional
+
+Full functionality offline. Sync is a background enhancement.
+
+### 4. Seamless Collaboration
+
+Real-time collaboration without central servers via CRDTs.
+
+### 5. The Long Now
+
+Data persists for decades, not dependent on a company's survival.
+
+### 6. Security and Privacy by Default
+
+End-to-end encryption. Your keys, your data.
+
+### 7. User Control
+
+You decide what to sync, where to sync, and who can access.
+
+## Architecture Comparison
+
+| Aspect | Cloud-First | Local-First |
+|--------|-------------|-------------|
+| **Primary storage** | Server | Device |
+| **Offline support** | Limited/none | Full |
+| **Latency** | Network-bound | Instant |
+| **Data ownership** | Provider | User |
+| **Sync** | Required | Optional |
+| **Conflicts** | Server decides | CRDT auto-merge |
+| **Privacy** | Provider sees data | E2E encrypted |
+
+## When to Use Local-First
+
+### Good Fit ✅
+
+- **Personal productivity** — Notes, todos, journals
+- **Creative tools** — Documents, designs, music
+- **Collaborative editing** — Shared documents, whiteboards
+- **Sensitive data** — Health records, financial data
+- **Unreliable connectivity** — Mobile, rural, travel
+
+### Poor Fit ❌
+
+- **Real-time multiplayer games** — Need authoritative server
+- **Financial transactions** — Need consensus (double-spend)
+- **Social feeds** — Benefit from central curation
+- **Large shared databases** — CRDT overhead becomes prohibitive
+
+## Trade-offs
+
+Local-first isn't free. Consider these trade-offs:
+
+### Storage
+```
+Cloud-first: 10 MB app, unlimited server storage
+Local-first: 10 MB app + all your data on device
+```
+
+Users need device storage for their data. Plan for storage management.
+
+### Complexity
+
+CRDTs are more complex than simple CRUD:
+- Merge semantics must be designed carefully
+- Eventually consistent (not immediately consistent)
+- Debugging distributed state is harder
+
+### Initial Sync
+
+First-time sync can be slow for large datasets:
+```
+New device → download all history → ready to use
+```
+
+### Conflict Resolution
+
+While CRDTs auto-merge, the result may surprise users:
+```
+User A: Sets title to "Meeting Notes"
+User B: Sets title to "Project Plans"
+Merged:  "Meeting Notes" (LWW) or "Meeting NotesProject Plans" (concat)
+```
+
+Design merge behavior to match user expectations.
+
+## Real-World Examples
+
+### Local-First Apps
+
+- **Obsidian** — Markdown notes, local vault + optional sync
+- **Linear** — Issue tracking with offline support
+- **Figma** — Design tool with real-time collaboration
+- **Apple Notes** — Local + iCloud sync
+
+### Local-First Protocols
+
+- **Automerge** — CRDT library for JSON documents
+- **Yjs** — CRDT for real-time collaboration
+- **Iroh** — P2P sync protocol
+- **IPFS** — Content-addressed storage
+
+## VUDO's Approach
+
+VUDO implements local-first with:
+
+```
+┌─────────────────────────────────────────────┐
+│                  Your App                    │
+├─────────────────────────────────────────────┤
+│  vudo-state: Reactive state management       │
+├─────────────────────────────────────────────┤
+│  Automerge: CRDT documents                   │
+├─────────────────────────────────────────────┤
+│  vudo-storage: SQLite (native) / Memory (web)│
+├─────────────────────────────────────────────┤
+│  Iroh: P2P networking + relay               │
+└─────────────────────────────────────────────┘
+```
+
+- **Write locally first** — Instant UI response
+- **Queue operations** — For background sync
+- **Sync when available** — P2P or relay
+- **Resolve conflicts** — Automerge CRDTs
+
+## Practice: Identify the Architecture
+
+For each app, identify whether it's cloud-first, local-first, or hybrid:
+
+1. Google Docs
+2. Git
+3. WhatsApp
+4. VS Code with Settings Sync
+5. Notion
+
+<Collapsible title="Answers">
+1. **Google Docs** — Cloud-first (requires connection for editing)
+2. **Git** — Local-first (full repo local, sync via push/pull)
+3. **WhatsApp** — Hybrid (messages stored locally, E2E encrypted)
+4. **VS Code** — Hybrid (local editor, optional settings sync)
+5. **Notion** — Cloud-first (limited offline, requires sync)
+</Collapsible>
+
+## Summary
+
+In this lesson, you learned:
+
+- **Local-first definition** — Device-primary, offline-capable, user-owned
+- **Seven ideals** — Fast, portable, offline, collaborative, durable, private, controlled
+- **Trade-offs** — Storage, complexity, initial sync, conflict UX
+- **When to use** — Personal/creative tools, collaboration, sensitive data
+- **VUDO stack** — Automerge + Iroh + reactive state
+
+## Next Steps
+
+<NextTutorial
+  title="CRDT Fundamentals"
+  href="/tutorials/local-first/002-crdt-basics"
+  description="Learn how conflict-free data types enable automatic merging"
+/>

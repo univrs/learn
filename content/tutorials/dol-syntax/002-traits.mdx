@@ -35,10 +35,10 @@ A trait declares a set of method signatures that implementing types must provide
 
 ```dol
 trait ContainerLifecycle {
-    start: fun() -> Result<Void, Error>
-    stop: fun() -> Result<Void, Error>
-    pause: fun() -> Result<Void, Error>
-    resume: fun() -> Result<Void, Error>
+    start: fun() -> Result<(), Error>
+    stop: fun() -> Result<(), Error>
+    pause: fun() -> Result<(), Error>
+    resume: fun() -> Result<(), Error>
 }
 ```
 
@@ -57,14 +57,14 @@ Trait methods can have various signatures:
 
 ```dol
 trait Identifiable {
-    -- Simple getter, returns a value
+    // Simple getter, returns a value
     get_id: fun() -> u64
 
-    -- Method with parameter
-    matches_id: fun(id: u64) -> Bool
+    // Method with parameter
+    matches_id: fun(id: u64) -> bool
 
-    -- Method that may fail
-    validate_id: fun() -> Result<Void, Error>
+    // Method that may fail
+    validate_id: fun() -> Result<(), Error>
 }
 ```
 
@@ -77,7 +77,7 @@ DOL uses `fun` for function types:
 | `fun() -> T` | No parameters, returns `T` |
 | `fun(a: A) -> T` | One parameter, returns `T` |
 | `fun(a: A, b: B) -> T` | Multiple parameters |
-| `fun() -> Void` | No return value |
+| `fun() -> ()` | No return value (unit type) |
 
 ## Generic Traits
 
@@ -86,24 +86,24 @@ Traits can have generic type parameters for flexibility:
 ```dol
 trait Collection<T> {
     length: fun() -> u64
-    is_empty: fun() -> Bool
-    contains: fun(item: T) -> Bool
-    add: fun(item: T) -> Void
-    remove: fun(item: T) -> Bool
+    is_empty: fun() -> bool
+    contains: fun(item: T) -> bool
+    add: fun(item: T) -> ()
+    remove: fun(item: T) -> bool
 }
 ```
 
 The `<T>` declares a type parameter that gets substituted when the trait is used:
 
 ```dol
--- A type implementing Collection<String>
-pub type StringList uses Collection<String> {
-    items: List<String>
+// A type implementing Collection<string>
+gen StringList uses Collection<string> {
+    has items: Vec<string>
 }
 
--- A type implementing Collection<Ui64>
-pub type IdSet uses Collection<Ui64> {
-    ids: Set<Ui64>
+// A type implementing Collection<u64>
+gen IdSet uses Collection<u64> {
+    has ids: Set<u64>
 }
 ```
 
@@ -115,8 +115,8 @@ Traits can provide default implementations for methods:
 trait Collection<T> {
     length: fun() -> u64
 
-    -- Default implementation using length()
-    is_empty: fun() -> Bool = { self.length() == 0 }
+    // Default implementation using length()
+    is_empty: fun() -> bool = { self.length() == 0 }
 }
 ```
 
@@ -132,15 +132,15 @@ Here is a more complete example with several defaults:
 
 ```dol
 trait Comparable<T> {
-    -- Required: must be implemented
+    // Required: must be implemented
     compare: fun(other: T) -> i64
 
-    -- Defaults: derived from compare()
-    equals: fun(other: T) -> Bool = { self.compare(other) == 0 }
-    less_than: fun(other: T) -> Bool = { self.compare(other) < 0 }
-    greater_than: fun(other: T) -> Bool = { self.compare(other) > 0 }
-    less_or_equal: fun(other: T) -> Bool = { self.compare(other) <= 0 }
-    greater_or_equal: fun(other: T) -> Bool = { self.compare(other) >= 0 }
+    // Defaults: derived from compare()
+    equals: fun(other: T) -> bool = { self.compare(other) == 0 }
+    less_than: fun(other: T) -> bool = { self.compare(other) < 0 }
+    greater_than: fun(other: T) -> bool = { self.compare(other) > 0 }
+    less_or_equal: fun(other: T) -> bool = { self.compare(other) <= 0 }
+    greater_or_equal: fun(other: T) -> bool = { self.compare(other) >= 0 }
 }
 ```
 
@@ -158,12 +158,12 @@ trait Entity {
 
 trait Auditable extends Entity {
     get_updated_at: fun() -> Timestamp
-    get_updated_by: fun() -> String
+    get_updated_by: fun() -> string
 }
 
 trait Versionable extends Auditable {
     get_version: fun() -> u64
-    increment_version: fun() -> Void
+    increment_version: fun() -> ()
 }
 ```
 
@@ -177,43 +177,43 @@ A type implementing `Versionable` must provide all methods from:
 Here is a complete example modeling container behavior:
 
 ```dol
-mod container.traits @ 0.3.0
+mod container.traits @ 0.8.0
 
--- Base trait for anything with an ID
+// Base trait for anything with an ID
 trait Identifiable {
     get_id: fun() -> u64
 }
 
--- Lifecycle management
+// Lifecycle management
 trait Lifecycle {
-    start: fun() -> Result<Void, Error>
-    stop: fun() -> Result<Void, Error>
-    restart: fun() -> Result<Void, Error> = {
+    start: fun() -> Result<(), Error>
+    stop: fun() -> Result<(), Error>
+    restart: fun() -> Result<(), Error> = {
         self.stop()?
         self.start()
     }
 }
 
--- Health checking
+// Health checking
 trait HealthCheckable {
-    is_healthy: fun() -> Bool
+    is_healthy: fun() -> bool
     get_health_status: fun() -> HealthStatus
     run_health_check: fun() -> Result<HealthStatus, Error>
 }
 
--- Resource management
+// Resource management
 trait ResourceManaged {
     get_cpu_usage: fun() -> f64
     get_memory_usage: fun() -> u64
-    set_cpu_limit: fun(limit: f64) -> Void
-    set_memory_limit: fun(limit: u64) -> Void
+    set_cpu_limit: fun(limit: f64) -> ()
+    set_memory_limit: fun(limit: u64) -> ()
 }
 
--- Complete container trait combining all behaviors
+// Complete container trait combining all behaviors
 trait Container extends Identifiable, Lifecycle, HealthCheckable, ResourceManaged {
-    get_name: fun() -> String
-    get_image: fun() -> String
-    get_labels: fun() -> Map<String, String>
+    get_name: fun() -> string
+    get_image: fun() -> string
+    get_labels: fun() -> Map<string, string>
 }
 ```
 
@@ -222,14 +222,14 @@ trait Container extends Identifiable, Lifecycle, HealthCheckable, ResourceManage
 Traits are ideal for defining data access patterns:
 
 ```dol
-mod repository @ 0.3.0
+mod repository @ 0.8.0
 
 trait Repository<T, ID> {
     find_by_id: fun(id: ID) -> Option<T>
-    find_all: fun() -> List<T>
+    find_all: fun() -> Vec<T>
     save: fun(entity: T) -> Result<T, Error>
-    delete: fun(id: ID) -> Result<Void, Error>
-    exists: fun(id: ID) -> Bool = {
+    delete: fun(id: ID) -> Result<(), Error>
+    exists: fun(id: ID) -> bool = {
         self.find_by_id(id).is_some()
     }
 }
@@ -239,12 +239,12 @@ trait PagedRepository<T, ID> extends Repository<T, ID> {
     count: fun() -> u64
 }
 
-pub type Page<T> {
-    items: List<T>
-    page_number: u64
-    page_size: u64
-    total_items: u64
-    total_pages: u64
+gen Page<T> {
+    has items: Vec<T>
+    has page_number: u64
+    has page_size: u64
+    has total_items: u64
+    has total_pages: u64
 }
 ```
 
@@ -253,18 +253,18 @@ pub type Page<T> {
 Traits can model event-driven patterns:
 
 ```dol
-mod events @ 0.3.0
+mod events @ 0.8.0
 
 trait EventEmitter<E> {
-    emit: fun(event: E) -> Void
-    on: fun(handler: fun(E) -> Void) -> Void
-    once: fun(handler: fun(E) -> Void) -> Void
-    remove_listener: fun(handler: fun(E) -> Void) -> Void
+    emit: fun(event: E) -> ()
+    on: fun(handler: fun(E) -> ()) -> ()
+    once: fun(handler: fun(E) -> ()) -> ()
+    remove_listener: fun(handler: fun(E) -> ()) -> ()
 }
 
 trait EventHandler<E> {
-    handle: fun(event: E) -> Result<Void, Error>
-    can_handle: fun(event: E) -> Bool
+    handle: fun(event: E) -> Result<(), Error>
+    can_handle: fun(event: E) -> bool
 }
 ```
 
@@ -277,42 +277,42 @@ Define traits for a notification system:
 
 <Collapsible title="Solution">
 ```dol
-mod notifications @ 0.3.0
+mod notifications @ 0.8.0
 
-pub type Notification {
-    id: u64
-    title: String
-    body: String
-    sent_at: Timestamp
-    priority: Priority
+gen Notification {
+    has id: u64
+    has title: string
+    has body: string
+    has sent_at: Timestamp
+    has priority: Priority
 }
 
-pub type Priority {
+gen Priority {
     kind: enum { Low, Normal, High, Urgent }
 }
 
 trait Notifiable {
-    receive: fun(notification: Notification) -> Result<Void, Error>
+    receive: fun(notification: Notification) -> Result<(), Error>
     get_unread_count: fun() -> u64
-    mark_as_read: fun(notification_id: u64) -> Void
+    mark_as_read: fun(notification_id: u64) -> ()
 }
 
 trait NotificationSender {
-    send: fun(notification: Notification, recipient: Notifiable) -> Result<Void, Error>
-    send_bulk: fun(notification: Notification, recipients: List<Notifiable>) -> Result<u64, Error>
+    send: fun(notification: Notification, recipient: Notifiable) -> Result<(), Error>
+    send_bulk: fun(notification: Notification, recipients: Vec<Notifiable>) -> Result<u64, Error>
 }
 
 trait NotificationChannel extends Notifiable, NotificationSender {
-    get_channel_name: fun() -> String
-    is_available: fun() -> Bool
+    get_channel_name: fun() -> string
+    is_available: fun() -> bool
     get_delivery_status: fun(notification_id: u64) -> DeliveryStatus
 }
 
-pub type DeliveryStatus {
+gen DeliveryStatus {
     kind: enum {
         Pending,
         Delivered { delivered_at: Timestamp },
-        Failed { reason: String }
+        Failed { reason: string }
     }
 }
 ```

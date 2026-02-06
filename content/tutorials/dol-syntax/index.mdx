@@ -1,6 +1,6 @@
 ---
 title: "DOL Syntax Track"
-description: "Master the declarative syntax of DOL v0.3.0 through structured lessons on types, traits, systems, and more"
+description: "Master the declarative syntax of DOL v0.8.0 through structured lessons on types, traits, systems, and more"
 track: "dol-syntax"
 order: 0
 duration: "2-3 hours total"
@@ -8,32 +8,32 @@ prerequisites:
   - "Basic programming concepts"
   - "DOL environment setup (optional)"
 outcomes:
-  - "Define genes and types with proper structure"
+  - "Define genomes with proper structure using gen"
   - "Create reusable traits for shared behavior"
   - "Model complete systems with components and connections"
-  - "Write constraints that enforce invariants"
-  - "Manage version evolution across specs"
-  - "Document specifications with exegesis"
-  - "Apply v0.3.0 new syntax features and HIR concepts"
+  - "Write rules that enforce invariants"
+  - "Manage version evolution with evo declarations"
+  - "Document specifications with docs blocks"
+  - "Apply v0.8.0 syntax with Rust-aligned types"
 ---
 
 # DOL Syntax Track
 
-Welcome to the DOL Syntax track. This track provides a comprehensive introduction to the Design Ontology Language v0.3.0 syntax, focusing on its declarative nature and specification-first approach.
+Welcome to the DOL Syntax track. This track provides a comprehensive introduction to the Design Ontology Language v0.8.0 syntax, focusing on its declarative nature and specification-first approach.
 
 ## What is DOL?
 
 DOL (Design Ontology Language) is a **declarative specification language** for defining system ontologies. Unlike imperative programming languages that describe *how* to do things, DOL describes *what* things are and *how they relate* to each other.
 
 ```dol
--- DOL is declarative: describe WHAT, not HOW
-mod example @ 0.3.0
+// DOL is declarative: describe WHAT, not HOW
+mod example @ 0.8.0
 
-pub type User {
-    id: u64
-    name: String
-    email: String
-    created_at: Timestamp
+gen User {
+    has id: u64
+    has name: string
+    has email: string
+    has created_at: Timestamp
 }
 ```
 
@@ -50,9 +50,9 @@ DOL follows three fundamental principles:
 <TutorialGrid>
   <TutorialCard
     number="01"
-    title="Defining Genes"
+    title="Defining Genomes"
     duration="20 min"
-    description="Learn type definitions with pub type, fields, and enums"
+    description="Learn type definitions with gen, fields, and enums"
     href="/tutorials/dol-syntax/001-genes"
   />
   <TutorialCard
@@ -71,31 +71,38 @@ DOL follows three fundamental principles:
   />
   <TutorialCard
     number="04"
-    title="Defining Constraints"
+    title="Defining Rules"
     duration="20 min"
-    description="Enforce invariants with forall quantifiers and validation rules"
+    description="Enforce invariants with forall quantifiers and validation"
     href="/tutorials/dol-syntax/004-constraints"
   />
   <TutorialCard
     number="05"
     title="Version Evolution"
     duration="20 min"
-    description="Manage type changes across versions with evolves declarations"
+    description="Manage type changes across versions with evo declarations"
     href="/tutorials/dol-syntax/005-evolution"
   />
   <TutorialCard
     number="06"
-    title="Exegesis Documentation"
+    title="Documentation Blocks"
     duration="15 min"
-    description="Write self-documenting specifications with structured comments"
+    description="Write self-documenting specifications with docs blocks"
     href="/tutorials/dol-syntax/006-exegesis"
   />
   <TutorialCard
     number="07"
-    title="v0.3.0 New Syntax"
+    title="v0.3.0 History"
     duration="25 min"
-    description="Learn type keyword, extends, val/var bindings, and HIR architecture"
+    description="Understand HIR architecture and legacy syntax migration"
     href="/tutorials/dol-syntax/007-v030-syntax"
+  />
+  <TutorialCard
+    number="08"
+    title="v0.8.0 Clarity"
+    duration="20 min"
+    description="New gen, rule, evo, docs keywords and Rust-aligned types"
+    href="/tutorials/dol-syntax/008-v080-syntax"
   />
 </TutorialGrid>
 
@@ -112,39 +119,62 @@ This track assumes:
 ```
                          DOL Syntax Track
 
-    [01 Genes] --> [02 Traits] --> [03 Systems]
-                                        |
-                                        v
-[07 v0.3.0] <-- [06 Exegesis] <-- [05 Evolution] <-- [04 Constraints]
+    [01 Genomes] --> [02 Traits] --> [03 Systems]
+                                         |
+                                         v
+[08 v0.8.0] <-- [07 v0.3.0] <-- [06 Docs] <-- [05 Evolution] <-- [04 Rules]
 ```
 
-Each lesson builds on concepts from previous lessons. We recommend completing them in order, though experienced developers may skip ahead. Tutorial 07 covers the latest v0.3.0 syntax changes and the HIR architecture.
+Each lesson builds on concepts from previous lessons. We recommend completing them in order, though experienced developers may skip ahead. Tutorial 08 covers the latest v0.8.0 "Clarity" syntax.
 
-## DOL v0.3.0 Syntax Overview
+## DOL v0.8.0 Syntax Overview
 
-This track covers the complete v0.3.0 syntax:
+This track covers the complete v0.8.0 syntax:
 
 | Keyword | Purpose | Example |
 |---------|---------|---------|
-| `mod` | Module declaration | `mod container.runtime @ 0.3.0` |
-| `pub type` | Public type definition | `pub type User { ... }` |
+| `mod` | Module declaration | `mod container.runtime @ 0.8.0` |
+| `gen` | Genome/type definition | `gen User { ... }` |
 | `trait` | Behavior contract | `trait Lifecycle { ... }` |
 | `system` | System architecture | `system OrderProcessing { ... }` |
-| `constraint` | Invariant rules | `constraint ValidOrder { ... }` |
-| `evolves` | Version migration | `evolves V1 > V2 @ 2.0.0 { ... }` |
+| `rule` | Invariant constraints | `rule ValidOrder { ... }` |
+| `evo` | Version migration | `evo V1 > V2 @ 2.0.0 { ... }` |
+| `docs` | Documentation block | `docs { ... }` |
 | `val` | Immutable binding | `val MAX_SIZE: u64 = 1000` |
 | `var` | Mutable binding | `var counter: u64 = 0` |
 | `forall` | Universal quantifier | `forall item in items { ... }` |
 | `extends` | Trait extension | `trait Admin extends User { ... }` |
 
+## Type System (Rust-Aligned)
+
+| Type | Description |
+|------|-------------|
+| `string` | Text data |
+| `bool` | Boolean values |
+| `i8`, `i16`, `i32`, `i64` | Signed integers |
+| `u8`, `u16`, `u32`, `u64` | Unsigned integers |
+| `f32`, `f64` | Floating point |
+| `Vec<T>` | Ordered collection |
+| `Map<K, V>` | Key-value mapping |
+| `Option<T>` | Optional values |
+| `()` | Unit type (void) |
+
 ## Ready to Start?
 
 <CallToAction href="/tutorials/dol-syntax/001-genes">
-  Begin with Defining Genes
+  Begin with Defining Genomes
 </CallToAction>
+
+## Next Tracks
+
+After completing DOL Syntax, continue with:
+
+- [Local-First Architecture](/tutorials/local-first) - CRDTs, offline-first, P2P sync
+- [Spirit System](/tutorials/spirits) - Runtime execution model
+- [CLI Mastery](/tutorials/cli) - Command-line tools
 
 ## Additional Resources
 
 - [DOL Language Reference](/dol/reference)
 - [Examples Gallery](/dol/examples)
-- [v0.3.0 Changelog](/dol/changelog)
+- [v0.8.0 Changelog](/dol/changelog)

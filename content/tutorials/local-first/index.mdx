@@ -1,0 +1,207 @@
+---
+title: "Local-First Architecture Track"
+description: "Build offline-capable, P2P applications with CRDTs, Automerge, and the VUDO local-first runtime"
+track: "local-first"
+order: 0
+duration: "3-4 hours total"
+prerequisites:
+  - "DOL Syntax Track (recommended)"
+  - "Basic understanding of distributed systems"
+outcomes:
+  - "Understand local-first principles and benefits"
+  - "Work with CRDTs for conflict-free collaboration"
+  - "Use Automerge for document synchronization"
+  - "Build P2P applications with Iroh networking"
+  - "Design offline-first data architectures"
+  - "Handle schema evolution in distributed systems"
+---
+
+# Local-First Architecture Track
+
+Welcome to the Local-First Architecture track. This track teaches you how to build applications that work offline, sync peer-to-peer, and never lose user data.
+
+## What is Local-First?
+
+**Local-first** software prioritizes the user's device as the source of truth:
+
+- **Offline by default** — Works without internet
+- **Instant response** — No server round-trips for basic operations  
+- **User data ownership** — Data lives on user's device, not corporate servers
+- **P2P sync** — Devices sync directly when possible
+- **Eventual consistency** — Conflicts resolve automatically via CRDTs
+
+```
+Traditional App:              Local-First App:
+┌────────┐                    ┌────────┐     ┌────────┐
+│ Client │ ←──────────────→   │ Device │ ←───│ Device │
+└────────┘         │          └────────┘     └────────┘
+                   │               ↑              ↑
+              ┌────────┐           └──────────────┘
+              │ Server │              P2P Sync
+              └────────┘
+```
+
+## Why Local-First?
+
+| Traditional | Local-First |
+|-------------|-------------|
+| Requires internet | Works offline |
+| Server latency | Instant response |
+| Server owns data | User owns data |
+| Server is SPOF | No single point of failure |
+| Conflicts = errors | Conflicts auto-resolve |
+
+## Core Technologies
+
+### CRDTs (Conflict-free Replicated Data Types)
+
+Data structures that can be modified independently and merged without conflicts:
+
+```rust
+// Two users edit the same document
+let mut doc_a = Document::new();
+let mut doc_b = doc_a.clone();
+
+doc_a.insert(0, "Hello ");  // User A types
+doc_b.insert(0, "World!");  // User B types
+
+// Merge without conflicts
+doc_a.merge(&doc_b);
+// Result: "Hello World!" or "World!Hello " (deterministic)
+```
+
+### Automerge
+
+A CRDT library for JSON-like documents:
+
+```rust
+use automerge::AutoCommit;
+
+let mut doc = AutoCommit::new();
+doc.put(ROOT, "title", "My Document")?;
+doc.put(ROOT, "content", "Hello world")?;
+
+// Sync changes between devices
+let changes = doc.get_changes(&[]);
+peer.apply_changes(changes)?;
+```
+
+### Iroh P2P
+
+Peer-to-peer networking with NAT traversal:
+
+```rust
+use iroh_net::Endpoint;
+
+// Discover and connect to peers
+let endpoint = Endpoint::builder().discovery_n0().bind().await?;
+let conn = endpoint.connect(peer_addr, ALPN).await?;
+
+// Sync documents directly
+sync_documents(&conn, &local_doc).await?;
+```
+
+## Track Overview
+
+<TutorialGrid>
+  <TutorialCard
+    number="01"
+    title="Local-First Principles"
+    duration="20 min"
+    description="Understand the philosophy and benefits of local-first software"
+    href="/tutorials/local-first/001-principles"
+  />
+  <TutorialCard
+    number="02"
+    title="CRDT Fundamentals"
+    duration="30 min"
+    description="Learn how conflict-free data types enable automatic merging"
+    href="/tutorials/local-first/002-crdt-basics"
+  />
+  <TutorialCard
+    number="03"
+    title="Automerge Documents"
+    duration="30 min"
+    description="Work with Automerge for JSON-like document synchronization"
+    href="/tutorials/local-first/003-automerge"
+  />
+  <TutorialCard
+    number="04"
+    title="P2P Networking with Iroh"
+    duration="30 min"
+    description="Build peer-to-peer connections with NAT traversal"
+    href="/tutorials/local-first/004-p2p-iroh"
+  />
+  <TutorialCard
+    number="05"
+    title="VUDO State Engine"
+    duration="25 min"
+    description="Use VUDO's reactive state management for local-first apps"
+    href="/tutorials/local-first/005-vudo-state"
+  />
+  <TutorialCard
+    number="06"
+    title="Schema Evolution"
+    duration="25 min"
+    description="Handle schema changes in distributed CRDT documents"
+    href="/tutorials/local-first/006-schema-evolution"
+  />
+  <TutorialCard
+    number="07"
+    title="Offline Patterns"
+    duration="20 min"
+    description="Design patterns for robust offline-first applications"
+    href="/tutorials/local-first/007-offline-patterns"
+  />
+</TutorialGrid>
+
+## Learning Path
+
+```
+                    Local-First Architecture
+
+[01 Principles] --> [02 CRDTs] --> [03 Automerge]
+                                        |
+                                        v
+[07 Patterns] <-- [06 Schema] <-- [05 VUDO State] <-- [04 P2P Iroh]
+```
+
+## VUDO Local-First Stack
+
+VUDO provides a complete local-first runtime:
+
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| **Storage** | SQLite + In-memory | Platform-agnostic persistence |
+| **State** | vudo-state | Reactive subscriptions, operation queue |
+| **CRDTs** | Automerge 3.0 | Conflict-free document sync |
+| **Network** | Iroh | QUIC-based P2P with relay fallback |
+| **Sync** | Willow Protocol | Fine-grained access control |
+
+## What You'll Build
+
+By the end of this track, you'll be able to build:
+
+- **Collaborative editors** — Real-time co-editing with offline support
+- **Sync'd apps** — Notes, todos, and data that sync across devices
+- **P2P applications** — Direct device-to-device communication
+- **Offline-first mobile** — Apps that work anywhere, sync when connected
+
+## Prerequisites
+
+- Basic Rust knowledge helpful (but not required)
+- Understanding of async/await patterns
+- Familiarity with JSON and document databases
+
+## Ready to Start?
+
+<CallToAction href="/tutorials/local-first/001-principles">
+  Begin with Local-First Principles
+</CallToAction>
+
+## Additional Resources
+
+- [Automerge Documentation](https://automerge.org)
+- [Iroh Documentation](https://iroh.computer)
+- [Local-First Web Dev](https://localfirstweb.dev)
+- [Ink & Switch Research](https://www.inkandswitch.com/local-first/)

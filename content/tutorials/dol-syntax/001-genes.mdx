@@ -1,25 +1,25 @@
 ---
-title: "Defining Genes"
-description: "Learn to define types with pub type, structured fields, enums, and module declarations"
+title: "Defining Genomes"
+description: "Learn to define types with gen, structured fields, enums, and module declarations"
 track: "dol-syntax"
 tutorial: 1
 duration: "20 min"
 objectives:
   - "Understand the module declaration syntax"
-  - "Define types using pub type"
+  - "Define types using gen"
   - "Create enum variants for state modeling"
   - "Structure complex nested types"
 tags:
-  - "genes"
+  - "gen"
   - "types"
   - "enums"
   - "modules"
   - "fundamentals"
 ---
 
-# Defining Genes
+# Defining Genomes
 
-In DOL, **genes** are the fundamental building blocks of your ontology. A gen is a type definition that describes the structure of a concept in your domain. In v0.3.0, genes are defined using the `pub type` syntax.
+In DOL, **genomes** (or "gens") are the fundamental building blocks of your ontology. A gen is a type definition that describes the structure of a concept in your domain.
 
 ## Learning Objectives
 
@@ -35,12 +35,12 @@ By the end of this lesson, you will be able to:
 Every DOL file begins with a module declaration that establishes namespace and version:
 
 ```dol
-mod container.runtime @ 0.3.0
+mod container.runtime @ 0.8.0
 ```
 
 This declares:
 - **Namespace**: `container.runtime` - a hierarchical path
-- **Version**: `0.3.0` - semantic versioning
+- **Version**: `0.8.0` - semantic versioning
 
 <Tip type="info">
 Module names use dot notation for hierarchy. Version numbers follow semantic versioning (MAJOR.MINOR.PATCH).
@@ -48,17 +48,17 @@ Module names use dot notation for hierarchy. Version numbers follow semantic ver
 
 ## Basic Type Definition
 
-Types are defined with the `pub type` keyword followed by the type name and its fields:
+Types are defined with the `gen` keyword followed by the type name and its fields:
 
 ```dol
-mod container.runtime @ 0.3.0
+mod container.runtime @ 0.8.0
 
-pub type Container {
-    id: u64
-    name: String
-    image: String
-    created_at: Timestamp
-    labels: Map<String, String>
+gen Container {
+    has id: u64
+    has name: string
+    has image: string
+    has created_at: Timestamp
+    has labels: Map<string, string>
 }
 ```
 
@@ -85,25 +85,25 @@ DOL supports generic collection types:
 
 | Type | Description | Example |
 |------|-------------|---------|
-| `List<T>` | Ordered collection | `List<String>` |
-| `Map<K, V>` | Key-value mapping | `Map<String, String>` |
-| `Set<T>` | Unique values | `Set<Ui64>` |
-| `Option<T>` | Optional value | `Option<String>` |
+| `Vec<T>` | Ordered collection | `Vec<string>` |
+| `Map<K, V>` | Key-value mapping | `Map<string, string>` |
+| `Set<T>` | Unique values | `Set<u64>` |
+| `Option<T>` | Optional value | `Option<string>` |
 
 ## Defining Enums
 
 Enums model discrete states or variants. They can be simple or carry associated data:
 
 ```dol
-mod container.runtime @ 0.3.0
+mod container.runtime @ 0.8.0
 
-pub type ContainerStatus {
+gen ContainerStatus {
     kind: enum {
         Created,
         Running,
         Paused,
         Stopped,
-        Failed { reason: String }
+        Failed { reason: string }
     }
 }
 ```
@@ -121,65 +121,65 @@ Use enums to model finite states. The `Failed` variant with associated data is a
 Here is a complete module defining container-related types:
 
 ```dol
-mod container.runtime @ 0.3.0
+mod container.runtime @ 0.8.0
 
-pub type ContainerStatus {
+gen ContainerStatus {
     kind: enum {
         Created,
         Running,
         Paused,
         Stopped,
-        Failed { reason: String }
+        Failed { reason: string }
     }
 }
 
-pub type Container {
-    id: u64
-    name: String
-    image: String
-    status: ContainerStatus
-    created_at: Timestamp
-    labels: Map<String, String>
+gen Container {
+    has id: u64
+    has name: string
+    has image: string
+    has status: ContainerStatus
+    has created_at: Timestamp
+    has labels: Map<string, string>
 }
 
-pub type ContainerConfig {
-    image: String
-    command: List<String>
-    env: Map<String, String>
-    ports: List<PortMapping>
-    volumes: List<VolumeMount>
+gen ContainerConfig {
+    has image: string
+    has command: Vec<string>
+    has env: Map<string, string>
+    has ports: Vec<PortMapping>
+    has volumes: Vec<VolumeMount>
 }
 
-pub type PortMapping {
-    container_port: u64
-    host_port: u64
-    protocol: String
+gen PortMapping {
+    has container_port: u64
+    has host_port: u64
+    has protocol: string
 }
 
-pub type VolumeMount {
-    source: String
-    target: String
-    read_only: Bool
+gen VolumeMount {
+    has source: string
+    has target: string
+    has read_only: bool
 }
 ```
 
 Notice how:
 - Types reference other types (`Container` has `ContainerStatus`)
-- Collections use generics (`List<PortMapping>`)
+- Collections use generics (`Vec<PortMapping>`)
 - Each type is self-contained and reusable
 
 ## Immutable and Mutable Values
 
-DOL v0.3.0 introduces `val` and `var` for bindings:
+DOL supports `val` and `var` for bindings:
 
 ```dol
-mod config @ 0.3.0
+mod config @ 0.8.0
 
--- Immutable: cannot be changed after initialization
+// Immutable: cannot be changed after initialization
 val MAX_CONTAINERS: u64 = 100
-val DEFAULT_IMAGE: String = "alpine:latest"
+val DEFAULT_IMAGE: string = "alpine:latest"
 
--- Mutable: can be reassigned
+// Mutable: can be reassigned
 var active_count: u64 = 0
 ```
 
@@ -192,44 +192,44 @@ Prefer `val` over `var` for most cases. Immutability makes specifications easier
 Types can be composed to model complex domains:
 
 ```dol
-mod ecommerce @ 0.3.0
+mod ecommerce @ 0.8.0
 
-pub type Address {
-    street: String
-    city: String
-    postal_code: String
-    country: String
+gen Address {
+    has street: string
+    has city: string
+    has postal_code: string
+    has country: string
 }
 
-pub type Customer {
-    id: u64
-    name: String
-    email: String
-    shipping_address: Address
-    billing_address: Option<Address>
+gen Customer {
+    has id: u64
+    has name: string
+    has email: string
+    has shipping_address: Address
+    has billing_address: Option<Address>
 }
 
-pub type OrderItem {
-    product_id: u64
-    quantity: u64
-    unit_price: f64
+gen OrderItem {
+    has product_id: u64
+    has quantity: u64
+    has unit_price: f64
 }
 
-pub type Order {
-    id: u64
-    customer: Customer
-    items: List<OrderItem>
-    total: f64
-    status: OrderStatus
+gen Order {
+    has id: u64
+    has customer: Customer
+    has items: Vec<OrderItem>
+    has total: f64
+    has status: OrderStatus
 }
 
-pub type OrderStatus {
+gen OrderStatus {
     kind: enum {
         Pending,
         Confirmed,
-        Shipped { tracking_number: String },
+        Shipped { tracking_number: string },
         Delivered { delivered_at: Timestamp },
-        Cancelled { reason: String }
+        Cancelled { reason: string }
     }
 }
 ```
@@ -243,31 +243,31 @@ Define a `Library` module with types for:
 
 <Collapsible title="Solution">
 ```dol
-mod library @ 0.3.0
+mod library @ 0.8.0
 
-pub type Book {
-    isbn: String
-    title: String
-    author: String
-    publication_year: u64
-    available: Bool
+gen Book {
+    has isbn: string
+    has title: string
+    has author: string
+    has publication_year: u64
+    has available: bool
 }
 
-pub type Member {
-    id: u64
-    name: String
-    email: String
-    membership_date: Timestamp
-    active: Bool
+gen Member {
+    has id: u64
+    has name: string
+    has email: string
+    has membership_date: Timestamp
+    has active: bool
 }
 
-pub type Loan {
-    id: u64
-    book_isbn: String
-    member_id: u64
-    borrowed_at: Timestamp
-    due_date: Timestamp
-    returned_at: Option<Timestamp>
+gen Loan {
+    has id: u64
+    has book_isbn: string
+    has member_id: u64
+    has borrowed_at: Timestamp
+    has due_date: Timestamp
+    has returned_at: Option<Timestamp>
 }
 ```
 </Collapsible>
@@ -277,7 +277,7 @@ pub type Loan {
 In this lesson, you learned:
 
 - **Module declaration** with `mod name @ version`
-- **Type definition** with `pub type Name { fields }`
+- **Type definition** with `gen Name { fields }`
 - **Enums** for modeling discrete states with optional data
 - **Value bindings** with `val` (immutable) and `var` (mutable)
 - **Type composition** to build complex domain models

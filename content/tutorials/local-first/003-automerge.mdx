@@ -1,0 +1,433 @@
+---
+title: "Automerge Documents"
+description: "Build collaborative applications with Automerge's JSON-like CRDT documents"
+track: "local-first"
+tutorial: 3
+duration: "30 min"
+objectives:
+  - "Create and modify Automerge documents"
+  - "Sync documents between peers"
+  - "Work with Automerge's data types"
+  - "Handle document history and undo"
+tags:
+  - "automerge"
+  - "crdt"
+  - "sync"
+  - "collaboration"
+---
+
+# Automerge Documents
+
+Automerge is a **CRDT library for JSON-like documents**. It provides automatic merging, sync, and history tracking — making it the foundation of VUDO's local-first runtime.
+
+## Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+- Create and modify Automerge documents
+- Sync changes between documents
+- Work with different Automerge data types
+- Track history and implement undo
+
+## What is Automerge?
+
+Automerge treats documents like JSON, but with superpowers:
+
+```rust
+use automerge::{AutoCommit, ObjType, ROOT};
+
+// Create a document (like a JSON object)
+let mut doc = AutoCommit::new();
+
+// Set fields (like JSON)
+doc.put(ROOT, "title", "My Document")?;
+doc.put(ROOT, "author", "Alice")?;
+
+// Create nested objects
+let settings = doc.put_object(ROOT, "settings", ObjType::Map)?;
+doc.put(&settings, "theme", "dark")?;
+doc.put(&settings, "font_size", 14)?;
+
+// Create arrays
+let tags = doc.put_object(ROOT, "tags", ObjType::List)?;
+doc.insert(&tags, 0, "rust")?;
+doc.insert(&tags, 1, "crdt")?;
+```
+
+The magic: **Two people can edit this document offline, and it merges automatically.**
+
+## Creating Documents
+
+### New Document
+
+```rust
+use automerge::AutoCommit;
+
+// AutoCommit: automatic change tracking
+let mut doc = AutoCommit::new();
+
+// Automerge: manual change commits (more control)
+let mut doc = Automerge::new();
+```
+
+### From Existing Data
+
+```rust
+// Load from saved bytes
+let doc = AutoCommit::load(&saved_bytes)?;
+
+// Fork an existing document
+let mut fork = doc.fork();
+```
+
+## Working with Data
+
+### Scalar Values
+
+```rust
+// Strings
+doc.put(ROOT, "name", "Alice")?;
+
+// Numbers (i64, u64, f64)
+doc.put(ROOT, "age", 30_i64)?;
+doc.put(ROOT, "score", 98.5_f64)?;
+
+// Booleans
+doc.put(ROOT, "active", true)?;
+
+// Null
+doc.put(ROOT, "nickname", ())?;
+
+// Timestamps
+doc.put(ROOT, "created", automerge::ScalarValue::Timestamp(timestamp))?;
+```
+
+### Maps (Objects)
+
+```rust
+// Create a nested object
+let user = doc.put_object(ROOT, "user", ObjType::Map)?;
+doc.put(&user, "name", "Alice")?;
+doc.put(&user, "email", "alice@example.com")?;
+
+// Read values
+let name: Option<String> = doc.get(&user, "name")?.map(|(v, _)| v.into());
+
+// Delete a key
+doc.delete(&user, "email")?;
+```
+
+### Lists (Arrays)
+
+```rust
+// Create a list
+let items = doc.put_object(ROOT, "items", ObjType::List)?;
+
+// Insert at index
+doc.insert(&items, 0, "first")?;
+doc.insert(&items, 1, "second")?;
+
+// Update at index
+doc.put(&items, 0, "updated first")?;
+
+// Delete at index
+doc.delete(&items, 1)?;
+
+// Get length
+let len = doc.length(&items);
+```
+
+### Text
+
+Automerge has a specialized text type for collaborative editing:
+
+```rust
+// Create text
+let text = doc.put_object(ROOT, "content", ObjType::Text)?;
+
+// Insert at position
+doc.splice_text(&text, 0, 0, "Hello World")?;
+
+// Delete characters
+doc.splice_text(&text, 5, 6, "")?;  // Delete " World"
+
+// Insert in middle
+doc.splice_text(&text, 5, 0, " Automerge")?;  // "Hello Automerge"
+
+// Get text content
+let content: String = doc.text(&text)?;
+```
+
+<Tip type="info">
+Text CRDT handles concurrent edits gracefully. Two users typing at different positions merge without conflict.
+</Tip>
+
+## Syncing Documents
+
+### Getting Changes
+
+```rust
+// Get all changes since creation
+let changes = doc.get_changes(&[])?;
+
+// Get changes since a known point
+let heads = other_doc.get_heads();
+let changes = doc.get_changes(&heads)?;
+
+// Save for storage/transmission
+let bytes = changes.iter()
+    .flat_map(|c| c.raw_bytes())
+    .collect::<Vec<_>>();
+```
+
+### Applying Changes
+
+```rust
+// Apply changes from another document
+doc.apply_changes(changes)?;
+
+// Merge two documents directly
+doc.merge(&mut other_doc)?;
+```
+
+### Sync Protocol
+
+For ongoing sync between peers:
+
+```rust
+use automerge::sync::{Message, State};
+
+// Each peer maintains sync state
+let mut sync_state = State::new();
+
+// Generate message to send
+let message = doc.generate_sync_message(&mut sync_state);
+
+// Receive message from peer
+if let Some(msg) = received_message {
+    doc.receive_sync_message(&mut sync_state, msg)?;
+}
+
+// Repeat until both synced (no more messages)
+```
+
+## Document Structure
+
+### Autosurgeon (Derive Macros)
+
+Use `autosurgeon` for type-safe document access:
+
+```rust
+use autosurgeon::{Hydrate, Reconcile};
+
+#[derive(Debug, Clone, Hydrate, Reconcile)]
+struct TodoItem {
+    id: String,
+    title: String,
+    completed: bool,
+}
+
+#[derive(Debug, Clone, Hydrate, Reconcile)]
+struct TodoList {
+    name: String,
+    items: Vec<TodoItem>,
+}
+
+// Reconcile Rust struct into document
+let mut doc = AutoCommit::new();
+let list = TodoList {
+    name: "My Todos".into(),
+    items: vec![
+        TodoItem { id: "1".into(), title: "Learn CRDTs".into(), completed: false },
+    ],
+};
+autosurgeon::reconcile(&mut doc, &list)?;
+
+// Hydrate document back to Rust struct
+let loaded: TodoList = autosurgeon::hydrate(&doc)?;
+```
+
+<Tip type="success">
+`autosurgeon` makes working with Automerge feel like regular Rust structs while preserving CRDT semantics.
+</Tip>
+
+## History and Undo
+
+### Viewing History
+
+```rust
+// Get all change hashes
+let changes = doc.get_changes(&[]);
+
+// Get heads (latest changes)
+let heads = doc.get_heads();
+
+// View document at a point in time
+let historical = doc.view_at(&some_hash)?;
+```
+
+### Implementing Undo
+
+```rust
+// Track changes per user action
+let before_heads = doc.get_heads();
+
+// User makes changes...
+doc.put(ROOT, "title", "New Title")?;
+
+// Store for undo
+let undo_point = before_heads;
+
+// To undo: create inverse changes
+// (Automerge doesn't have built-in undo, you track it)
+```
+
+## VUDO Integration
+
+VUDO wraps Automerge with reactive state:
+
+```rust
+use vudo_state::{DocumentStore, Subscription};
+
+// Create store with Automerge backend
+let store = DocumentStore::new();
+
+// Subscribe to changes (reactive)
+let sub = store.subscribe(|doc| {
+    let title: String = doc.get(ROOT, "title")?.into();
+    println!("Title changed: {}", title);
+});
+
+// Changes trigger subscriptions
+store.update(|doc| {
+    doc.put(ROOT, "title", "Updated!")?;
+    Ok(())
+})?;
+```
+
+## Common Patterns
+
+### Unique IDs
+
+Always use unique IDs for list items:
+
+```rust
+use uuid::Uuid;
+
+fn add_item(doc: &mut AutoCommit, list: &ObjId, title: &str) {
+    let item = doc.insert_object(list, 0, ObjType::Map)?;
+    doc.put(&item, "id", Uuid::new_v4().to_string())?;
+    doc.put(&item, "title", title)?;
+}
+```
+
+### Timestamps
+
+Use Lamport timestamps for ordering:
+
+```rust
+doc.put(&item, "created_at", automerge::ScalarValue::Timestamp(
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)?
+        .as_millis() as i64
+))?;
+```
+
+### Presence (Who's Online)
+
+Ephemeral data for presence:
+
+```rust
+// Don't store presence in document (would bloat history)
+// Use separate ephemeral channel
+struct Presence {
+    user_id: String,
+    cursor_position: usize,
+    last_seen: Instant,
+}
+```
+
+## Practice Exercise
+
+Build a collaborative note-taking structure:
+
+Requirements:
+- Notes have title, content (text), and tags
+- Notes can be starred
+- Track created_at and updated_at
+
+<Collapsible title="Solution">
+```rust
+use automerge::{AutoCommit, ObjType, ROOT};
+use autosurgeon::{Hydrate, Reconcile};
+
+#[derive(Debug, Clone, Hydrate, Reconcile)]
+struct Note {
+    id: String,
+    title: String,
+    content: String,  // Will be Text CRDT
+    tags: Vec<String>,
+    starred: bool,
+    created_at: i64,
+    updated_at: i64,
+}
+
+#[derive(Debug, Clone, Hydrate, Reconcile)]
+struct Notebook {
+    name: String,
+    notes: Vec<Note>,
+}
+
+fn create_note(doc: &mut AutoCommit, notes_list: &ObjId, title: &str) -> Result<()> {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)?
+        .as_millis() as i64;
+    
+    let note = doc.insert_object(notes_list, 0, ObjType::Map)?;
+    doc.put(&note, "id", uuid::Uuid::new_v4().to_string())?;
+    doc.put(&note, "title", title)?;
+    
+    // Use Text type for collaborative editing
+    let content = doc.put_object(&note, "content", ObjType::Text)?;
+    
+    let tags = doc.put_object(&note, "tags", ObjType::List)?;
+    doc.put(&note, "starred", false)?;
+    doc.put(&note, "created_at", now)?;
+    doc.put(&note, "updated_at", now)?;
+    
+    Ok(())
+}
+
+fn update_content(doc: &mut AutoCommit, note: &ObjId, content: &str) -> Result<()> {
+    let text = doc.get(note, "content")?.unwrap().1;
+    let current_len = doc.text(&text)?.len();
+    doc.splice_text(&text, 0, current_len, content)?;
+    
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)?
+        .as_millis() as i64;
+    doc.put(note, "updated_at", now)?;
+    
+    Ok(())
+}
+```
+</Collapsible>
+
+## Summary
+
+In this lesson, you learned:
+
+- **Creating documents** — AutoCommit, load, fork
+- **Data types** — Scalars, maps, lists, text
+- **Syncing** — Changes, merge, sync protocol
+- **Type safety** — autosurgeon for Rust struct mapping
+- **History** — Viewing past states, undo patterns
+- **VUDO integration** — Reactive subscriptions
+
+## Next Steps
+
+<NextTutorial
+  title="P2P Networking with Iroh"
+  href="/tutorials/local-first/004-p2p-iroh"
+  description="Build peer-to-peer connections with NAT traversal"
+/>

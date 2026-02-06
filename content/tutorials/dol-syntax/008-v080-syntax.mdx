@@ -1,0 +1,220 @@
+---
+title: "v0.8.0 Clarity Release"
+description: "DOL v0.8.0 modernizes syntax with shorter keywords (gen, rule, evo, docs) and Rust-aligned types (string, Vec<T>, i64)"
+track: "dol-syntax"
+tutorial: 8
+duration: "20 min"
+objectives:
+  - "Use the new preferred keywords: gen, rule, evo, docs"
+  - "Work with Rust-aligned type names"
+  - "Apply tree shaking for optimized builds"
+  - "Migrate existing code using dol-migrate"
+tags:
+  - "v0.8.0"
+  - "gen"
+  - "rule"
+  - "evo"
+  - "docs"
+  - "tree-shaking"
+  - "migration"
+---
+
+# v0.8.0 "Clarity" Release
+
+DOL v0.8.0 focuses on **clarity** — shorter keywords and Rust-aligned types make code more readable and feel natural to systems programmers.
+
+## Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+- Use the new preferred keywords
+- Write types using Rust-aligned names
+- Apply tree shaking to eliminate dead code
+- Migrate existing code automatically
+
+## What's New in v0.8.0
+
+### New Preferred Keywords
+
+| v0.7.x | v0.8.0 | Purpose |
+|--------|--------|---------|
+| `gene` | `gen` | Genome/type declarations |
+| `constraint` | `rule` | Constraint declarations |
+| `evolves` | `evo` | Evolution declarations |
+| `exegesis` | `docs` | Documentation blocks |
+
+### Rust-Aligned Type Names
+
+| Old | New | Notes |
+|-----|-----|-------|
+| `String` | `string` | Lowercase primitive |
+| `Bool` | `bool` | Lowercase primitive |
+| `Int8`, `Int16`, `Int32`, `Int64` | `i8`, `i16`, `i32`, `i64` | Signed integers |
+| `UInt8`, `UInt16`, `UInt32`, `UInt64` | `u8`, `u16`, `u32`, `u64` | Unsigned integers |
+| `Float32`, `Float64` | `f32`, `f64` | Floats |
+| `List<T>` | `Vec<T>` | Vectors |
+| `Void` | `()` | Unit type |
+
+<Tip type="info">
+Old syntax still compiles in v0.8.0 with deprecation warnings. It will error in v0.9.0.
+</Tip>
+
+## Before & After
+
+### Old v0.7.x Style
+
+```dol
+mod messaging @ 0.7.0
+
+gene Message {
+    has content: String
+    has sender_id: Int64
+    has recipients: List<String>
+    has read: Bool
+}
+
+constraint MessageValid for Message {
+    assert this.content.len() > 0
+    assert this.recipients.len() > 0
+}
+
+exegesis {
+    Messages must have content and at least one recipient.
+}
+```
+
+### New v0.8.0 Style
+
+```dol
+mod messaging @ 0.8.0
+
+gen Message {
+    has content: string
+    has sender_id: i64
+    has recipients: Vec<string>
+    has read: bool
+}
+
+rule MessageValid for Message {
+    assert this.content.len() > 0
+    assert this.recipients.len() > 0
+}
+
+docs {
+    Messages must have content and at least one recipient.
+}
+```
+
+## Tree Shaking
+
+v0.8.0 introduces dead code elimination. The compiler analyzes dependency graphs and removes unreachable declarations.
+
+```bash
+# Enable tree shaking
+dol-parse --tree-shake src/
+
+# Preview what would be eliminated
+dol-parse --shake-analyze src/
+
+# Specify additional roots to preserve
+dol-parse --tree-shake --roots "PublicAPI,ConfigType" src/
+```
+
+### How It Works
+
+1. **Root identification** — Public declarations and `--roots` entries
+2. **Dependency analysis** — Transitive closure of all referenced types
+3. **Elimination** — Unreachable declarations removed from output
+
+```dol
+mod example @ 0.8.0
+
+// This is a root (public)
+pub gen User {
+    has name: string
+    has email: Email  // Email is reachable via User
+}
+
+// Reachable (referenced by User)
+gen Email {
+    has address: string
+    has verified: bool
+}
+
+// ELIMINATED (never referenced)
+gen OldLegacyType {
+    has deprecated_field: string
+}
+```
+
+## CRDT Support (Preview)
+
+v0.8.0 lays groundwork for CRDT integration in v0.9.0:
+
+```dol
+mod collaborative @ 0.8.0
+
+// CRDT-backed document (coming in v0.9.0)
+gen Document {
+    has title: string
+    has content: Text  // Will be Automerge Text CRDT
+    has authors: Vec<string>
+    
+    // Automatic merge semantics
+    #[crdt(strategy = "lww")]  // Last-writer-wins
+    has last_modified: Timestamp
+}
+```
+
+## Migration
+
+### Automatic Migration
+
+```bash
+# Migrate all .dol files in a directory
+dol-migrate 0.7-to-0.8 src/
+
+# Preview changes first
+dol-migrate 0.7-to-0.8 --dry-run src/
+
+# Show diff
+dol-migrate 0.7-to-0.8 --diff src/
+
+# Also modernize to v0.8 style
+dol-migrate 0.7-to-0.8 --modernize src/
+```
+
+### Manual Migration Checklist
+
+1. **Keywords**: `gene` → `gen`, `constraint` → `rule`, `evolves` → `evo`, `exegesis` → `docs`
+2. **Types**: `String` → `string`, `List<T>` → `Vec<T>`, `Int64` → `i64`, etc.
+3. **Test**: Run `dol-parse` and fix any remaining warnings
+
+## Deprecation Timeline
+
+| Syntax | v0.8.0 | v0.9.0 | v1.0.0 |
+|--------|--------|--------|--------|
+| `gene` | ⚠️ Warning | ❌ Error | ❌ Removed |
+| `String` | ⚠️ Warning | ❌ Error | ❌ Removed |
+| `List<T>` | ⚠️ Warning | ❌ Error | ❌ Removed |
+| `constraint` | ⚠️ Warning | ❌ Error | ❌ Removed |
+| `exegesis` | ⚠️ Warning | ❌ Error | ❌ Removed |
+
+## Summary
+
+v0.8.0 "Clarity" makes DOL feel more natural:
+
+- **Shorter keywords** reduce visual noise
+- **Rust-aligned types** help systems programmers
+- **Tree shaking** produces smaller, faster builds
+- **Migration tools** make upgrading painless
+
+<Tip type="success">
+Run `dol-migrate 0.7-to-0.8 --diff .` to preview all changes before committing.
+</Tip>
+
+## Next Steps
+
+- [Local-First Architecture](/tutorials/local-first/) — Build offline-capable applications
+- [CRDT Fundamentals](/tutorials/local-first/crdt-basics) — Understand conflict-free data types
+- [Spirits Tutorial](/tutorials/spirits/) — Build your first Spirit with v0.8.0 syntax
