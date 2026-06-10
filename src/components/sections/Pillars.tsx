@@ -8,7 +8,7 @@ const pillars = [
     description: 'Specification-first development. Write specs first, generate tests, implement with confidence. 631 tests passing.',
     href: '/dol',
     icon: FileCode,
-    gradient: 'linear-gradient(135deg, var(--glow-cyan), #00b8a0)',
+    gradient: 'linear-gradient(135deg, var(--glow-cyan), #b9a06c)',
     features: ['Genes & Traits', 'Constraints', 'Systems', 'Exegesis'],
   },
   {
@@ -17,7 +17,7 @@ const pillars = [
     description: 'Multi-target compilation. Bridge high-level intent to low-level execution across languages and platforms.',
     href: '/llvm',
     icon: Cpu,
-    gradient: 'linear-gradient(135deg, var(--glow-gold), #e6a800)',
+    gradient: 'linear-gradient(135deg, var(--glow-gold), #e8c25a)',
     features: ['MCP Server', 'Claude Flow', 'Multi-language', 'Optimization'],
   },
   {
@@ -26,7 +26,7 @@ const pillars = [
     description: 'Modular, discoverable, composable. Build AI agents and systems with capability modules that work together.',
     href: '/skills',
     icon: Puzzle,
-    gradient: 'linear-gradient(135deg, var(--spore-purple), #9d5cf9)',
+    gradient: 'linear-gradient(135deg, var(--spore-purple), #7a6a32)',
     features: ['SKILL.md Spec', 'Catalog', 'Composable', 'AI-Ready'],
   },
 ]

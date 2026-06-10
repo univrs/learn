@@ -52,7 +52,7 @@ export default function SmallWorlds() {
                             <span
                                 className="text-sm px-3 py-1 rounded-full"
                                 style={{
-                                    backgroundColor: "rgba(255, 215, 0, 0.15)",
+                                    backgroundColor: "rgba(232, 194, 90, 0.15)",
                                     color: "var(--glow-gold)",
                                 }}
                             >
@@ -212,7 +212,7 @@ export default function SmallWorlds() {
                                 <div
                                     className="rounded-xl p-6 mb-6"
                                     style={{
-                                        backgroundColor: "rgba(255, 215, 0, 0.1)",
+                                        backgroundColor: "rgba(232, 194, 90, 0.1)",
                                         border: "1px solid var(--glow-gold)",
                                     }}
                                 >

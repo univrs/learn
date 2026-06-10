@@ -41,7 +41,7 @@ function SkillsOverview() {
             <div className="flex items-center gap-3 mb-6">
               <div
                 className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, var(--spore-purple), rgba(176, 136, 249, 0.3))' }}
+                style={{ background: 'linear-gradient(135deg, var(--spore-purple), rgba(185, 160, 108, 0.3))' }}
               >
                 <Puzzle className="w-6 h-6" style={{ color: 'white' }} />
               </div>

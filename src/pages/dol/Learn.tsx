@@ -255,7 +255,7 @@ export default function DOLLearn() {
                                             <span
                                                 className="text-xs px-2 py-0.5 rounded"
                                                 style={{
-                                                    backgroundColor: "var(--glow-gold-dim, rgba(255, 215, 0, 0.15))",
+                                                    backgroundColor: "var(--glow-gold-dim, rgba(232, 194, 90, 0.15))",
                                                     color: "var(--glow-gold)",
                                                 }}
                                             >

@@ -596,9 +596,8 @@ export default function DOLRepl({
 
     try {
       // Apply custom DOL highlighting on top of TypeScript base
-      const theme: ShikiTheme = document.documentElement.getAttribute('data-theme') === 'light'
-        ? 'github-light'
-        : 'github-dark'
+      // Code surfaces stay dark in both site themes, so always use the dark token set
+      const theme: ShikiTheme = 'github-dark'
 
       const html = highlighter.codeToHtml(code, {
         lang: 'typescript',

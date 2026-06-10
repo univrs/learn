@@ -103,7 +103,7 @@ export default function TutorialLayout({
           <div
             className="sticky top-0 z-10 backdrop-blur-xl"
             style={{
-              backgroundColor: 'rgba(10, 13, 11, 0.95)',
+              backgroundColor: 'rgba(8, 8, 8, 0.95)',
               borderBottom: '1px solid var(--border-subtle)'
             }}
           >

@@ -434,7 +434,7 @@ export default function EnergyCalculator() {
                           ? 'var(--glow-cyan)'
                           : results.closure.selfSufficiencyPercent >= 70
                           ? 'var(--glow-gold)'
-                          : '#ef4444',
+                          : '#5a1320',
                       }}
                     />
                   </div>

@@ -180,7 +180,7 @@ export default function ProgressTracker({
             className="h-full rounded-full transition-all duration-500"
             style={{
               width: `${percentage}%`,
-              background: 'linear-gradient(135deg, var(--glow-cyan), #00b8a0)'
+              background: 'linear-gradient(135deg, var(--glow-cyan), #b9a06c)'
             }}
           />
         </div>
@@ -232,7 +232,7 @@ export default function ProgressTracker({
           className="h-full rounded-full transition-all duration-500 ease-out"
           style={{
             width: `${percentage}%`,
-            background: 'linear-gradient(135deg, var(--glow-cyan), #00b8a0)',
+            background: 'linear-gradient(135deg, var(--glow-cyan), #b9a06c)',
             boxShadow: percentage > 0 ? 'var(--glow-sm)' : 'none'
           }}
         />

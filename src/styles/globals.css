@@ -4,7 +4,9 @@
 
 /*
   Univrs.io Design System
-  Aesthetic: Organic Bioluminescence — dark forest floor with mycelial glow
+  Aesthetic: Univrs gold/black — near-black, warm gold, Cinzel + Cormorant Garamond
+  (unified with shine.univrs.io; variable names kept from the original
+  bioluminescence theme, values remapped to the canonical palette)
 */
 
 /* ═══════════════════════════════════════════════════════════════
@@ -12,30 +14,30 @@
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-    /* Core palette - forest depths */
-    --void: #0a0d0b;
-    --deep-earth: #0f1411;
-    --forest-floor: #141a16;
-    --moss: #1a221d;
-    --bark: #232d27;
+    /* Core palette - near-black golds */
+    --void: #080808;
+    --deep-earth: #0f0f0c;
+    --forest-floor: #0c0c0a;
+    --moss: #14120c;
+    --bark: #221e14;
 
-    /* Bioluminescent accents */
-    --glow-cyan: #00ff88;
-    --glow-cyan-dim: #00ff8840;
-    --glow-gold: #ffd700;
-    --glow-gold-dim: #ffd70030;
-    --spore-purple: #b088f9;
-    --mycelium-white: #e8f4ec;
-    --soft-gray: #8a9a8f;
+    /* Gold accents */
+    --glow-cyan: #e8c25a;
+    --glow-cyan-dim: #e8c25a40;
+    --glow-gold: #f4d77c;
+    --glow-gold-dim: #f4d77c30;
+    --spore-purple: #b9a06c;
+    --mycelium-white: #f3ecd8;
+    --soft-gray: #9a907a;
 
     /* Semantic */
     --text-primary: var(--mycelium-white);
-    --text-secondary: var(--soft-gray);
+    --text-secondary: #d4cab0;
     --text-accent: var(--glow-cyan);
     --bg-primary: var(--void);
     --bg-secondary: var(--deep-earth);
     --bg-card: var(--forest-floor);
-    --border-subtle: #2a3a30;
+    --border-subtle: rgba(232, 194, 90, 0.22);
 
     /* Shadows & Glows */
     --glow-sm: 0 0 10px var(--glow-cyan-dim);
@@ -51,23 +53,24 @@
     --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Light theme override */
+/* Light theme override — warm paper */
 [data-theme="light"] {
-    --void: #f8faf9;
-    --deep-earth: #f0f4f2;
-    --forest-floor: #e8eeeb;
-    --moss: #dce5e0;
-    --bark: #c8d4cd;
+    --void: #faf8f0;
+    --deep-earth: #f4efe2;
+    --forest-floor: #ffffff;
+    --moss: #e7dec6;
+    --bark: #d8cba4;
 
-    --glow-cyan: #047857;
-    --glow-cyan-dim: #04785730;
-    --glow-gold: #b8960a;
-    --glow-gold-dim: #b8960a30;
-    --spore-purple: #7c4dbd;
-    --mycelium-white: #1a221d;
-    --soft-gray: #5a6a5f;
+    --glow-cyan: #7a6a32;
+    --glow-cyan-dim: #7a6a3230;
+    --glow-gold: #a08530;
+    --glow-gold-dim: #a0853030;
+    --spore-purple: #b9a06c;
+    --mycelium-white: #221d12;
+    --soft-gray: #6b6353;
 
-    --border-subtle: #c8d4cd;
+    --text-secondary: #4a4232;
+    --border-subtle: rgba(122, 106, 50, 0.3);
     --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
@@ -81,7 +84,8 @@
     }
 
     body {
-        font-family: "Inter", system-ui, sans-serif;
+        font-family: "Cormorant Garamond", "Iowan Old Style", Garamond, serif;
+        font-size: 1.1rem;
         background: var(--bg-primary);
         color: var(--text-primary);
         min-height: 100vh;
@@ -112,7 +116,7 @@
             ),
             radial-gradient(
                 ellipse 50% 30% at 50% 80%,
-                rgba(176, 136, 249, 0.1) 0%,
+                rgba(185, 160, 108, 0.1) 0%,
                 transparent 50%
             );
         pointer-events: none;
@@ -133,14 +137,21 @@
 
     h1,
     h2,
-    h3,
+    h3 {
+        font-family: "Cinzel Decorative", "Cinzel", serif;
+        color: var(--glow-cyan);
+        font-weight: 400;
+        line-height: 1.2;
+    }
+
     h4,
     h5,
     h6 {
-        font-family: "Space Grotesk", sans-serif;
-        color: var(--text-primary);
-        font-weight: 300;
+        font-family: "Cinzel", "Cormorant Garamond", serif;
+        color: var(--spore-purple);
+        font-weight: 400;
         line-height: 1.2;
+        letter-spacing: 0.08em;
     }
 
     p {
@@ -191,8 +202,8 @@
     .prose .btn-primary,
     .prose-invert .btn-primary {
         @apply inline-flex items-center justify-center px-6 py-3 text-sm font-semibold rounded-md transition-all;
-        background: linear-gradient(135deg, var(--glow-cyan), #00b8a0);
-        color: #ffffff !important;
+        background: linear-gradient(135deg, var(--glow-cyan), #b9a06c);
+        color: #080808 !important;
         box-shadow: var(--glow-sm);
         text-decoration: none !important;
     }
@@ -210,7 +221,7 @@
     .prose-invert .btn-secondary {
         @apply inline-flex items-center justify-center px-6 py-3 text-sm font-semibold rounded-md transition-all;
         background-color: transparent;
-        color: #ffffff !important;
+        color: #f3ecd8 !important;
         border: 1px solid var(--border-subtle);
         text-decoration: none !important;
     }
@@ -219,7 +230,7 @@
     [data-theme="light"] .btn-secondary:hover,
     [data-theme="light"] .btn-secondary:visited,
     [data-theme="light"] .btn-secondary:active {
-        color: #1a221d !important;
+        color: #221d12 !important;
     }
 
     .btn-secondary:hover {
@@ -326,6 +337,18 @@
     }
 }
 
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Sunlion medallion brand mark */
+.logo-medallion {
+    animation: spin 220s linear infinite;
+    filter: drop-shadow(0 0 6px rgba(232, 194, 90, 0.35));
+}
+
 .animate-fade-up {
     animation: fade-up 1s ease-out;
 }
@@ -353,8 +376,8 @@
 article .btn-primary,
 .prose a.btn-primary,
 .prose-invert a.btn-primary {
-    background: linear-gradient(135deg, var(--glow-cyan), #00b8a0) !important;
-    color: #ffffff !important;
+    background: linear-gradient(135deg, var(--glow-cyan), #b9a06c) !important;
+    color: #080808 !important;
     text-decoration: none !important;
 }
 
@@ -364,7 +387,7 @@ article .btn-secondary,
 .prose a.btn-secondary,
 .prose-invert a.btn-secondary {
     background-color: transparent !important;
-    color: #ffffff !important;
+    color: var(--text-primary) !important;
     text-decoration: none !important;
     border: 1px solid var(--border-subtle) !important;
 }

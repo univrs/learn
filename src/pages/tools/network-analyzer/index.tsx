@@ -118,8 +118,8 @@ function NetworkCanvas({
 
     // Draw edges
     ctx.strokeStyle = isSmallWorld
-      ? 'rgba(0, 255, 136, 0.15)'
-      : 'rgba(138, 154, 143, 0.15)';
+      ? 'rgba(232, 194, 90, 0.15)'
+      : 'rgba(154, 144, 122, 0.15)';
     ctx.lineWidth = 0.5;
 
     const nodeMap = new Map(nodes.map((n) => [n.id, n]));
@@ -155,20 +155,20 @@ function NetworkCanvas({
       if (node.localClustering > 0.5 && isSmallWorld) {
         ctx.beginPath();
         ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 255, 136, 0.1)';
+        ctx.fillStyle = 'rgba(232, 194, 90, 0.1)';
         ctx.fill();
       }
     }
 
     // Small-world indicator glow
     if (isSmallWorld) {
-      ctx.strokeStyle = 'rgba(0, 255, 136, 0.3)';
+      ctx.strokeStyle = 'rgba(232, 194, 90, 0.3)';
       ctx.lineWidth = 2;
       ctx.strokeRect(2, 2, width - 4, height - 4);
 
       // Corner glow
       const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 100);
-      gradient.addColorStop(0, 'rgba(0, 255, 136, 0.2)');
+      gradient.addColorStop(0, 'rgba(232, 194, 90, 0.2)');
       gradient.addColorStop(1, 'transparent');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, 100, 100);
@@ -799,7 +799,7 @@ export default function NetworkTopologyAnalyzer() {
                   className="card"
                   style={{
                     backgroundColor: metrics.isSmallWorld
-                      ? 'rgba(0, 255, 136, 0.05)'
+                      ? 'rgba(232, 194, 90, 0.05)'
                       : 'var(--bg-card)',
                     borderColor: metrics.isSmallWorld
                       ? 'var(--glow-cyan)'

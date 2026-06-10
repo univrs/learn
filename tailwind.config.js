@@ -33,9 +33,9 @@ export default {
                 },
             },
             fontFamily: {
-                sans: ["Inter", "system-ui", "sans-serif"],
+                sans: ["Cormorant Garamond", "Iowan Old Style", "Garamond", "serif"],
                 mono: ["JetBrains Mono", "Fira Code", "monospace"],
-                display: ["Space Grotesk", "sans-serif"],
+                display: ["Cinzel Decorative", "Cinzel", "serif"],
             },
             typography: () => ({
                 DEFAULT: {
@@ -48,8 +48,15 @@ export default {
                                 textShadow: "var(--glow-sm)",
                             },
                         },
-                        "h1, h2, h3, h4": {
-                            color: "var(--text-primary)",
+                        "h1, h2, h3": {
+                            fontFamily: '"Cinzel Decorative", "Cinzel", serif',
+                            color: "var(--glow-cyan)",
+                            fontWeight: "400",
+                        },
+                        h4: {
+                            fontFamily: '"Cinzel", "Cormorant Garamond", serif',
+                            color: "var(--spore-purple)",
+                            fontWeight: "400",
                         },
                         code: {
                             color: "var(--spore-purple)",
@@ -65,9 +72,11 @@ export default {
                             content: '""',
                         },
                         pre: {
-                            backgroundColor: "var(--bg-secondary)",
+                            /* code blocks stay dark in both themes */
+                            backgroundColor: "#0c0c0a",
+                            color: "#d4cab0",
                             borderRadius: "0.5rem",
-                            border: "1px solid var(--border-subtle)",
+                            border: "1px solid rgba(232, 194, 90, 0.22)",
                         },
                         blockquote: {
                             borderLeftColor: "var(--glow-cyan)",

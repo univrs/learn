@@ -100,7 +100,7 @@ export default function DOLStdlib() {
             <div className="card" style={{ borderLeft: '4px solid var(--spore-purple)' }}>
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-normal" style={{ color: 'var(--spore-purple)' }}>Implementation Layer</h3>
-                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(176, 136, 249, 0.2)', color: 'var(--spore-purple)' }}>
+                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(185, 160, 108, 0.2)', color: 'var(--spore-purple)' }}>
                   Months to years
                 </span>
               </div>

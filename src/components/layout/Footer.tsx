@@ -31,12 +31,12 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <img
-                src="/icon.jpg"
+                src="/sunlion-medallion.webp"
                 alt="Univrs"
-                className="w-8 h-8 rounded-lg object-cover"
+                className="w-8 h-8 logo-medallion"
               />
               <span
-                className="text-lg font-normal"
+                className="text-lg font-normal font-display"
                 style={{ color: 'var(--text-primary)' }}
               >
                 Univrs Learn

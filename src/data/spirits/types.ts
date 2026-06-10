@@ -294,12 +294,12 @@ export const STATUS_DISPLAY: Record<GapStatus, { label: string; color: string; b
   learning: {
     label: 'Learning',
     color: 'var(--glow-gold)',
-    bgColor: 'rgba(255, 215, 0, 0.1)'
+    bgColor: 'rgba(232, 194, 90, 0.1)'
   },
   practicing: {
     label: 'Practicing',
     color: 'var(--spore-purple)',
-    bgColor: 'rgba(176, 136, 249, 0.1)'
+    bgColor: 'rgba(185, 160, 108, 0.1)'
   },
   demonstrating: {
     label: 'Demonstrating',
@@ -308,7 +308,7 @@ export const STATUS_DISPLAY: Record<GapStatus, { label: string; color: string; b
   },
   closed: {
     label: 'Closed',
-    color: '#00ff88',
-    bgColor: 'rgba(0, 255, 136, 0.1)'
+    color: '#e8c25a',
+    bgColor: 'rgba(232, 194, 90, 0.1)'
   },
 };

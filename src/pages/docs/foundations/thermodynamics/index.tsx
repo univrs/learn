@@ -99,7 +99,7 @@ function ThermodynamicsOverview() {
                                 className="w-12 h-12 rounded-xl flex items-center justify-center"
                                 style={{
                                     background:
-                                        "linear-gradient(135deg, var(--glow-gold), rgba(255, 215, 0, 0.3))",
+                                        "linear-gradient(135deg, var(--glow-gold), rgba(232, 194, 90, 0.3))",
                                 }}
                             >
                                 <Flame
@@ -134,7 +134,7 @@ function ThermodynamicsOverview() {
                             <span
                                 className="px-3 py-1 rounded-full text-sm"
                                 style={{
-                                    backgroundColor: "rgba(255, 215, 0, 0.15)",
+                                    backgroundColor: "rgba(232, 194, 90, 0.15)",
                                     color: "var(--glow-gold)",
                                 }}
                             >
@@ -224,7 +224,7 @@ function ThermodynamicsOverview() {
                                             <div
                                                 className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center text-lg font-light"
                                                 style={{
-                                                    backgroundColor: "rgba(255, 215, 0, 0.15)",
+                                                    backgroundColor: "rgba(232, 194, 90, 0.15)",
                                                     color: "var(--glow-gold)",
                                                 }}
                                             >

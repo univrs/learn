@@ -60,10 +60,10 @@ export default function Header() {
       )}
       style={{
         backgroundColor: scrolled
-          ? (isDark ? 'rgba(10, 13, 11, 0.95)' : 'rgba(248, 250, 249, 0.95)')
+          ? (isDark ? 'rgba(8, 8, 8, 0.95)' : 'rgba(250, 248, 240, 0.95)')
           : 'transparent',
         borderBottom: scrolled
-          ? `1px solid ${isDark ? '#2a3a30' : '#c8d4cd'}`
+          ? `1px solid ${isDark ? 'rgba(232, 194, 90, 0.22)' : 'rgba(122, 106, 50, 0.3)'}`
           : 'none',
       }}
     >
@@ -71,24 +71,16 @@ export default function Header() {
         <div className="flex h-[70px] items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
+            <img
+              src="/sunlion-medallion.webp"
+              alt="Univrs"
+              className="w-8 h-8 logo-medallion"
+            />
             <span
-              className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden"
-              style={{
-                background: 'linear-gradient(135deg, #00ffd5, #b088f9)',
-                boxShadow: isDark ? '0 0 10px rgba(0, 255, 213, 0.3)' : 'none'
-              }}
+              className="text-xl font-normal font-display"
+              style={{ color: isDark ? '#f3ecd8' : '#221d12' }}
             >
-              <img
-                src="/icon.jpg"
-                alt="Univrs"
-                className="w-full h-full object-cover"
-              />
-            </span>
-            <span
-              className="text-xl font-normal"
-              style={{ color: isDark ? '#e8f4ec' : '#1a221d' }}
-            >
-              Univrs.io
+              Univrs
             </span>
           </Link>
 
@@ -103,17 +95,17 @@ export default function Header() {
                   className="relative text-sm font-medium transition-colors"
                   style={{
                     color: isActive
-                      ? (isDark ? '#e8f4ec' : '#1a221d')
-                      : (isDark ? '#8a9a8f' : '#5a6a5f'),
+                      ? (isDark ? '#f3ecd8' : '#221d12')
+                      : (isDark ? '#9a907a' : '#6b6353'),
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.color = isDark ? '#e8f4ec' : '#1a221d'
+                      e.currentTarget.style.color = isDark ? '#f3ecd8' : '#221d12'
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.color = isDark ? '#8a9a8f' : '#5a6a5f'
+                      e.currentTarget.style.color = isDark ? '#9a907a' : '#6b6353'
                     }
                   }}
                 >
@@ -121,7 +113,7 @@ export default function Header() {
                   {isActive && (
                     <span
                       className="absolute -bottom-1 left-0 right-0 h-0.5"
-                      style={{ backgroundColor: isDark ? '#00ffd5' : '#008b75' }}
+                      style={{ backgroundColor: isDark ? '#e8c25a' : '#7a6a32' }}
                     />
                   )}
                 </Link>
@@ -136,15 +128,15 @@ export default function Header() {
               onClick={toggleTheme}
               className="w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all"
               style={{
-                backgroundColor: isDark ? '#141a16' : '#e8eeeb',
-                border: `1px solid ${isDark ? '#2a3a30' : '#c8d4cd'}`,
+                backgroundColor: isDark ? '#0c0c0a' : '#f4efe2',
+                border: `1px solid ${isDark ? 'rgba(232, 194, 90, 0.22)' : 'rgba(122, 106, 50, 0.3)'}`,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = isDark ? '#00ffd5' : '#008b75'
-                e.currentTarget.style.boxShadow = isDark ? '0 0 10px rgba(0, 255, 213, 0.3)' : '0 0 10px rgba(0, 139, 117, 0.3)'
+                e.currentTarget.style.borderColor = isDark ? '#e8c25a' : '#7a6a32'
+                e.currentTarget.style.boxShadow = isDark ? '0 0 10px rgba(232, 194, 90, 0.35)' : '0 0 10px rgba(122, 106, 50, 0.3)'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = isDark ? '#2a3a30' : '#c8d4cd'
+                e.currentTarget.style.borderColor = isDark ? 'rgba(232, 194, 90, 0.22)' : 'rgba(122, 106, 50, 0.3)'
                 e.currentTarget.style.boxShadow = 'none'
               }}
               aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
@@ -157,9 +149,9 @@ export default function Header() {
               target="_blank"
               rel="noopener noreferrer"
               className="hidden sm:flex items-center gap-1 text-sm transition-colors"
-              style={{ color: isDark ? '#8a9a8f' : '#5a6a5f' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = isDark ? '#e8f4ec' : '#1a221d'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isDark ? '#8a9a8f' : '#5a6a5f'}
+              style={{ color: isDark ? '#9a907a' : '#6b6353' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = isDark ? '#f3ecd8' : '#221d12'}
+              onMouseLeave={(e) => e.currentTarget.style.color = isDark ? '#9a907a' : '#6b6353'}
             >
               univrs.io
               <ExternalLink className="w-3 h-3" />
@@ -170,13 +162,13 @@ export default function Header() {
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 rounded-lg transition-colors"
-              style={{ color: isDark ? '#8a9a8f' : '#5a6a5f' }}
+              style={{ color: isDark ? '#9a907a' : '#6b6353' }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = isDark ? '#e8f4ec' : '#1a221d'
-                e.currentTarget.style.backgroundColor = isDark ? '#1a221d' : '#dce5e0'
+                e.currentTarget.style.color = isDark ? '#f3ecd8' : '#221d12'
+                e.currentTarget.style.backgroundColor = isDark ? '#221d12' : '#e7dec6'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = isDark ? '#8a9a8f' : '#5a6a5f'
+                e.currentTarget.style.color = isDark ? '#9a907a' : '#6b6353'
                 e.currentTarget.style.backgroundColor = 'transparent'
               }}
             >
@@ -187,7 +179,7 @@ export default function Header() {
             <button
               type="button"
               className="md:hidden p-2 rounded-lg transition-colors"
-              style={{ color: isDark ? '#8a9a8f' : '#5a6a5f' }}
+              style={{ color: isDark ? '#9a907a' : '#6b6353' }}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -199,7 +191,7 @@ export default function Header() {
         {mobileMenuOpen && (
           <div
             className="md:hidden py-4"
-            style={{ borderTop: `1px solid ${isDark ? '#2a3a30' : '#c8d4cd'}` }}
+            style={{ borderTop: `1px solid ${isDark ? 'rgba(232, 194, 90, 0.22)' : 'rgba(122, 106, 50, 0.3)'}` }}
           >
             <div className="flex flex-col gap-2">
               {navigation.map((item) => {
@@ -211,10 +203,10 @@ export default function Header() {
                     className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
                     style={{
                       color: isActive
-                        ? (isDark ? '#00ffd5' : '#008b75')
-                        : (isDark ? '#8a9a8f' : '#5a6a5f'),
+                        ? (isDark ? '#e8c25a' : '#7a6a32')
+                        : (isDark ? '#9a907a' : '#6b6353'),
                       backgroundColor: isActive
-                        ? (isDark ? 'rgba(0, 255, 213, 0.1)' : 'rgba(0, 139, 117, 0.1)')
+                        ? (isDark ? 'rgba(232, 194, 90, 0.12)' : 'rgba(122, 106, 50, 0.12)')
                         : 'transparent',
                     }}
                     onClick={() => setMobileMenuOpen(false)}

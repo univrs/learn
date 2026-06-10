@@ -108,7 +108,7 @@ export default function SkillsCatalog() {
                   </h3>
                   <span
                     className="text-xs px-2 py-1 rounded"
-                    style={{ backgroundColor: 'rgba(176, 136, 249, 0.2)', color: 'var(--spore-purple)' }}
+                    style={{ backgroundColor: 'rgba(185, 160, 108, 0.2)', color: 'var(--spore-purple)' }}
                   >
                     {skill.category}
                   </span>

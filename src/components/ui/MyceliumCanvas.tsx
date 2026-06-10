@@ -46,8 +46,8 @@ export default function MyceliumCanvas() {
     const getThemeColors = () => {
       const isDark = document.documentElement.getAttribute('data-theme') !== 'light'
       return {
-        node: isDark ? 'rgba(0, 255, 213, 0.6)' : 'rgba(0, 139, 117, 0.6)',
-        connection: isDark ? 'rgba(0, 255, 213, 0.15)' : 'rgba(0, 139, 117, 0.15)'
+        node: isDark ? 'rgba(232, 194, 90, 0.6)' : 'rgba(122, 106, 50, 0.6)',
+        connection: isDark ? 'rgba(232, 194, 90, 0.15)' : 'rgba(122, 106, 50, 0.15)'
       }
     }
 
