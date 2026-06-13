@@ -8,7 +8,7 @@ const navigation = [
   { name: 'LLVM', href: '/llvm' },
   { name: 'Skills', href: '/skills' },
   { name: 'Roadmap', href: '/roadmap' },
-  { name: 'About', href: '/about' },
+  { name: 'About', href: '/about.html' },
 ]
 
 export default function Header() {
@@ -92,6 +92,7 @@ export default function Header() {
                 <Link
                   key={item.name}
                   to={item.href}
+                  reloadDocument={item.href.endsWith('.html')}
                   className="relative text-sm font-medium transition-colors"
                   style={{
                     color: isActive
@@ -200,6 +201,7 @@ export default function Header() {
                   <Link
                     key={item.name}
                     to={item.href}
+                    reloadDocument={item.href.endsWith('.html')}
                     className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
                     style={{
                       color: isActive
