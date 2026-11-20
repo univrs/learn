@@ -75,7 +75,7 @@ export default function Roadmap() {
     <>
       <Helmet>
         <title>Roadmap | Univrs Learn</title>
-        <meta name="description" content="VUDO OS 3-Year Roadmap: From language specification to self-aware computing platform." />
+        <meta name="description" content="VUDO 3-Year Roadmap: From language specification to self-aware computing platform." />
       </Helmet>
 
       {/* Hero */}
@@ -83,7 +83,7 @@ export default function Roadmap() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-light text-univrs-text-primary mb-6">
-              VUDO OS <span className="gradient-text">3-Year Roadmap</span>
+              VUDO <span className="gradient-text">3-Year Roadmap</span>
             </h1>
             <p className="text-xl sm:text-2xl text-univrs-text-secondary mb-4">
               Building the future of ontology-first development
@@ -276,7 +276,7 @@ export default function Roadmap() {
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-light text-univrs-text-primary mb-8 text-center">
-            Why <span className="gradient-text">VUDO OS</span>
+            Why <span className="gradient-text">VUDO</span>
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="card">
@@ -346,7 +346,7 @@ export default function Roadmap() {
               Join the Journey
             </h2>
             <p className="text-univrs-text-secondary mb-6">
-              VUDO OS is building the future of self-aware computing. From formal specifications
+              VUDO is building the future of self-aware computing. From formal specifications
               to distributed intelligence, we're creating tools that understand themselves.
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
