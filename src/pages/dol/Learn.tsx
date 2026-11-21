@@ -46,7 +46,7 @@ const tutorials = [
     {
         number: "06",
         title: "Traits and Constraints",
-        description: "Define behaviors and enforce invariants in DOL",
+        description: "Define behaviors and declare invariants in DOL",
         topics: ["trait", "constraint", "uses", "never", "invariants"],
         link: "/dol/tutorials/006-traits-constraints",
         duration: "25 min",

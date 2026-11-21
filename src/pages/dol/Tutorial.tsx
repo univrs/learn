@@ -39,7 +39,7 @@ const tutorials = [
     {
         slug: "006-traits-constraints",
         title: "Traits and Constraints",
-        description: "Define behaviors and enforce invariants",
+        description: "Define behaviors and declare invariants",
         duration: "25 min",
     },
     {

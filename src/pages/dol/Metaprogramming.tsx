@@ -33,7 +33,7 @@ export default function DOLMetaprogramming() {
     return (
         <>
             <Helmet>
-                <title>Meta-Programming | DOL v0.7.2 | Univrs Learn</title>
+                <title>Meta-Programming | DOL v0.8.2 | Univrs Learn</title>
                 <meta
                     name="description"
                     content="DOL meta-programming: Quote/Eval for AST manipulation, Reflect for type introspection, 18 built-in macros, and idiom brackets for applicative style."
@@ -74,7 +74,7 @@ export default function DOLMetaprogramming() {
                         className="text-xl max-w-3xl mb-4"
                         style={{ color: "var(--text-secondary)" }}
                     >
-                        DOL v0.7.2 includes powerful meta-programming capabilities for
+                        DOL v0.8.2 includes meta-programming capabilities for
                         code generation, AST manipulation, and compile-time computation.
                     </p>
                     <div
@@ -148,10 +148,12 @@ export default function DOLMetaprogramming() {
                                 style={{ color: "var(--text-primary)" }}
                             >
 {`// Quote captures expressions as AST
-ast = '(1 + 2 * 3)           // Quoted<i64>
-expr = '{ x + y }            // Quoted expression
-block = '{
-    if condition { a } else { b }
+fun quote_examples() {
+    let ast = '(1 + 2 * 3)           // Quoted<i64>
+    let expr = '{ x + y }            // Quoted expression
+    let block = '{
+        if condition { a } else { b }
+    }
 }
 
 // The type system tracks quoted expressions
@@ -235,31 +237,8 @@ original = '(a + b * c)
                             style={{ color: "var(--text-secondary)" }}
                         >
                             Build AST templates with holes that can be filled dynamically.
+                            <strong> Planned — not implemented in v0.8.2:</strong> the quasi-quote and unquote syntax does not parse yet.
                         </p>
-                        <div
-                            className="rounded-xl overflow-hidden"
-                            style={{
-                                backgroundColor: "var(--bg-tertiary)",
-                                border: "1px solid var(--border-subtle)",
-                            }}
-                        >
-                            <pre
-                                className="p-6 text-sm font-mono overflow-x-auto"
-                                style={{ color: "var(--text-primary)" }}
-                            >
-{`// Quasi-quote with unquote splicing
-x = 5
-template = \`(1 + ~x)         // Splice x into template
-result = !template           // 6
-
-// Build expressions dynamically
-fun make_adder(n: i64) -> Quoted<Expr> {
-    return \`(x + ~n)
-}
-add_five = make_adder(5)
-result = !add_five where { x = 10 }  // 15`}
-                            </pre>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -309,20 +288,22 @@ result = !add_five where { x = 10 }  // 15`}
                                 style={{ color: "var(--text-primary)" }}
                             >
 {`gen Person {
-    has name: String
+    has name: string
     has age: i64
 }
 
-info = ?Person
-// info.name == "Person"
-// info.fields == [
-//   { name: "name", type: "String" },
-//   { name: "age", type: "Int64" }
-// ]
+fun inspect(person: Person) {
+    let info = ?Person
+    // info.name == "Person"
+    // info.fields == [
+    //   { name: "name", type: "string" },
+    //   { name: "age", type: "i64" }
+    // ]
 
-// Check trait implementation
-if ?Person.implements(Serializable) {
-    serialize(person)
+    // Check trait implementation
+    if info.implements(Serializable) {
+        serialize(person)
+    }
 }`}
                             </pre>
                         </div>
@@ -347,20 +328,20 @@ if ?Person.implements(Serializable) {
                                 style={{ color: "var(--text-primary)" }}
                             >
 {`gen TypeInfo {
-    has name: String
+    has name: string
     has kind: TypeKind
-    has fields: List<FieldInfo>
-    has methods: List<MethodInfo>
+    has fields: Vec<FieldInfo>
+    has methods: Vec<MethodInfo>
 
-    fun implements(trait: Trait) -> Bool
+    fun implements(trait: Trait) -> bool
     fun size() -> u64
-    fun is_primitive() -> Bool
+    fun is_primitive() -> bool
 }
 
 gen FieldInfo {
-    has name: String
-    has type_name: String
-    has is_public: Bool
+    has name: string
+    has type_name: string
+    has is_public: bool
 }`}
                             </pre>
                         </div>
@@ -402,10 +383,7 @@ gen FieldInfo {
                             className="p-6 text-sm font-mono overflow-x-auto"
                             style={{ color: "var(--text-primary)" }}
                         >
-{`// Instead of chaining operators:
-result = add <$> mx <*> my
-
-// Write naturally:
+{`// Write applicative code naturally:
 result = [| add mx my |]
 
 // Works with any applicative functor
@@ -494,29 +472,31 @@ parsed = [| create_user name_result age_result email_result |]
                                 className="p-6 text-sm font-mono overflow-x-auto"
                                 style={{ color: "var(--text-primary)" }}
                             >
-{`#derive(Debug, Clone)
+{`#[derive(Debug, Clone)]
 gen Container {
     has id: u64
-    has name: String
+    has name: string
 }
 
 // Conditional compilation
-#cfg(target.wasm)
+#[cfg(target.wasm)]
 fun platform_init() { wasm_init() }
 
-#cfg(target.native)
+#[cfg(target.native)]
 fun platform_init() { native_init() }
 
-// Debug printing
-value = #dbg(compute_something())  // Prints and returns
+fun macro_examples() {
+    // Debug printing
+    let value = #dbg(compute_something())  // Prints and returns
 
-// Assertions
-#assert(count > 0, "count must be positive")
-#assert_eq(expected, actual)
+    // Assertions
+    #assert(count > 0, "count must be positive")
+    #assert_eq(expected, actual)
 
-// String operations
-msg = #format("Hello, {}!", name)
-combined = #concat("pre", "fix", "_name")`}
+    // String operations
+    let msg = #format("Hello, {}!", name)
+    let combined = #concat("pre", "fix", "_name")
+}`}
                             </pre>
                         </div>
                     </div>

@@ -40,7 +40,7 @@ docs {
   This demonstrates the basic pattern:
   - gen <domain>.<name> declares a new gene
   - <entity> has <property> declares properties
-  - exegesis explains the intent and usage
+  - docs explains the intent and usage
 }
 ```
 
@@ -52,20 +52,22 @@ Let's break down what we just wrote.
 
 ```dol
 gen hello.world {
-  ...
+  // properties go here
 }
 ```
 
-- `gene` is the keyword that starts a gen declaration
+- `gen` is the keyword that starts a gene declaration (the older `gene` keyword still parses but is deprecated)
 - `hello.world` is a **qualified identifier** - names in DOL use dot notation to create namespaces
 - The curly braces `{ }` contain the gene's body
 
 ### The `has` Predicate
 
 ```dol
-message has content
-message has sender
-message has timestamp
+gen hello.world {
+  message has content
+  message has sender
+  message has timestamp
+}
 ```
 
 The `has` predicate declares that an entity possesses a property:
@@ -75,7 +77,7 @@ The `has` predicate declares that an entity possesses a property:
 
 This says: "A message has content, a message has sender, a message has timestamp."
 
-### The Exegesis
+### The `docs` Block (Exegesis)
 
 ```dol
 docs {
@@ -83,12 +85,12 @@ docs {
 }
 ```
 
-**Exegesis is mandatory** in DOL. Every declaration must include an `docs` block that explains:
+Every declaration should include a `docs` block (the exegesis; the older `exegesis` keyword is deprecated) that explains:
 - What the declaration represents
 - Why it exists
 - How it should be used
 
-Exegesis is not just documentation - it's a first-class part of the specification that can be parsed and analyzed.
+Exegesis is not just documentation - it's a first-class part of the specification that can be parsed and analyzed. The parser accepts declarations without a `docs` block; run `dol-check --require-exegesis` to make missing exegesis an error.
 
 ## Another Example: Containers
 
@@ -130,15 +132,16 @@ Notice how the exegesis provides rich context about what each property means and
 
 ## Comments in DOL
 
-DOL supports two styles of comments:
+DOL supports line comments only, written with `//` or `--` (block comments `/* */` are not supported):
 
 ```dol
 // Single-line comment
+-- Also a single-line comment
 
-/* Multi-line
-   comment */
-
-/// Documentation comment (for inline docs)
+/// Lines starting with /// are ordinary line comments too
+gen comment.example {
+  example has comments
+}
 ```
 
 Comments are for code authors. Exegesis is for specification consumers.
@@ -157,6 +160,8 @@ dol-parse example.dol
 # Check a DOL file for errors
 dol-check example.dol
 ```
+
+> **Note (v0.8.2):** `dol-parse` and `dol-check` currently only process the **first declaration** in a file; anything after it is ignored. Keep one declaration (plus its `docs` block) per file when using the CLI.
 
 ## The `is` Predicate
 
@@ -186,7 +191,7 @@ The `is` predicate says something **about the nature** of an entity, while `has`
 - Use **qualified identifiers** with dot notation: `domain.name`
 - The `has` predicate declares properties: `entity has property`
 - The `is` predicate declares states or traits: `entity is state`
-- **Exegesis is mandatory** - every declaration must be explained
+- **Exegesis matters** - every declaration should be explained in a `docs` block (enforced by `dol-check --require-exegesis`)
 
 ## Practice Exercise
 
@@ -196,7 +201,7 @@ Try writing a gen that describes a "user account" with these properties:
 - A user has created_at
 - A user is authenticated
 
-Remember to include an exegesis block explaining what a user account represents!
+Remember to include a `docs` block explaining what a user account represents!
 
 ```dol
 gen account.user {

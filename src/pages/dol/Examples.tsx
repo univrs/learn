@@ -64,8 +64,7 @@ export default function DOLExamples() {
             </h1>
           </div>
           <p className="text-xl max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
-            Real-world examples showcasing DOL v0.8.1 capabilities through a complete biological systems module.
-            Learn by exploring actual production code.
+            Examples showcasing DOL v0.8.2 capabilities through a biological systems module.
           </p>
         </div>
       </section>
@@ -77,8 +76,13 @@ export default function DOLExamples() {
             Biology Module
           </h2>
           <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
-            A complete DOL v0.8.1 showcase modeling biological systems from molecular to ecosystem scales.
+            A complete DOL v0.8.2 showcase modeling biological systems from molecular to ecosystem scales.
             Located in the DOL repository at <code className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--glow-cyan)' }}>examples/stdlib/biology/</code>
+          </p>
+          <p className="mb-6 text-sm" style={{ color: 'var(--soft-gray)' }}>
+            Status note (v0.8.2): in the repository, only <code>types.dol</code> and <code>mod.dol</code> parse as whole files;
+            the other biology files fail after their first declaration, which <code>dol-check</code> does not detect because it
+            only reads the first declaration of each file. The snippets on this page have been adapted so that each one parses as a whole file.
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {modules.map((module) => (
@@ -193,7 +197,7 @@ pub gen Nutrient {
             Pattern: Traits with Biological Laws
           </h2>
           <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
-            Traits define behavioral contracts with laws that enforce biological principles like mass conservation.
+            Traits define behavioral contracts with laws that state biological principles like mass conservation.
           </p>
           <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
             <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
@@ -202,26 +206,22 @@ pub gen Nutrient {
             <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-secondary)' }}>
 {`pub trait Hyphal {
   /// Extend toward nutrient gradient
-  is extend(gradient: Gradient<Nutrient>) -> Self
+  fun extend(gradient: Gradient<Nutrient>) -> Self
 
   /// Branch into multiple hyphae
-  is branch(factor: f64) -> Vec<Self>
+  fun branch(factor: f64) -> Vec<Self>
 
   /// Fuse with another hypha (anastomosis)
-  is fuse(other: Self) -> Option<Self>
+  fun fuse(other: Self) -> Option<Self>
 
-  law conservation_of_mass {
-    // Mass in = mass out + mass stored
-    forall self: Self.
-      this.absorbed_mass() ==
-        this.transported_mass() + this.stored_mass()
+  /// Mass in = mass out + mass stored
+  law conservation_of_mass(h: Self) {
+    h.absorbed_mass() == h.transported_mass() + h.stored_mass()
   }
 
-  law branching_conserves_potential {
-    // Branching distributes potential, doesn't create it
-    forall self: Self, factor: f64.
-      sum(this.branch(factor).map(|b| b.branching_potential))
-        <= this.branching_potential
+  /// Branching distributes potential, doesn't create it
+  law branching_conserves_potential(h: Self, factor: f64) {
+    sum(h.branch(factor).map(|b| b.branching_potential)) <= h.branching_potential
   }
 
   docs {
@@ -295,48 +295,24 @@ pub gen Interaction {
             Pattern: Speciation with <code className="text-sm px-2 py-1 rounded" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--glow-gold)' }}>evo</code>
           </h2>
           <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
-            Model evolutionary transitions with geological timestamps and migration functions.
+            Model evolutionary transitions with versioned evo declarations (new version &gt; previous version) and a stated reason.
           </p>
           <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
             <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
               <span className="text-xs font-mono" style={{ color: 'var(--soft-gray)' }}>evolution.dol</span>
             </div>
             <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-secondary)' }}>
-{`/// Eukaryote evolved from Organism (via endosymbiosis)
-evo Organism > Eukaryote @ 2.0Gya {
-  added nucleus: Nucleus
-  added mitochondria: Vec<Mitochondrion>
-  added endomembrane_system: bool = true
+{`// Eukaryote evolved from Organism (via endosymbiosis)
+evo Eukaryote @ 2.0.0 > 1.0.0 {
+  adds Eukaryote has nucleus
+  adds Eukaryote has mitochondria
+  adds Eukaryote has endomembrane_system
+  because "Eukaryotes gained membrane-bound organelles via endosymbiosis"
+}
 
-  rule has_nucleus {
-    this.nucleus is not null
-  }
-
-  rule has_mitochondria {
-    // All eukaryotes have mitochondria (or remnants)
-    this.mitochondria.len() >= 1
-  }
-
-  migrate from Organism {
-    return Eukaryote {
-      species_id: old.species_id,
-      genome: old.genome,
-      lineage: Lineage {
-        ancestor_id: Some(old.species_id),
-        divergence_time: GeoTime { mya: 2000.0 },
-        innovations: ["nucleus", "mitochondria", "endosymbiosis"]
-      },
-      generation: old.generation,
-      nucleus: Nucleus.default(),
-      mitochondria: [Mitochondrion.default()],
-      endomembrane_system: true
-    }
-  }
-
-  docs {
-    Eukaryotes: complex cells with membrane-bound organelles.
-    Evolved ~2 billion years ago via endosymbiosis.
-  }
+docs {
+  Eukaryotes: complex cells with membrane-bound organelles.
+  Evolved ~2 billion years ago via endosymbiosis.
 }`}
             </pre>
           </div>
@@ -359,7 +335,7 @@ evo Organism > Eukaryote @ 2.0Gya {
             <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-secondary)' }}>
 {`pub system MyceliumNetwork {
   uses Hyphal
-  uses Transport<Nutrient>
+  uses Transport
   uses Evolvable
 
   state nodes: Map<u64, MyceliumNode>
@@ -452,10 +428,10 @@ dol-check examples/stdlib/biology/mycelium.dol`}
               <div className="rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)' }}>
                 <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-secondary)' }}>
 {`# Run biology module tests
-cargo test biology
+cargo test --test biology_tests
 
 # Run specific test
-cargo test test_mycelium_growth`}
+cargo test --test biology_tests test_parse_mycelium_network`}
                 </pre>
               </div>
             </div>

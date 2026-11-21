@@ -15,7 +15,7 @@ As your DOL specifications grow, you need to organize them into modules. Modules
 
 ## Module Declaration
 
-Every DOL file can declare its module with a version. DOL v0.3.0 prefers `mod` over `module`:
+Every DOL file can declare its module with a version. `mod` is the preferred short form of `module` (both are accepted):
 
 ```dol
 mod dol.token @ 0.4.0
@@ -50,8 +50,8 @@ use dol.types.{ TypeExpr, TypeParam }
 
 pub gen GeneDecl {
   has name: string
-  has type_params<Vec<TypeParam>
-  has fields<Vec<Field>
+  has type_params: Vec<TypeParam>
+  has fields: Vec<Field>
   has span: Span
 
   docs {
@@ -80,6 +80,8 @@ use dol.ast.{ * }
 ## Public vs Private
 
 Items are private by default. Use `pub` to make them public:
+
+> **Note (v0.8.2):** `pub` is accepted by the parser but not yet enforced — the AST currently records every item as private, so visibility is a documentation convention for now.
 
 ```dol
 mod user.account @ 1.0.0
@@ -152,9 +154,6 @@ system mycelium.network @0.2.0 {
   // Minimum version
   requires nutrient.model >= 0.0.1
 
-  // Version range
-  requires spatial.coords >= 0.1.0, < 1.0.0
-
   uses MyceliumNode
   uses HyphalSegment
 }
@@ -170,7 +169,6 @@ A typical DOL project structure:
 
 ```
 my-project/
-├── dol.toml              # Project manifest
 ├── src/
 │   ├── lib.dol           # Library entry point
 │   ├── types/
@@ -221,22 +219,23 @@ docs {
 DOL tracks how specifications change over time:
 
 ```dol
-evolves container.lifecycle @0.0.2 from @0.0.1 {
+evo container.lifecycle @ 0.0.2 > 0.0.1 {
   // Added new state
-  add container is pausing
+  adds container is pausing
 
-  // Renamed field
-  rename status to state
+  // Deprecated property
+  deprecates container has status
 
-  // Changed type
-  change timeout: i32 to timeout: i64
+  // Removed property
+  removes legacy_timeout
+
+  because "Pausing enables graceful suspension."
 }
 
 docs {
   Evolution from v0.0.1 to v0.0.2 of the container lifecycle.
   Added pausing state for graceful pause support.
-  Renamed status to state for clarity.
-  Changed timeout to 64-bit for longer durations.
+  Deprecated status and removed the legacy timeout.
 }
 ```
 
@@ -244,14 +243,16 @@ docs {
 
 | Command | Description |
 |---------|-------------|
-| `add field has property` | Add new property |
-| `remove field` | Remove property |
-| `rename old to new` | Rename property |
-| `change field: OldType to field: NewType` | Change type |
+| `adds subject has property` | Add a new statement |
+| `deprecates subject has property` | Mark a statement as deprecated |
+| `removes name` | Remove an item |
+| `because "reason"` | Record the rationale |
+
+The header reads `evo name @ new_version > parent_version`. (`evolves` is the deprecated pre-v0.8 keyword.)
 
 ## Visibility Modifiers
 
-DOL has several visibility levels:
+DOL's syntax has several visibility levels. In v0.8.2 these modifiers are parsed but **not enforced** (every item is recorded as private), so the table describes intent:
 
 | Modifier | Visibility |
 |----------|------------|
@@ -288,15 +289,9 @@ pub gen PublicAPI {
 
 ### 1. One Concept Per Module
 
-```dol
-// Good: focused modules
-mod myproject.user @ 1.0.0
-mod myproject.auth @ 1.0.0
-mod myproject.session @ 1.0.0
+Good: focused modules such as `myproject.user`, `myproject.auth` and `myproject.session` (one `mod` declaration per file).
 
-// Avoid: catch-all modules
-mod myproject.misc @ 1.0.0  // Too vague
-```
+Avoid: catch-all modules such as `myproject.misc` — too vague.
 
 ### 2. Minimize Public API
 
@@ -316,23 +311,18 @@ gen TokenCache {
   has entries: Map<string, Session>
 }
 
-fun validate_token(token: string) -> Bool {
+fun validate_token(token: string) -> bool {
   // internal logic
 }
 ```
 
 ### 3. Version Meaningfully
 
-```dol
-// Major: Breaking changes
-mod myproject @ 2.0.0  // Incompatible API changes
-
-// Minor: New features
-mod myproject @ 1.1.0  // Added new genes/functions
-
-// Patch: Bug fixes
-mod myproject @ 1.0.1  // Fixed behavior, no API changes
-```
+| Change | Example header | Meaning |
+|--------|----------------|---------|
+| Major | `mod myproject @ 2.0.0` | Incompatible API changes |
+| Minor | `mod myproject @ 1.1.0` | Added new genes/functions |
+| Patch | `mod myproject @ 1.0.1` | Fixed behavior, no API changes |
 
 ## Key Takeaways
 
@@ -341,12 +331,14 @@ mod myproject @ 1.0.1  // Fixed behavior, no API changes
 - Use `pub` for public visibility
 - Systems declare dependencies with `requires name >= version`
 - Organize projects with clear module boundaries
-- Track changes with `evolves` declarations
+- Track changes with `evo` declarations
 - Follow semver for versioning
 
 ## Practice Exercise
 
 Create a module structure for a blog system:
+
+`blog/lib.dol`:
 
 ```dol
 mod blog @ 1.0.0
@@ -357,8 +349,11 @@ use blog.traits.{ Publishable, Commentable }
 docs {
   Blog system module. Re-exports public API.
 }
+```
 
-// In blog/types.dol:
+`blog/types.dol`:
+
+```dol
 mod blog.types @ 1.0.0
 
 pub gen Post {
@@ -366,8 +361,8 @@ pub gen Post {
   has title: string
   has content: string
   has author_id: u64
-  has published_at: Option<Ui64>
-  has tags<Vec<string>
+  has published_at: Option<u64>
+  has tags: Vec<string>
 
   docs {
     A blog post with optional publication date.
@@ -381,8 +376,11 @@ pub gen Author {
 pub gen Comment {
   // Add fields: id, post_id, author_id, content, created_at
 }
+```
 
-// In blog/traits.dol:
+`blog/traits.dol`:
+
+```dol
 mod blog.traits @ 1.0.0
 
 use blog.types.{ Post }
@@ -410,7 +408,7 @@ You have completed the DOL Fundamentals track! You now understand:
 - Values, types, and enums
 - Functions with `fun` keyword
 - Control flow and pattern matching
-- Collections: List, Map, Option
+- Collections: Vec, Map, Option
 - Traits and constraints
 - Error handling with Result
 - Modules and imports
@@ -419,10 +417,9 @@ You have completed the DOL Fundamentals track! You now understand:
 
 Continue your DOL journey:
 
-- **[DOL Reference](/dol/reference)** - Complete language specification
-- **[Metal DOL](/dol/language)** - The simple ontology syntax
+- **[DOL Reference](/dol/reference)** - Language reference (there is no formal language specification yet; the parser source is the de facto spec)
 - **[Examples](/dol/examples)** - Real-world specifications
-- **[Grammar](/dol/grammar)** - Formal EBNF grammar
+- **[Cheatsheet](/dol/cheatsheet)** - Quick syntax summary
 
 <div className="mt-8 flex justify-between">
   <a href="/dol/tutorials/007-error-handling" className="btn-secondary inline-flex items-center gap-2">← Previous: Error Handling</a>

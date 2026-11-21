@@ -13,6 +13,8 @@ next: "/dol/tutorials/006-traits-constraints"
 
 DOL provides powerful collection types and functional operations for working with data. This lesson covers lists, maps, and the functional programming patterns used throughout DOL.
 
+> **Status (v0.8.2):** every snippet in this lesson parses, but DOL has no implemented standard library yet, so methods such as `push`, `map`, `filter`, `reduce` and `iter` are illustrative. The WASM backend does not yet compile lambdas or list literals.
+
 ## List
 
 An ordered sequence of elements:
@@ -20,8 +22,8 @@ An ordered sequence of elements:
 ```dol
 pub gen MyceliumNode {
   has id: u64
-  has tips<Vec<HyphalTip>
-  has connections<Vec<Ui64>
+  has tips: Vec<HyphalTip>
+  has connections: Vec<u64>
   has stored_nutrients: Nutrient
 
   docs {
@@ -35,13 +37,10 @@ pub gen MyceliumNode {
 
 ```dol
 // Empty list
-val empty<Vec<i64> = []
+val empty: Vec<i64> = []
 
 // List with elements
 val numbers = [1, 2, 3, 4, 5]
-
-// From repeated value
-val zeros = [0; 10]  // [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ```
 
 ### List Operations
@@ -70,7 +69,7 @@ Key-value pairs:
 ```dol
 pub system MyceliumNetwork {
   state nodes: Map<u64, MyceliumNode>
-  state edges<Vec<HyphalSegment>
+  state edges: Vec<HyphalSegment>
   state next_id: u64
 
   docs {
@@ -95,11 +94,6 @@ val unknown = scores.get("Charlie")    // None
 
 // Check key exists
 val has_bob = scores.contains_key("Bob")  // true
-
-// Iterate
-for (name, score) in scores {
-  // process name and score
-}
 ```
 
 ## Option
@@ -123,8 +117,8 @@ val nothing: Option<i64> = None
 
 // Pattern match
 match maybe_value {
-  Some(v) => { /* use v */ },
-  None => { /* handle missing */ }
+  Some(v) => v,
+  None => 0
 }
 
 // Unwrap with default
@@ -165,11 +159,13 @@ val call_args = args.map(|arg| CallArg {
 Keep elements matching a predicate:
 
 ```dol
-val numbers = [1, 2, 3, 4, 5, 6]
-val evens = numbers.filter(|n| n % 2 == 0)  // [2, 4, 6]
+fun evens() -> Vec<i64> {
+  val numbers = [1, 2, 3, 4, 5, 6]
+  return numbers.filter(|n| n % 2 == 0)  // [2, 4, 6]
+}
 
 // From the codebase
-fun has_enough_branching_points() -> Bool {
+fun has_enough_branching_points() -> bool {
   val branch_count = this.nodes.values()
     .filter(|n| n.is_branching_point())
     .len()
@@ -182,8 +178,10 @@ fun has_enough_branching_points() -> Bool {
 Combine all elements into one:
 
 ```dol
-val numbers = [1, 2, 3, 4, 5]
-val sum = numbers.reduce(0, |acc, n| acc + n)  // 15
+fun total() -> i64 {
+  val numbers = [1, 2, 3, 4, 5]
+  return numbers.reduce(0, |acc, n| acc + n)  // 15
+}
 
 // From the codebase
 fun calculate_biomass() -> f64 {
@@ -220,13 +218,13 @@ val all_even = numbers.all(|n| n % 2 == 0)  // false
 Combine multiple operations fluently:
 
 ```dol
-pub fun can_fruit() -> Bool {
+pub fun can_fruit() -> bool {
   return this.total_biomass > 100.0 &&
          this.nodes.len() > 50 &&
          this.has_enough_branching_points()
 }
 
-fun has_enough_branching_points() -> Bool {
+fun has_enough_branching_points() -> bool {
   val branch_count = this.nodes.values()
     .filter(|n| n.is_branching_point())
     .len()
@@ -251,18 +249,20 @@ val result = large_list
 
 ```dol
 pub gen DolFile {
-  has declarations<Vec<Decl>
+  has declarations: Vec<Decl>
   has span: Span
 }
 
 // Flatten nested structures
-val all_fields = declarations
-  .filter_map(|d| match d {
-    Decl.Gene { decl } => Some(decl.fields),
-    _ => None
-  })
-  .flatten()
-  .collect()
+fun all_fields(declarations: Vec<Decl>) -> Vec<Field> {
+  return declarations
+    .filter_map(|d| match d {
+      Decl.Gene(decl) => Some(decl.fields),
+      _ => None
+    })
+    .flatten()
+    .collect()
+}
 ```
 
 ## Key Takeaways
@@ -285,7 +285,7 @@ pub gen Node {
   has active: bool
 }
 
-pub fun process_nodes(nodes<Vec<Node>) -> i64 {
+pub fun process_nodes(nodes: Vec<Node>) -> i64 {
   // Return the sum of values for all active nodes
   // whose value is greater than 10
   nodes

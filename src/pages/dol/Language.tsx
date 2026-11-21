@@ -45,8 +45,7 @@ const operatorCategories = [
     operators: [
       { symbol: '&&', meaning: 'Logical AND' },
       { symbol: '||', meaning: 'Logical OR' },
-      { symbol: 'not', meaning: 'Logical NOT' },
-      { symbol: 'implies', meaning: 'Logical implication' },
+      { symbol: '!', meaning: 'Logical NOT' },
     ],
   },
   {
@@ -74,7 +73,7 @@ export default function DOLLanguage() {
         <title>DOL Language Guide | Univrs Learn</title>
         <meta
           name="description"
-          content="Complete language guide for DOL v0.8.1 syntax including declarations, types, generics, operators, and control flow."
+          content="Complete language guide for DOL v0.8.2 syntax including declarations, types, generics, operators, and control flow."
         />
       </Helmet>
 
@@ -95,7 +94,7 @@ export default function DOLLanguage() {
             </h1>
           </div>
           <p className="text-xl max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
-            Complete reference for DOL v0.8.1 syntax, covering declarations, types, generics, operators, and control flow.
+            Complete reference for DOL v0.8.2 syntax, covering declarations, types, generics, operators, and control flow.
           </p>
         </div>
       </section>
@@ -113,7 +112,7 @@ export default function DOLLanguage() {
               Module Declaration
             </h3>
             <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
-              Every DOL file begins with a module declaration specifying its namespace and version.
+              A DOL file can begin with an optional module declaration specifying its namespace and version.
             </p>
             <div
               className="rounded-xl overflow-hidden"
@@ -158,7 +157,8 @@ use system.orchestration.{ scheduler, allocator }`}
               Visibility Modifiers
             </h3>
             <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
-              Control which declarations are visible to other modules.
+              Control which declarations are visible to other modules. Note: in v0.8.2 these modifiers are
+              parsed but not yet recorded or enforced (every declaration is treated as private in the AST).
             </p>
             <div className="grid md:grid-cols-3 gap-4">
               <div className="card">
@@ -191,11 +191,11 @@ use system.orchestration.{ scheduler, allocator }`}
               style={{ backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)' }}
             >
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
-                {`pub gen container.exists @ 1.0.0 { /* ... */ }
+                {`pub gen container.exists { container has id }
 
-pub(spirit) trait internal.helper @ 0.1.0 { /* ... */ }
+pub(spirit) trait internal.helper { uses container.exists }
 
-pub(parent) rule local.invariant @ 1.0.0 { /* ... */ }`}
+pub(parent) rule local.invariant { container has id }`}
               </pre>
             </div>
           </div>
@@ -218,7 +218,7 @@ pub(parent) rule local.invariant @ 1.0.0 { /* ... */ }`}
                 Atomic type definitions with fields and rules. Cannot be decomposed further.
               </p>
               <code className="text-xs" style={{ color: 'var(--soft-gray)' }}>
-                gen name @ version &#123; /* statements */ &#125;
+                gen name &#123; /* statements */ &#125;
               </code>
             </div>
 
@@ -230,7 +230,7 @@ pub(parent) rule local.invariant @ 1.0.0 { /* ... */ }`}
                 Interface contracts defining methods and behavioral laws. Composable capabilities.
               </p>
               <code className="text-xs" style={{ color: 'var(--soft-gray)' }}>
-                trait name @ version &#123; /* behaviors */ &#125;
+                trait name &#123; /* behaviors */ &#125;
               </code>
             </div>
 
@@ -242,7 +242,7 @@ pub(parent) rule local.invariant @ 1.0.0 { /* ... */ }`}
                 Named invariants that must always hold. Express business rules and system guarantees.
               </p>
               <code className="text-xs" style={{ color: 'var(--soft-gray)' }}>
-                rule name @ version &#123; /* invariants */ &#125;
+                rule name &#123; /* invariants */ &#125;
               </code>
             </div>
 
@@ -266,7 +266,7 @@ pub(parent) rule local.invariant @ 1.0.0 { /* ... */ }`}
                 Version migrations defining how declarations change over time.
               </p>
               <code className="text-xs" style={{ color: 'var(--soft-gray)' }}>
-                evo name from X.Y.Z to X.Y.Z+1 &#123; /* changes */ &#125;
+                evo name @ X.Y.Z+1 &gt; X.Y.Z &#123; /* changes */ &#125;
               </code>
             </div>
           </div>
@@ -379,6 +379,11 @@ pub(parent) rule local.invariant @ 1.0.0 { /* ... */ }`}
           <h2 className="text-2xl font-light mb-8" style={{ color: 'var(--text-primary)' }}>
             Generics
           </h2>
+          <p className="mb-8" style={{ color: 'var(--text-secondary)' }}>
+            Status in v0.8.2: type parameters on gen and trait are parsed but not yet recorded in the AST, so they
+            are not checked or used by code generation. Generic functions (<code>fun first&lt;T&gt;(...)</code>) are
+            planned — not implemented.
+          </p>
 
           <div className="grid md:grid-cols-2 gap-8">
             <div>
@@ -390,7 +395,7 @@ pub(parent) rule local.invariant @ 1.0.0 { /* ... */ }`}
                 style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}
               >
                 <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
-                  {`gen Container<T> @ 1.0.0 {
+                  {`gen Container<T> {
     has items: Vec<T>
     has capacity: u64
 }`}
@@ -407,9 +412,9 @@ pub(parent) rule local.invariant @ 1.0.0 { /* ... */ }`}
                 style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}
               >
                 <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
-                  {`gen SortedList<T: Comparable> @ 1.0.0 {
+                  {`gen SortedList<T: Comparable> {
     has items: Vec<T>
-    is sorted
+    items is sorted
 }`}
                 </pre>
               </div>
@@ -424,7 +429,7 @@ pub(parent) rule local.invariant @ 1.0.0 { /* ... */ }`}
                 style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}
               >
                 <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
-                  {`gen Buffer<T = u8> @ 1.0.0 {
+                  {`gen Buffer<T = u8> {
     has data: Vec<T>
     has size: u64
 }`}
@@ -441,7 +446,7 @@ pub(parent) rule local.invariant @ 1.0.0 { /* ... */ }`}
                 style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}
               >
                 <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
-                  {`gen Cache<K, V> @ 1.0.0 {
+                  {`gen Cache<K, V> {
     has store: Map<K, Option<V>>
     has history: Vec<Result<V, Error>>
 }`}
@@ -459,7 +464,7 @@ pub(parent) rule local.invariant @ 1.0.0 { /* ... */ }`}
               style={{ backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)' }}
             >
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
-                {`trait Serializable<T: Clone + Hash + Eq> @ 1.0.0 {
+                {`trait Serializable<T: Clone + Hash + Eq> {
     fun to_bytes(value: T) -> Vec<u8>
     fun from_bytes(bytes: Vec<u8>) -> Option<T>
 }`}
@@ -531,16 +536,13 @@ total = price * quantity + tax
 is_valid = age >= 18 && status == "active"
 
 // Logic
-can_proceed = has_permission && not is_blocked
+can_proceed = has_permission && !is_blocked
 
 // Pipe (function composition)
 result = data
     |> validate
     |> transform
-    |> persist
-
-// Implication
-invariant requires active implies running`}
+    |> persist`}
               </pre>
             </div>
           </div>
@@ -634,7 +636,7 @@ for item in items {
 }
 
 // While loop
-while active && not done {
+while active && !done {
     tick()
     check_status()
 }
@@ -676,12 +678,11 @@ match value {
     _ { "small" }
 }
 
-// Filter in comprehensions
-evens = [x for x in numbers if x % 2 == 0]
-
 // Conditional iteration
-for user in users if user.active {
-    notify(user)
+for user in users {
+    if user.active {
+        notify(user)
+    }
 }`}
                 </pre>
               </div>
@@ -708,30 +709,21 @@ fun add(x: i64, y: i64) -> i64 {
     return x + y
 }
 
-// Generic function
-fun first<T>(items: Vec<T>) -> Option<T> {
-    if items.is_empty() {
-        None
-    } else {
-        Some(items[0])
-    }
-}
-
-// Function with rules
-fun sort<T: Comparable>(items: Vec<T>) -> Vec<T> {
-    // implementation
-}
+// Host import (bodiless sex fun): links against the VUDO VM's "vudo" module
+sex fun host_log(level: i32, msg: string) -> i32
 
 // Effectful function (IO/side effects)
-sex fun print_message(msg: string) {
-    vudo_print(msg)
+sex fun greet() -> i64 {
+    // level 2 = Info
+    return host_log(2, "Hello, World!")
 }
 
-// Effect block in pure function
+// Effect block in a pure function
+// (parsed; not yet supported by the WASM backend)
 fun compute_with_log(x: i64) -> i64 {
     let result = x * 2
     sex {
-        vudo_print("computed: " + result.to_string())
+        host_log(2, "computed")
     }
     return result
 }`}
@@ -779,7 +771,7 @@ fun compute_with_log(x: i64) -> i64 {
               </h3>
               <ul className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 <li>Every declaration must include docs</li>
-                <li>Document public APIs with triple-quoted strings</li>
+                <li>Document every declaration with a <code>docs</code> block</li>
                 <li>Explain the "why" not just the "what"</li>
                 <li>Include examples in documentation</li>
               </ul>

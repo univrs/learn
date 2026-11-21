@@ -67,7 +67,7 @@ export default function About() {
               <li>
                 <strong className="text-univrs-primary-400">DOL (Design Ontology Language)</strong> -
                 A specification language that lets you define systems in terms of genes (data),
-                traits (behavior), and constraints (rules).
+                traits (behavior), and rules (invariants).
               </li>
               <li>
                 <strong className="text-univrs-secondary-400">LLVM Translation Tools</strong> -
