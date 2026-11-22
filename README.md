@@ -46,8 +46,10 @@ cargo install dol --features cli
 
 ## Tutorial Tracks
 
-### DOL Fundamentals (Beginner, 2-3 hours)
-Learn DOL from first principles:
+Published on the site:
+
+### DOL Fundamentals (Beginner, 2-3 hours) - `/dol/learn`
+Learn DOL from first principles (source: `src/content/tutorials/dol/`, rendered at `/dol/tutorials/<slug>`):
 - Hello DOL - First specification
 - Values and Types - Type system
 - Functions - Methods and standalone functions
@@ -57,39 +59,18 @@ Learn DOL from first principles:
 - Error Handling - Option, Result
 - Modules and Imports - Code organization
 
-### DOL Syntax (Beginner, 2-3 hours)
-Master the declarative syntax:
-- Genes and Types
-- Defining Traits
-- System Modules
-- Constraints and Rules (`forall`, `exists`)
-- Version Evolution
-- Exegesis Documentation
-- v0.3.0 New Features (HIR, `type`, `extends`, `val`/`var`)
+### DOL REPL Tutorial - `/dol/repl`
+Interactive exploration of expressions, functions and genes.
 
-### Spirit Development (Intermediate, 2-3 hours)
-Build secure WebAssembly programs for VUDO:
-- VUDO Platform Architecture
-- Spirit Manifests (TOML)
-- Capability-Based Security (14 capability types)
-- Runtime Modules
+### Unpublished drafts
 
-### VUDO CLI (Beginner, 1.5 hours)
-Master the command-line interface:
-- Project Creation (`vudo new`)
-- Build and Run
-- Signing Spirits (Ed25519)
-- Registry Operations (Imaginarium)
+The following tracks exist as MDX source in this repo but are **not rendered on the site** (no route loads them):
 
-### Capstone: Lion & Swan (Advanced, 6-8 hours)
-Build a complete Spirit from DOL to deployment:
-- Define the Ontology
-- Create Spirit Project
-- Image Generation (AI APIs)
-- Narrative Engine
-- Credit Integration (Mycelial economics)
-- Testing and Quality
-- Sign and Publish
+- `content/tutorials/dol-syntax/` - DOL Syntax (genes, traits, systems, constraints, evolution, exegesis)
+- `content/tutorials/spirits/` - Spirit Development
+- `content/tutorials/vudo-cli/` - VUDO CLI (project creation, build/run, signing, registry)
+- `content/tutorials/cli/`, `content/tutorials/dol/`, `content/tutorials/local-first/` - other drafts
+- `content/tutorials/capstone/` and `src/content/tutorials/capstone/` - Capstone: Lion & Swan
 
 ---
 

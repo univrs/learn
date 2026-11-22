@@ -12,6 +12,7 @@ import DOLCheatsheet from "./Cheatsheet";
 import DOLQuickStart from "./QuickStart";
 import DOLPlayground from "./Playground";
 import DOLTutorial from "./Tutorial";
+import DOLLanguage from "./Language";
 import ReplIndex from "./repl";
 
 const sections = [
@@ -372,6 +373,7 @@ export default function DOLIndex() {
             <Route path="tutorials/:slug" element={<DOLTutorial />} />
             <Route path="metaprogramming" element={<DOLMetaprogramming />} />
             <Route path="examples" element={<DOLExamples />} />
+            <Route path="language" element={<DOLLanguage />} />
             <Route path="reference" element={<DOLReference />} />
             <Route path="stdlib" element={<DOLStdlib />} />
             <Route path="cheatsheet" element={<DOLCheatsheet />} />
