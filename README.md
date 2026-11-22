@@ -113,7 +113,7 @@ Build a complete Spirit from DOL to deployment:
 - **Host call checking** - a `sex fun` the VM does not provide is a compile error
 - **Real WASM output** - `compile_source` and the Spirit pipeline emit real WASM instead of a placeholder module
 - **Strings to host functions** - string literals and `string` parameters lower to `(ptr, len)`
-- **Tests** - 2,183 passing with default features; 2,405 with `cli,serde,wasm` (root crate)
+- **Tests** - 2,512 passing (`cli,serde,wasm`, including doctests) (root crate)
 
 ### Roadmap
 

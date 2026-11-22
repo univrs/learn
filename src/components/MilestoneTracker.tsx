@@ -100,7 +100,7 @@ const phases: Phase[] = [
 ]
 
 const repositories: Repository[] = [
-  { name: 'univrs-dol', url: 'https://github.com/univrs/dol', status: 'stable', tests: 2183 },
+  { name: 'univrs-dol', url: 'https://github.com/univrs/dol', status: 'stable', tests: 2512 },
   { name: 'univrs-enr', url: 'https://github.com/univrs/univrs-enr', status: 'active', tests: 0 },
   { name: 'univrs-network', url: 'https://github.com/univrs/univrs-network', status: 'pending', tests: 0 },
   { name: 'univrs-vudo', url: 'https://github.com/univrs/univrs-vudo', status: 'stable', tests: 402 },

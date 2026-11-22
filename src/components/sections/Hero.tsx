@@ -48,7 +48,7 @@ export default function Hero() {
             }}
           >
             <div className="flex items-center gap-2">
-              <span style={{ color: 'var(--glow-cyan)' }}>2,183 Tests</span>
+              <span style={{ color: 'var(--glow-cyan)' }}>2,512 Tests</span>
             </div>
             <div
               className="hidden sm:block w-px h-4"

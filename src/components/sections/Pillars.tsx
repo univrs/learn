@@ -5,7 +5,7 @@ const pillars = [
   {
     name: 'Design Ontology Language',
     shortName: 'DOL',
-    description: 'Specification-first development. Write specs first, generate tests, implement with confidence. 2,183 tests passing (v0.8.2).',
+    description: 'Specification-first development. Write specs first, generate tests, implement with confidence. 2,512 tests passing (v0.8.2).',
     href: '/dol',
     icon: FileCode,
     gradient: 'linear-gradient(135deg, var(--glow-cyan), #b9a06c)',

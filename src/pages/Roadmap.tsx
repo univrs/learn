@@ -292,7 +292,7 @@ export default function Roadmap() {
               <div className="text-3xl mb-3">🔬</div>
               <h3 className="text-lg font-normal text-univrs-text-primary mb-2">Tested Technology</h3>
               <p className="text-sm text-univrs-text-muted">
-                2,183 passing tests (2,405 with the cli, serde and wasm features) across lexer, parser, HIR, validation, and codegen. v0.8.2 is pre-1.0 software.
+                2,512 passing tests (cli, serde and wasm features, including doctests) across lexer, parser, HIR, validation, and codegen. v0.8.2 is pre-1.0 software.
               </p>
             </div>
             <div className="card">
@@ -319,16 +319,16 @@ export default function Roadmap() {
             <div className="card">
               <div className="grid grid-cols-2 gap-8">
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">2,183</div>
-                  <div className="text-sm text-univrs-text-muted">DOL Tests Passing (default features)</div>
+                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">2,512</div>
+                  <div className="text-sm text-univrs-text-muted">DOL Tests Passing (incl. doctests)</div>
                 </div>
                 <div className="text-center">
                   <div className="text-4xl font-light text-univrs-secondary-400 mb-2">v0.8.2</div>
                   <div className="text-sm text-univrs-text-muted">DOL + WASM + VUDO VM Host ABI</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">2,405</div>
-                  <div className="text-sm text-univrs-text-muted">Tests with cli, serde, wasm features</div>
+                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">15</div>
+                  <div className="text-sm text-univrs-text-muted">VUDO VM Host Functions (DOL ABI)</div>
                 </div>
                 <div className="text-center">
                   <div className="text-4xl font-light text-univrs-secondary-400 mb-2">12 / 12</div>

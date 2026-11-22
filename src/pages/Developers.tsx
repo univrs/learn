@@ -159,15 +159,6 @@ export default function Developers() {
                 <MessageSquare className="mr-2 w-4 h-4" />
                 GitHub Discussions
               </a>
-              <a
-                href="https://github.com/univrs/dol/blob/main/CONTRIBUTING.md"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-secondary"
-              >
-                Contributing Guidelines
-                <ExternalLink className="ml-2 w-4 h-4" />
-              </a>
             </div>
           </div>
         </div>

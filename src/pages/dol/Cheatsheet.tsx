@@ -221,7 +221,7 @@ export default function DOLCheatsheet() {
                         className="text-center text-sm"
                         style={{ color: "var(--soft-gray)" }}
                     >
-                        DOL v0.8.2 | 2,183 tests passing (root crate, default features)
+                        DOL v0.8.2 | 2,512 tests passing (incl. doctests)
                     </div>
                 </div>
             </section>
