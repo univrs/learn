@@ -35,7 +35,7 @@ export default function DOLQuickStart() {
     return (
         <>
             <Helmet>
-                <title>DOL v0.8.1 Quick Start | Univrs Learn</title>
+                <title>DOL v0.8.2 Quick Start | Univrs Learn</title>
                 <meta
                     name="description"
                     content="Get from zero to DOL in 5 minutes. Install, write your first gene, and start building ontology-first systems."
@@ -69,7 +69,7 @@ export default function DOLQuickStart() {
                             className="text-3xl sm:text-4xl font-light"
                             style={{ color: "var(--text-primary)" }}
                         >
-                            DOL v0.8.1 Quick Start
+                            DOL v0.8.2 Quick Start
                         </h1>
                     </div>
                     <p
@@ -128,10 +128,13 @@ export default function DOLQuickStart() {
                             className="p-6 text-sm font-mono overflow-x-auto"
                             style={{ color: "var(--glow-cyan)" }}
                         >
-                            {`# Clone and build
+                            {`# Install the CLI tools from crates.io
+cargo install dol --features cli
+
+# Or clone and build from source
 git clone https://github.com/univrs/dol.git
 cd dol
-cargo build --release --all-features
+cargo build --release --features cli
 
 # Add to PATH
 export PATH="$PATH:$(pwd)/target/release"`}
@@ -199,10 +202,10 @@ pub gen Greeting {
     fun display() -> string {
         return this.message
     }
+}
 
-    docs {
-        A simple greeting demonstrating DOL basics.
-    }
+docs {
+    A simple greeting demonstrating DOL basics.
 }`}
                         </pre>
                     </div>
@@ -301,9 +304,10 @@ pub gen Greeting {
                             style={{ color: "var(--text-secondary)" }}
                         >
                             <span style={{ color: "var(--soft-gray)" }}>$</span> dol-parse hello.dol{"\n"}
-                            <span style={{ color: "var(--glow-cyan)" }}>✓</span> hello.dol (Greeting){"\n\n"}
+                            <span style={{ color: "var(--glow-cyan)" }}>✓</span> hello.dol (Greeting){"\n"}
+                            {"    Greeting gene with 2 statements\n\n"}
                             <span style={{ color: "var(--soft-gray)" }}>$</span> dol-check hello.dol{"\n"}
-                            <span style={{ color: "var(--glow-cyan)" }}>✓</span> All constraints satisfied
+                            {"Summary\n  Files:    1\n  Passed:   1"}
                         </pre>
                     </div>
                 </div>
@@ -354,8 +358,8 @@ pub gen Greeting {
                             className="p-6 text-sm font-mono overflow-x-auto"
                             style={{ color: "var(--text-secondary)" }}
                         >
-                            <span style={{ color: "var(--soft-gray)" }}>$</span> dol-codegen hello.dol -o generated/{"\n"}
-                            <span style={{ color: "var(--glow-cyan)" }}>✓</span> Generated: generated/hello.rs
+                            <span style={{ color: "var(--soft-gray)" }}>$</span> dol-codegen hello.dol -o hello.rs{"\n"}
+                            {"Generated hello.dol\n\nWrote hello.rs (1 files)"}
                         </pre>
                     </div>
                 </div>

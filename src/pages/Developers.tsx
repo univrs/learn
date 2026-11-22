@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async'
-import { Github, ExternalLink, Code2, BookOpen, FileCode, MessageSquare } from 'lucide-react'
+import { Github, Code2, BookOpen, FileCode, MessageSquare } from 'lucide-react'
 
 export default function Developers() {
   return (
@@ -120,11 +120,14 @@ export default function Developers() {
               <div className="text-univrs-text-muted mb-1"># Navigate to the project</div>
               <div className="text-univrs-text-primary mb-3">cd dol</div>
 
-              <div className="text-univrs-text-muted mb-1"># Build with all features</div>
-              <div className="text-univrs-text-primary">cargo build --release --all-features</div>
+              <div className="text-univrs-text-muted mb-1"># Build the library and CLI tools</div>
+              <div className="text-univrs-text-primary mb-3">cargo build --release --features cli</div>
+
+              <div className="text-univrs-text-muted mb-1"># Or install the CLI tools from crates.io</div>
+              <div className="text-univrs-text-primary">cargo install dol --features cli</div>
             </div>
             <p className="text-univrs-text-muted text-sm mt-4">
-              Requires Rust 1.70 or later. Install Rust from{' '}
+              Requires Rust 1.84 or later. Install Rust from{' '}
               <a
                 href="https://rustup.rs"
                 target="_blank"
@@ -155,15 +158,6 @@ export default function Developers() {
               >
                 <MessageSquare className="mr-2 w-4 h-4" />
                 GitHub Discussions
-              </a>
-              <a
-                href="https://github.com/univrs/dol/blob/main/CONTRIBUTING.md"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-secondary"
-              >
-                Contributing Guidelines
-                <ExternalLink className="ml-2 w-4 h-4" />
               </a>
             </div>
           </div>

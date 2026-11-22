@@ -1,6 +1,6 @@
 ---
 title: "Traits and Constraints"
-description: "Define behaviors and enforce invariants in DOL"
+description: "Define behaviors and declare invariants in DOL"
 lesson: 6
 track: "dol-fundamentals"
 duration: "25 minutes"
@@ -11,7 +11,7 @@ next: "/dol/tutorials/007-error-handling"
 
 # Traits and Constraints
 
-DOL's ontology system goes beyond genes. **Traits** define behaviors and state machines, while **constraints** enforce invariants. Together, they create robust, self-documenting specifications.
+DOL's ontology system goes beyond genes. **Traits** define behaviors and state machines, while **rules** declare invariants. Together, they create robust, self-documenting specifications.
 
 ## Traits
 
@@ -95,14 +95,14 @@ docs {
 
 ## Constraints
 
-**Constraints** enforce rules that must always be true:
+**Rules** state invariants that must always be true. In v0.8 they are declared with the `rule` keyword (the older `constraint` keyword still parses but emits a deprecation warning):
 
 ```dol
-constraint container.integrity {
-  state == declared
-  identity not changes
-  boundaries not expand
-  resources not exceeds
+rule container.integrity {
+  state matches declared
+  identity never changes
+  boundaries never expand
+  resources never exceeds
 }
 
 docs {
@@ -122,13 +122,13 @@ docs {
 
 ### Constraint Keywords
 
-DOL constraints use specific keywords:
+Rule bodies are made of the same predicates as other declarations:
 
-| Keyword | Meaning |
+| Predicate | Meaning |
 |---------|---------|
-| `==` | Value must equal declared specification |
-| `not` | Action is prohibited |
-| `always` | Condition must hold at all times |
+| `matches` | Value must match the declared specification |
+| `never` | Action is prohibited |
+| `is` / `has` | State or property that must hold |
 | `requires` | Prerequisite condition |
 
 ### Property Constraints
@@ -136,10 +136,10 @@ DOL constraints use specific keywords:
 Ensure properties maintain specific relationships:
 
 ```dol
-constraint resource.allocation {
-  used not exceeds allocated
-  allocated not exceeds maximum
-  minimum not exceeds allocated
+rule resource.allocation {
+  used never exceeds_allocation
+  allocated never exceeds_maximum
+  allocated never falls_below_minimum
 }
 
 docs {
@@ -154,9 +154,9 @@ docs {
 Protect immutable aspects of entities:
 
 ```dol
-constraint identity.cryptographic {
-  keypair not changes
-  public_key extends keypair
+rule identity.cryptographic {
+  keypair never changes
+  public_key derives from keypair
   signature is verifiable
 }
 
@@ -199,26 +199,7 @@ pub gen Ordering {
 
 ### Implementing Traits
 
-Genes can declare that they implement traits:
-
-```dol
-pub gen MyceliumNode {
-  has id: u64
-  has position: Vec3
-  has connections<Vec<Ui64>
-
-  implements Hashable {
-    fun hash() -> u64 {
-      return this.id
-    }
-  }
-
-  docs {
-    A node in the mycelium network. Uses its unique ID
-    as its hash value.
-  }
-}
-```
+> **Planned — not implemented in v0.8.2.** There is no syntax yet for a gen to declare that it implements a trait (`implements` / `impl` blocks do not parse). A gen can define methods directly with `fun` inside its body.
 
 ## Combining Traits and Constraints
 
@@ -255,11 +236,11 @@ docs {
   Container lifecycle manages state transitions.
 }
 
-constraint container.integrity {
-  state == declared
-  identity not changes
-  boundaries not expand
-  resources not exceeds
+rule container.integrity {
+  state matches declared
+  identity never changes
+  boundaries never expand
+  resources never exceeds
 }
 
 docs {
@@ -269,54 +250,38 @@ docs {
 
 ## Trait Bounds
 
-Use traits as type constraints:
-
-```dol
-pub fun sort<T: Comparable>(items<Vec<T>) -> Vec<T> {
-  // T must implement Comparable
-  // implementation can use compare() method
-}
-
-pub fun store<T: Hashable + Comparable>(item: T) -> u64 {
-  // T must implement both Hashable and Comparable
-  return item.hash()
-}
-```
+> **Planned — not implemented in v0.8.2.** Generic functions with trait bounds (`fun sort<T: Comparable>(...)`) do not parse yet.
 
 ## System Constraints
 
-Systems can have their own constraints:
+Systems declare their requirements and state:
 
 ```dol
-system mycelium.network @0.1.0 {
+system mycelium.network @ 0.1.0 {
   requires transport.protocol >= 0.0.1
   uses MyceliumNode
 
   state nodes: Map<u64, MyceliumNode>
-  state edges<Vec<HyphalSegment>
-
-  rule {
-    nodes.len() <= 10000
-    edges.len() <= nodes.len() * 10
-  }
+  state edges: Vec<HyphalSegment>
 }
 
 docs {
-  Mycelium network system with size constraints.
-  Limits prevent unbounded growth.
+  Mycelium network system built on a transport protocol.
 }
 ```
+
+> **Note (v0.8.2):** a `rule name { ... }` block nested inside a `gen` or `system` is accepted by the parser, but its body is discarded. Write invariants as top-level `rule` declarations.
 
 ## Key Takeaways
 
 - **Traits** define behaviors and state machines with `trait name { }`
 - Use `is` to declare states: `entity is state`
 - Use `uses` to compose traits: `uses other.trait`
-- **Constraints** enforce invariants with `constraint name { }`
-- Use `==` for equality: `value == declared`
-- Use `not` for prohibitions: `property not changes`
-- Use `forall` for quantified predicates: `forall x in items`
-- Traits can include method signatures for implementation
+- **Rules** declare invariants with `rule name { }` (`constraint` is the deprecated pre-v0.8 keyword)
+- Use `matches` for equality: `state matches declared`
+- Use `never` for prohibitions: `property never changes`
+- Use `forall` for quantified predicates: `forall transition emits event`
+- Traits can include method signatures (`fun hash() -> u64`)
 - Combine traits and constraints for complete specifications
 
 ## Practice Exercise
@@ -350,11 +315,11 @@ docs {
   // Your explanation here
 }
 
-constraint user.security {
-  // Add constraints for:
-  // - password_hash not exposed
-  // - email == pattern
-  // - username not changes
+rule user.security {
+  // Add rules for:
+  // - password_hash never exposed
+  // - email matches pattern
+  // - username never changes
 }
 
 docs {

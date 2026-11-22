@@ -22,8 +22,10 @@ docs {
   with content, sender, and timestamp properties.
 }
 
-print("Hello from DOL!")
-print("Genes define what things should be.")`,
+fun main() {
+  print("Hello from DOL!")
+  print("Genes define what things should be.")
+}`,
         expectedOutput: "Hello from DOL!",
     },
     gene: {
@@ -34,8 +36,8 @@ module example.user @ 0.1.0
 
 pub gen User {
   has id: u64
-  has name: String
-  has email: String
+  has name: string
+  has email: string
   has created_at: i64
 }
 
@@ -44,19 +46,21 @@ docs {
   Each property has a type from DOL's type system.
 }
 
-print("User gen defined successfully")`,
+fun main() {
+  print("User gen defined successfully")
+}`,
     },
     constraints: {
-        title: "Adding Constraints",
-        description: "Enforce business rules with constraints",
-        code: `// Constraints ensure invariants hold
+        title: "Adding Rules",
+        description: "Declare invariants with rules",
+        code: `// Rules declare invariants (rule replaces the deprecated constraint keyword)
 gen product.exists {
   product has id
   product has name
   product has price
 }
 
-constraint product.valid {
+rule product.valid {
   price never negative
   name never empty
 }
@@ -66,7 +70,9 @@ docs {
   and non-empty names.
 }
 
-print("Product constraint validated")`,
+fun main() {
+  print("Product rule declared")
+}`,
     },
     functions: {
         title: "Functions",
@@ -83,12 +89,14 @@ pub gen Counter {
     }
   }
 
-  fun is_at_max() -> Bool {
+  fun is_at_max() -> bool {
     return this.value >= this.max
   }
 }
 
-print("Counter with methods defined")`,
+fun main() {
+  print("Counter with methods defined")
+}`,
     },
 };
 
@@ -266,7 +274,7 @@ export default function DOLPlayground() {
                         description="A complete system specification following DOL best practices (read-only)"
                         readOnly={true}
                         initialCode={`// Complete System Pattern
-// Demonstrates genes, traits, constraints, and systems
+// Demonstrates genes, traits, rules, and systems
 
 module order.system @ 1.0.0
 
@@ -274,7 +282,7 @@ module order.system @ 1.0.0
 pub gen Order {
   has id: u64
   has customer_id: u64
-  has items: List<OrderItem>
+  has items: Vec<OrderItem>
   has status: OrderStatus
   has created_at: i64
   has total_amount: f64
@@ -309,10 +317,12 @@ system order.service @1.0.0 {
 
 docs {
   Order system with status tracking,
-  validation constraints, and service composition.
+  validation rules, and service composition.
 }
 
-print("OrderSystem ready")`}
+fun main() {
+  print("OrderSystem ready")
+}`}
                         height="500px"
                         showHistory={false}
                     />

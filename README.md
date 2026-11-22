@@ -8,12 +8,12 @@
 
 ---
 
-## DOL v0.7.2
+## DOL v0.8.2
 
 The Design Ontology Language (DOL) is a specification-first language for ontology-driven development.
 
-[![GitHub Release](https://img.shields.io/github/v/release/univrs/dol)](https://github.com/univrs/dol/releases/tag/v0.7.2)
-[![Crates.io](https://img.shields.io/crates/v/dol)](https://crates.io/crates/dol/0.7.2)
+[![GitHub Release](https://img.shields.io/github/v/release/univrs/dol)](https://github.com/univrs/dol/releases/tag/v0.8.2)
+[![Crates.io](https://img.shields.io/crates/v/dol)](https://crates.io/crates/dol/0.8.2)
 
 ### Quick Example
 
@@ -33,8 +33,14 @@ docs {
 ### Install
 
 ```bash
-cargo install dol
+cargo install dol --features cli
 ```
+
+### Status (v0.8.2)
+
+- **Works:** parsing and validation of the v0.8 syntax (`gen`, `rule`, `evo`, `docs`); code generation to Rust, TypeScript and JSON Schema (quality varies); WASM compilation for a subset of the language, linking against the VUDO VM host ABI; LLVM native backend (beta, not in CI, manual LLVM 18 setup).
+- **Not yet:** type enforcement, self-hosting, a language server (LSP), a formal language specification.
+- **Known limitation:** `dol-parse` and `dol-check` only read the first declaration in a file.
 
 ---
 
@@ -93,31 +99,31 @@ Build a complete Spirit from DOL to deployment:
 |---------|-------------|
 | **Genes** | Define properties and data structures |
 | **Traits** | Define behaviors and capabilities |
-| **Constraints** | Enforce invariants with `forall`/`exists` |
-| **Systems** | Compose genes, traits, and constraints |
+| **Rules** | Declare invariants with `rule` (formerly `constraint`) |
+| **Systems** | Compose genes, traits, and rules |
 | **Evolution** | Version and migrate specifications |
 | **SEX** | Side Effect System for controlled mutability |
-| **Generics** | Type parameters with bounds |
+| **Generics** | Type parameters on `gen`/`trait` (parsed, not yet checked) |
 | **Pattern Matching** | Destructure and match data |
 | **Pipes** | Function composition with `\|>` and `>>` |
 
-### v0.7.2 Highlights
+### v0.8.2 Highlights
 
-- **`this` keyword** - Instance self-reference in methods (`this.value`, `this.method()`)
-- **Live Compiler** - Browser-based DOL playground with execution simulation
-- **WASM Pipeline** - Full compilation to WebAssembly (1,800+ tests passing)
-- **HIR Complete** - High-level Intermediate Representation with Rust codegen
-- **`val`/`var`** - Clear immutable vs mutable bindings
-- **`Self` type** - Type-level self-reference in traits
+- **VUDO VM host ABI** - bodiless `sex fun host_*` declarations import from module `vudo` with the VM linker's exact signatures (15 host functions)
+- **Host call checking** - a `sex fun` the VM does not provide is a compile error
+- **Real WASM output** - `compile_source` and the Spirit pipeline emit real WASM instead of a placeholder module
+- **Strings to host functions** - string literals and `string` parameters lower to `(ptr, len)`
+- **Tests** - 2,512 passing (`cli,serde,wasm`, including doctests) (root crate)
 
 ### Roadmap
 
 | Version | Focus | Status |
 |---------|-------|--------|
-| v0.5.0 | MLIR Dialect, HIR → MLIR, WASM Emission | ✅ Complete |
+| v0.5.0 | MLIR Dialect, HIR → MLIR, WASM Emission | ⚠️ MLIR experimental (stubs, not in CI) |
 | v0.7.0 | Live Compiler, Browser Editor, Execution Simulation | ✅ Complete |
-| v0.8.0 | MVS (gen, rule, Vec, docs), REPL Tutorials | ✅ Current |
-| v0.9.0 | MCP Server, Full Bootstrap, Spirit Runtime | 🎯 Next |
+| v0.8.0 | MVS (gen, rule, Vec, docs), REPL Tutorials | ✅ Complete |
+| v0.8.2 | VUDO VM host ABI (Spirit Hosting H0) | ✅ Current |
+| v0.9.0 | Legacy syntax removal, Full Bootstrap | 🎯 Planned |
 
 ---
 

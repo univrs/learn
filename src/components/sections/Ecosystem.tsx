@@ -3,7 +3,7 @@ import { ExternalLink, Github, BookOpen } from 'lucide-react'
 const repos = [
   {
     name: 'dol',
-    description: 'Design Ontology Language compiler and stdlib',
+    description: 'Design Ontology Language parser, validator and code generators',
     href: 'https://github.com/univrs/dol',
     language: 'Rust',
     color: '#e8c25a',

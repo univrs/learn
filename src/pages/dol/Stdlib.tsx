@@ -59,6 +59,10 @@ export default function DOLStdlib() {
             The conceptual foundations and primitives that underpin all DOL specifications.
             Philosophy, physics, and information theory for systems design.
           </p>
+          <p className="text-sm max-w-2xl mt-4" style={{ color: 'var(--soft-gray)' }}>
+            Status (v0.8.2): this page is conceptual. The DOL repository's <code>stdlib/</code> currently contains
+            Markdown design notes only; there is no importable DOL standard library yet.
+          </p>
         </div>
       </section>
 

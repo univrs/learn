@@ -28,7 +28,7 @@ pub fun ident(name: string, span: Span) -> Expr {
 ```
 
 The syntax:
-- `pub` (optional) - makes the function public
+- `pub` (optional) - marks the function public (accepted by the parser; not yet recorded in the v0.8.2 AST)
 - `fun` - keyword for function definition
 - `ident` - function name
 - `(name: string, span: Span)` - parameters with types
@@ -43,13 +43,13 @@ Add methods inside gen declarations:
 pub gen MyceliumNode {
   has id: u64
   has position: Vec3
-  has connections<Vec<Ui64>
+  has connections: Vec<u64>
 
-  fun is_branching_point() -> Bool {
+  fun is_branching_point() -> bool {
     return this.connections.len() > 2
   }
 
-  fun is_tip() -> Bool {
+  fun is_tip() -> bool {
     return this.connections.len() == 1
   }
 
@@ -64,14 +64,14 @@ Inside methods, `this` refers to the current instance.
 
 ## Public vs Private Methods
 
-Methods follow the same visibility rules as fields:
+Methods can be marked `pub` like fields. **Note:** in v0.8.2 visibility is parsed but not enforced — the AST records every item as private:
 
 ```dol
 pub gen Counter {
   has value: i64
   has max: i64
 
-  // Public method - accessible everywhere
+  // Marked public
   pub fun increment() -> Counter {
     return Counter {
       value: this.value + 1,
@@ -79,8 +79,8 @@ pub gen Counter {
     }
   }
 
-  // Private method - only accessible within this gene
-  fun validate() -> Bool {
+  // Unmarked (private by intent)
+  fun validate() -> bool {
     return this.value <= this.max
   }
 }
@@ -114,21 +114,11 @@ pub fun factorial(n: i64) -> i64 {
 
 ## Parameters with Defaults
 
-Provide default values for optional parameters:
+> **Planned — not implemented in v0.8.2.** Default parameter values (`greeting: string = "Hello"`) are not accepted by the parser. Pass every argument explicitly.
 
-```dol
-pub fun greet(name: string, greeting: string = "Hello") -> string {
-  return greeting + ", " + name + "!"
-}
+## Constructor Functions
 
-// Usage:
-// greet("Alice")           -> "Hello, Alice!"
-// greet("Bob", "Welcome")  -> "Welcome, Bob!"
-```
-
-## Generic Functions
-
-Functions can work with multiple types:
+Small functions that build values are a common pattern:
 
 ```dol
 /// Create an integer literal expression
@@ -156,62 +146,38 @@ pub fun bool_lit(value: bool, span: Span) -> Expr {
 }
 ```
 
-Or use type parameters for truly generic functions:
-
-```dol
-pub fun identity<T>(x: T) -> T {
-  x
-}
-
-pub fun swap<T>(pair: (T, T)) -> (T, T) {
-  (pair.1, pair.0)
-}
-```
+> **Planned — not implemented in v0.8.2.** Generic functions with type parameters (`fun identity<T>(x: T) -> T`) are not accepted by the parser.
 
 ## Lambda Expressions
 
 Anonymous functions use pipe syntax:
 
 ```dol
-// Lambda syntax: |params| body
-val double = |x: i64| x * 2
-val add = |a: i64, b: i64| a + b
+pub fun lambda_examples() {
+  // Lambda syntax: |params| body
+  val double = |x: i64| x * 2
+  val add = |a: i64, b: i64| a + b
 
-// Block lambdas for complex logic
-val calculate = |x: i64| {
-  val squared = x * x
-  val doubled = squared * 2
-  doubled + 1
+  // Block lambdas for complex logic
+  val calculate = |x: i64| {
+    val squared = x * x
+    val doubled = squared * 2
+    doubled + 1
+  }
 }
 ```
 
-Lambdas are commonly used with collection methods:
+Lambdas are commonly passed to collection methods:
 
 ```dol
-pub fun find_nearby_nodes(pos: Vec3, max_dist: f64) -> List<Ui64> {
-  var result = []
-  for (id, node) in this.nodes {
-    val dx = pos.x - node.position.x
-    val dy = pos.y - node.position.y
-    val dz = pos.z - node.position.z
-    val dist = (dx * dx + dy * dy + dz * dz).sqrt()
-    if dist <= max_dist {
-      result.push(id)
-    }
-  }
-  return result
+pub fun branching_nodes(nodes: Vec<MyceliumNode>) -> Vec<MyceliumNode> {
+  return nodes.filter(|n: MyceliumNode| n.connections.len() > 2)
 }
 ```
 
 ## Function Types
 
-Functions are first-class values:
-
-```dol
-type BinaryOp = (i64, i64) -> i64
-type Predicate<T> = (T) -> Bool
-type Transformer = (Expr) -> Expr
-```
+Functions are first-class values. Function types are written `(i64) -> i64`. (Type aliases such as `type BinaryOp = (i64, i64) -> i64` are **planned — not implemented in v0.8.2**.)
 
 Higher-order functions accept or return functions:
 
@@ -231,10 +197,9 @@ Systems can have stateful functions:
 ```dol
 pub system MyceliumNetwork {
   uses Hyphal
-  uses Transport<Nutrient>
 
   state nodes: Map<u64, MyceliumNode>
-  state edges<Vec<HyphalSegment>
+  state edges: Vec<HyphalSegment>
   state next_id: u64
 
   pub fun from_spore(position: Vec3) -> MyceliumNetwork {
@@ -274,9 +239,9 @@ pub system MyceliumNetwork {
 - Define functions with `fun name(params) -> ReturnType { body }`
 - Methods inside genes use `this` to access the instance
 - The last expression (without semicolon) is returned
-- Use `pub` for public visibility
+- Use `pub` to mark public items (not yet enforced in v0.8.2)
 - Lambdas: `|params| expression` or `|params| { block }`
-- Generic functions use type parameters: `fun name<T>(x: T) -> T`
+- Generic functions (`fun name<T>`) and default parameters are planned, not yet implemented
 
 ## Practice Exercise
 
@@ -290,7 +255,7 @@ pub gen Rectangle {
   // Add these methods:
   // 1. area() -> f64
   // 2. perimeter() -> f64
-  // 3. is_square() -> Bool
+  // 3. is_square() -> bool
   // 4. scale(factor: f64) -> Rectangle
 }
 

@@ -9,13 +9,13 @@ interface Milestone {
 }
 
 const year1Milestones: Milestone[] = [
-  { name: 'DOL 2.0 Specification', status: 'complete' },
+  { name: 'DOL 2.0 language generation (fun, match, lambdas, pipes)', status: 'complete', metric: 'a label, not a version; no formal spec' },
   { name: 'Lexer + Parser', status: 'complete', metric: '157 tests' },
-  { name: 'Type Checker', status: 'complete', metric: '87 tests' },
+  { name: 'Type Checker', status: 'in-progress', metric: 'type errors not enforced yet' },
   { name: 'Effect Inference', status: 'complete', metric: '24 tests' },
   { name: 'Rust Codegen', status: 'complete', metric: '24 tests' },
-  { name: 'Self-Hosting (v0.2.3)', status: 'complete', metric: '1532 tests' },
-  { name: 'DOL v0.8.1 + WASM Pipeline', status: 'complete', metric: 'HIR + WASM + Live Editor' },
+  { name: 'Self-Hosting (DOL-in-DOL bootstrap)', status: 'in-progress', metric: 'sources parse; output does not compile' },
+  { name: 'DOL v0.8 + WASM Pipeline', status: 'complete', metric: 'HIR + WASM + Live Editor' },
 ]
 
 const year2Milestones: Milestone[] = [
@@ -27,11 +27,12 @@ const year2Milestones: Milestone[] = [
 ]
 
 const year25Milestones: Milestone[] = [
-  { name: 'DOL v0.8.1 MVS (gen, rule, Vec, docs)', status: 'complete', metric: 'shipped' },
+  { name: 'DOL v0.8 "Clarity" MVS (gen, rule, Vec, docs)', status: 'complete', metric: 'shipped' },
+  { name: 'DOL v0.8.2: VUDO VM host ABI (Spirit Hosting H0)', status: 'complete', metric: '15 host functions' },
   { name: 'WASM Compiler Pipeline', status: 'complete', metric: '~0.2ms compile' },
   { name: 'Live Browser Editor', status: 'complete', metric: 'vudo.univrs.io/editor' },
   { name: 'Execution Simulation', status: 'complete', metric: 'real-time output' },
-  { name: 'MCP Server for AI Integration', status: 'planned' },
+  { name: 'MCP Server for AI Integration', status: 'complete', metric: 'dol-mcp (stdio)' },
 ]
 
 const year3Milestones: Milestone[] = [
@@ -117,7 +118,7 @@ export default function Roadmap() {
                 </p>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-univrs-primary-400/10 border border-univrs-primary-400/30">
                   <CheckCircle2 className="w-3 h-3 text-univrs-primary-400" />
-                  <span className="text-sm text-univrs-primary-400 font-medium">COMPLETE</span>
+                  <span className="text-sm text-univrs-primary-400 font-medium">LARGELY COMPLETE</span>
                 </div>
               </div>
             </div>
@@ -131,7 +132,7 @@ export default function Roadmap() {
                 <div className="mt-6 pt-6 border-t border-univrs-text-muted/20">
                   <p className="text-sm text-univrs-text-secondary">
                     <strong className="text-univrs-text-primary">Focus:</strong> Complete DOL toolchain with lexer, parser, type checker, and code generation.
-                    Achieve self-hosting where DOL specifications can generate the DOL compiler itself.
+                    Self-hosting (DOL specifications generating the DOL compiler itself) remains a goal: it does not work yet, and type errors are not enforced yet.
                   </p>
                 </div>
               </div>
@@ -184,7 +185,7 @@ export default function Roadmap() {
         </div>
       </section>
 
-      {/* DOL v0.8.1 */}
+      {/* DOL v0.8.x */}
       <section className="py-16 bg-univrs-bg-secondary">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-3 gap-8 mb-12">
@@ -195,8 +196,8 @@ export default function Roadmap() {
                     <Cpu className="w-6 h-6 text-univrs-bg-primary" />
                   </div>
                   <div>
-                    <h2 className="text-3xl font-light text-univrs-text-primary">v0.8.1</h2>
-                    <p className="text-sm text-univrs-text-muted">January 2026</p>
+                    <h2 className="text-3xl font-light text-univrs-text-primary">v0.8.x</h2>
+                    <p className="text-sm text-univrs-text-muted">January – November 2026</p>
                   </div>
                 </div>
                 <h3 className="text-2xl font-light text-cyan-400 mb-2">Clarity</h3>
@@ -218,8 +219,9 @@ export default function Roadmap() {
                 </div>
                 <div className="mt-6 pt-6 border-t border-univrs-text-muted/20">
                   <p className="text-sm text-univrs-text-secondary">
-                    <strong className="text-univrs-text-primary">Delivered:</strong> DOL v0.8.1 "Clarity" with MVS (Minimal Viable Syntax): gen, rule, Vec, docs.
-                    WASM compiler in browser, live editor at vudo.univrs.io/editor, interactive REPL tutorials at learn.univrs.io.
+                    <strong className="text-univrs-text-primary">Delivered:</strong> DOL v0.8 "Clarity" with MVS (Minimal Viable Syntax): gen, rule, Vec, docs.
+                    WASM compiler in browser (DOL 0.8.0 build), live editor at vudo.univrs.io/editor, interactive REPL tutorials at learn.univrs.io.
+                    v0.8.2 (November 2026) links DOL-compiled WASM against the VUDO VM host ABI.
                   </p>
                 </div>
               </div>
@@ -283,14 +285,14 @@ export default function Roadmap() {
               <div className="text-3xl mb-3">🧬</div>
               <h3 className="text-lg font-normal text-univrs-text-primary mb-2">First-Mover Advantage</h3>
               <p className="text-sm text-univrs-text-muted">
-                First ontology-first DSL with formal semantics. No competing platforms in this space.
+                An ontology-first DSL: declare what a system is, then generate code from it. No competing platforms in this space.
               </p>
             </div>
             <div className="card">
               <div className="text-3xl mb-3">🔬</div>
-              <h3 className="text-lg font-normal text-univrs-text-primary mb-2">Proven Technology</h3>
+              <h3 className="text-lg font-normal text-univrs-text-primary mb-2">Tested Technology</h3>
               <p className="text-sm text-univrs-text-muted">
-                1,705+ passing tests across lexer, parser, type checker, HIR, validation, and codegen. Production-ready v0.8.1.
+                2,512 passing tests (cli, serde and wasm features, including doctests) across lexer, parser, HIR, validation, and codegen. v0.8.2 is pre-1.0 software.
               </p>
             </div>
             <div className="card">
@@ -317,20 +319,20 @@ export default function Roadmap() {
             <div className="card">
               <div className="grid grid-cols-2 gap-8">
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">1,705+</div>
-                  <div className="text-sm text-univrs-text-muted">DOL Tests Passing</div>
+                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">2,512</div>
+                  <div className="text-sm text-univrs-text-muted">DOL Tests Passing (incl. doctests)</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">v0.8.1</div>
-                  <div className="text-sm text-univrs-text-muted">DOL + WASM + Live Editor</div>
+                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">v0.8.2</div>
+                  <div className="text-sm text-univrs-text-muted">DOL + WASM + VUDO VM Host ABI</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">498</div>
-                  <div className="text-sm text-univrs-text-muted">Unit Tests (src/)</div>
+                  <div className="text-4xl font-light text-univrs-primary-400 mb-2">15</div>
+                  <div className="text-sm text-univrs-text-muted">VUDO VM Host Functions (DOL ABI)</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">1,159</div>
-                  <div className="text-sm text-univrs-text-muted">Integration Tests</div>
+                  <div className="text-4xl font-light text-univrs-secondary-400 mb-2">12 / 12</div>
+                  <div className="text-sm text-univrs-text-muted">Native LLVM Examples (beta, not in CI)</div>
                 </div>
               </div>
             </div>

@@ -42,13 +42,14 @@ DOL includes these primitive types:
 
 | Type | Description | Examples |
 |------|-------------|----------|
-| `i8`, `i16`, `i32`, `i64` | Signed integers | `-1`, `42`, `1000` |
-| `u8`, `u16`, `u32`, `u64` | Unsigned integers | `0`, `255`, `65535` |
+| `i8`, `i16`, `i32`, `i64`, `i128` | Signed integers | `-1`, `42`, `1000` |
+| `u8`, `u16`, `u32`, `u64`, `u128` | Unsigned integers | `0`, `255`, `65535` |
 | `f32`, `f64` | Floating point | `3.14`, `-0.5` |
 | `bool` | Boolean | `true`, `false` |
 | `string` | UTF-8 text | `"hello"` |
-| `char` | Unicode scalar | `'a'`, `'\n'` |
-| `void` | Unit/no value | `()` |
+| `()` | Unit/no value | `()` |
+
+The older PascalCase names (`Int64`, `String`, `Bool`, `Void`, ...) still parse in v0.8.2 but emit deprecation warnings.
 
 ## Typed Gene Example
 
@@ -71,7 +72,7 @@ pub gen Span {
 
 Note the differences from simple genes:
 - `module ... @ version` declares the module and version
-- `pub` makes the gen publicly visible
+- `pub` marks the gen as public (note: in v0.8.2 the parser accepts `pub` but does not yet record it in the AST)
 - Fields use `has name: Type` syntax
 - `///` provides inline documentation
 
@@ -81,7 +82,7 @@ DOL has built-in collection types:
 
 ```dol
 pub gen Container {
-  has tags<Vec<string>
+  has tags: Vec<string>
   has metadata: Map<string, string>
   has resources: Option<ResourceSpec>
 }
@@ -150,7 +151,7 @@ docs {
 
 ## Generic Types
 
-Define genes that work with any type using type parameters:
+Type parameters on genes are accepted by the parser. **Note:** in v0.8.2 they are parsed and then discarded (not yet recorded in the AST or checked), so treat this as documentation of intent:
 
 ```dol
 /// Generic field within a gene
@@ -176,10 +177,10 @@ Fields can have default values:
 pub gen GeneDecl {
   has name: string
   has is_pub: bool = false
-  has type_params<Vec<TypeParam> = []
-  has fields<Vec<Field>
-  has methods<Vec<FunctionDecl>
-  has constraints<Vec<ConstraintDecl>
+  has type_params: Vec<TypeParam> = []
+  has fields: Vec<Field>
+  has methods: Vec<FunctionDecl>
+  has constraints: Vec<ConstraintDecl>
   has exegesis: Option<string>
   has span: Span
 }
@@ -195,16 +196,16 @@ For types that reference themselves, use `Box<T>`:
 pub gen TypeExpr {
   type: enum {
     /// Simple type
-    Named { path<Vec<string> },
+    Named { path: Vec<string> },
 
-    /// Generic<Vec<T>, Map<K, V>
-    Generic { name: string, args<Vec<TypeExpr> },
+    /// Generic: Vec<T>, Map<K, V>
+    Generic { name: string, args: Vec<TypeExpr> },
 
     /// Function: (A, B) -> C
-    Function { params<Vec<TypeExpr>, ret: Box<TypeExpr> },
+    Function { params: Vec<TypeExpr>, ret: Box<TypeExpr> },
 
     /// Tuple: (A, B, C)
-    Tuple { elements<Vec<TypeExpr> },
+    Tuple { elements: Vec<TypeExpr> },
 
     /// Optional: T?
     Optional { inner: Box<TypeExpr> }
@@ -236,37 +237,9 @@ pub gen Point {
 }
 ```
 
-## Reference and Pointer Types
+## Reference Types and Type Aliases
 
-DOL supports references and pointers:
-
-```dol
-pub gen TypeExpr {
-  type: enum {
-    /// Reference: &T, &mut T
-    Reference { inner: Box<TypeExpr>, is_mut: bool },
-
-    /// Pointer: *T, *mut T
-    Pointer { inner: Box<TypeExpr>, is_mut: bool }
-  }
-}
-```
-
-## Type Aliases
-
-Give types shorter names:
-
-```dol
-type NodeId = u64
-type Position = (f64, f64, f64)
-type Callback = (Event) -> Bool
-
-pub gen NetworkNode {
-  has id: NodeId
-  has position: Position
-  has on_message: Option<Callback>
-}
-```
+> **Planned — not implemented in v0.8.2.** Reference types (`&T`), slice types (`[T]`) and type aliases (`type NodeId = u64`) are not accepted by the parser. Use named genes or `type Name { ... }` declarations instead.
 
 ## Key Takeaways
 
@@ -274,7 +247,7 @@ pub gen NetworkNode {
 - Primitive types: integers, floats, strings, booleans
 - Collection types: `Vec<T>`, `Map<K,V>`, `Option<T>`
 - Define enums with `type: enum { ... }`
-- Use generics with type parameters: `gen Name<T> { ... }`
+- Generic parameters (`gen Name<T> { ... }`) parse, but are not yet enforced in v0.8.2
 - Default values: `has field: Type = default`
 - Recursive types use `Box<T>`
 
@@ -285,8 +258,8 @@ Create a typed gen for a "blog post" with:
 - `title: string`
 - `body: string`
 - `status: enum { Draft, Published, Archived }`
-- `tags<Vec<string>`
-- `published_at: Option<Ui64>`
+- `tags: Vec<string>`
+- `published_at: Option<u64>`
 
 ```dol
 module blog @ 1.0.0

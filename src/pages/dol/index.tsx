@@ -153,8 +153,50 @@ function DOLOverview() {
                                 color: "var(--glow-cyan)",
                             }}
                         >
-                            cargo install dol
+                            cargo install dol --features cli
                         </code>
+                    </div>
+                </div>
+            </section>
+
+            {/* Status Section */}
+            <section className="py-16">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <h2
+                        className="text-2xl font-light mb-8"
+                        style={{ color: "var(--text-primary)" }}
+                    >
+                        Status (v{DOL_VERSION})
+                    </h2>
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div className="card">
+                            <h3
+                                className="text-lg font-normal mb-3"
+                                style={{ color: "var(--glow-cyan)" }}
+                            >
+                                Works today
+                            </h3>
+                            <ul className="text-sm space-y-2" style={{ color: "var(--soft-gray)" }}>
+                                <li>Parsing and validation of the v0.8 syntax (gen, rule, evo, docs, fun, sex)</li>
+                                <li>Code generation to Rust, TypeScript and JSON Schema (output quality varies; not all generated Rust compiles)</li>
+                                <li>WASM compilation for a subset of the language, linking against the VUDO VM host ABI (15 host functions)</li>
+                                <li>LLVM native backend (beta, not in CI, needs a manual LLVM 18 setup)</li>
+                            </ul>
+                        </div>
+                        <div className="card">
+                            <h3
+                                className="text-lg font-normal mb-3"
+                                style={{ color: "var(--glow-gold)" }}
+                            >
+                                Not yet implemented
+                            </h3>
+                            <ul className="text-sm space-y-2" style={{ color: "var(--soft-gray)" }}>
+                                <li>Type enforcement: type errors are not rejected by the validator</li>
+                                <li>Self-hosting: the DOL-in-DOL bootstrap does not compile</li>
+                                <li>Language server (LSP)</li>
+                                <li>A formal language specification: the lexer and parser source are the reference</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -182,8 +224,8 @@ function DOLOverview() {
                                 desc: "Define behaviors and capabilities",
                             },
                             {
-                                name: "Constraints",
-                                desc: "Define rules and invariants",
+                                name: "Rules",
+                                desc: "Define rules and invariants (rule, formerly constraint)",
                             },
                             {
                                 name: "Systems",

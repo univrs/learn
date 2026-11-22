@@ -6,11 +6,11 @@ const steps = [
     title: 'Learn DOL',
     description: 'Start with the Design Ontology Language to define your system specifications.',
     href: '/dol/learn',
-    code: `# Define a system gene
+    code: `// Define a system gene
 gen Position {
-  x: Float
-  y: Float
-  z: Float
+  has x: f64
+  has y: f64
+  has z: f64
 }`,
   },
   {

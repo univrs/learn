@@ -12,7 +12,7 @@ const sections = [
             { syntax: "pub trait Name { ... }", desc: "Public trait (interface)" },
             { syntax: "pub system Name { ... }", desc: "Public system (composed)" },
             { syntax: "rule name { ... }", desc: "Define constraint rule" },
-            { syntax: "evo Old > New @ version { ... }", desc: "Schema evolution" },
+            { syntax: "evo name @ 1.0.1 > 1.0.0 { ... }", desc: "Schema evolution (new > previous version)" },
         ],
     },
     {
@@ -35,7 +35,7 @@ const sections = [
         items: [
             { syntax: "type: enum { A, B, C }", desc: "Enum variants" },
             { syntax: "has field: Type = default", desc: "Field with default" },
-            { syntax: "rule name { predicate }", desc: "Invariant rule" },
+            { syntax: "rule name { predicate }", desc: "Invariant rule (parsed; nested rule body is currently discarded)" },
             { syntax: "fun method() -> Type { body }", desc: "Method definition" },
             { syntax: "docs { documentation }", desc: "Required docs" },
         ],
@@ -47,7 +47,7 @@ const sections = [
             { syntax: "entity is state", desc: "State/quality assertion" },
             { syntax: "entity derives from source", desc: "Ancestry/origin" },
             { syntax: "uses dependency", desc: "Import dependency" },
-            { syntax: "entity can action", desc: "Capability declaration" },
+            { syntax: "entity emits event", desc: "Event emission" },
             { syntax: "entity requires prop", desc: "Mandatory constraint" },
             { syntax: "entity never changes", desc: "Immutability rule" },
         ],
@@ -62,8 +62,6 @@ const sections = [
             { syntax: "?", desc: "Reflect: ?Type  ->  TypeInfo" },
             { syntax: "#", desc: "Macro: #name(...)  ->  expanded" },
             { syntax: "[| |]", desc: "Idiom: [| f x y |]  ->  f <$> x <*> y" },
-            { syntax: "<$>", desc: "Map (functor)" },
-            { syntax: "<*>", desc: "Apply (applicative)" },
         ],
     },
     {
@@ -81,9 +79,9 @@ const sections = [
     {
         title: "Lambdas & Functions",
         items: [
-            { syntax: "\\x -> x + 1", desc: "Lambda expression" },
-            { syntax: "\\(x, y) -> x + y", desc: "Multi-param lambda" },
-            { syntax: "\\x: i64 -> x * 2", desc: "Typed parameter" },
+            { syntax: "|x| x + 1", desc: "Lambda expression" },
+            { syntax: "|x, y| x + y", desc: "Multi-param lambda" },
+            { syntax: "|x: i64| x * 2", desc: "Typed parameter" },
             { syntax: "fun name(x: T) -> R { }", desc: "Pure function" },
             { syntax: "sex fun name() { }", desc: "Effectful function (IO)" },
             { syntax: "sex { ... }", desc: "Effect block in pure fn" },
@@ -223,7 +221,7 @@ export default function DOLCheatsheet() {
                         className="text-center text-sm"
                         style={{ color: "var(--soft-gray)" }}
                     >
-                        DOL v0.8.1 | 1,800+ tests passing
+                        DOL v0.8.2 | 2,512 tests passing (incl. doctests)
                     </div>
                 </div>
             </section>

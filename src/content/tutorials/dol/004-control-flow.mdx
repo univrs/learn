@@ -48,23 +48,13 @@ val status = if is_active { "active" } else { "inactive" }
 Pattern matching is one of DOL's most powerful features:
 
 ```dol
-pub fun is_primitive(ty: TypeExpr) -> bool {
-  match ty.type {
-    i8 { return true }
-    i16 { return true }
-    i32 { return true }
-    i64 { return true }
-    u8 { return true }
-    u16 { return true }
-    u32 { return true }
-    u64 { return true }
-    f32 { return true }
-    f64 { return true }
-    bool { return true }
-    string { return true }
-    char { return true }
-    void { return true }
-    _ { return false }
+pub fun is_primitive(name: string) -> bool {
+  match name {
+    "i8" | "i16" | "i32" | "i64" => true,
+    "u8" | "u16" | "u32" | "u64" => true,
+    "f32" | "f64" => true,
+    "bool" | "string" => true,
+    _ => false
   }
 }
 ```
@@ -115,15 +105,15 @@ pub fun categorize(n: i64) -> string {
 Iterate over collections:
 
 ```dol
-pub fun find_nearby_nodes(pos: Vec3, max_dist: f64) -> List<Ui64> {
-  result = []
-  for (id, node) in this.nodes {
-    dx = pos.x - node.position.x
-    dy = pos.y - node.position.y
-    dz = pos.z - node.position.z
-    dist = (dx * dx + dy * dy + dz * dz).sqrt()
+pub fun find_nearby_nodes(pos: Vec3, max_dist: f64) -> Vec<u64> {
+  var result = []
+  for node in this.nodes {
+    val dx = pos.x - node.position.x
+    val dy = pos.y - node.position.y
+    val dz = pos.z - node.position.z
+    val dist = (dx * dx + dy * dy + dz * dz).sqrt()
     if dist <= max_dist {
-      result.push(id)
+      result.push(node.id)
     }
   }
   return result
@@ -137,23 +127,21 @@ pub fun find_nearby_nodes(pos: Vec3, max_dist: f64) -> List<Ui64> {
 for i in 0..10 {
   // process i
 }
-
-// Inclusive range: 0 to 10
-for i in 0..=10 {
-  // process i
-}
 ```
+
+Only the exclusive range `a..b` is supported; an inclusive range (`0..=10`) is not accepted by the v0.8.2 parser.
 
 ## While Loops
 
 Continue while a condition is true:
 
 ```dol
-pub fun find_root(var n: i64) -> i64 {
-  while n > 1 {
-    n = n / 2
+pub fun find_root(n: i64) -> i64 {
+  var m = n
+  while m > 1 {
+    m = m / 2
   }
-  return n
+  return m
 }
 ```
 
@@ -162,7 +150,7 @@ pub fun find_root(var n: i64) -> i64 {
 Infinite loop until explicitly broken:
 
 ```dol
-pub fun find_first_match(items<Vec<Item>, predicate: (Item) -> Bool) -> Option<Item> {
+pub fun find_first_match(items: Vec<Item>, predicate: (Item) -> bool) -> Option<Item> {
   var index = 0
   loop {
     if index >= items.len() {
@@ -172,7 +160,7 @@ pub fun find_first_match(items<Vec<Item>, predicate: (Item) -> Bool) -> Option<I
     if predicate(item) {
       break Some(item)
     }
-    index += 1
+    index = index + 1  // compound assignment (+=) is not supported yet
   }
 }
 ```
@@ -206,9 +194,9 @@ match point {
 
 ```dol
 match node {
-  MyceliumNode { connections: [], .. } => "isolated",
-  MyceliumNode { connections, .. } if connections.len() == 1 => "tip",
-  MyceliumNode { connections, .. } if connections.len() > 2 => "branch",
+  MyceliumNode { connections: c } if c.len() == 0 => "isolated",
+  MyceliumNode { connections: c } if c.len() == 1 => "tip",
+  MyceliumNode { connections: c } if c.len() > 2 => "branch",
   _ => "relay"
 }
 ```
@@ -220,7 +208,7 @@ match expr.type {
   Expr.IntLit { value, suffix: None } => {
     // Integer literal
   }
-  Expr.StringLit { value, is_raw: false } => {
+  Expr.StringLit { value, is_raw: raw } => {
     // String literal
   }
   Expr.Binary { op, left, right } => {
@@ -255,7 +243,7 @@ pub fun parse_config(text: string) -> Result<Config, Error> {
   let port = parse_port(text)?
   let host = parse_host(text)?
 
-  Ok(Config { name, port, host })
+  Ok(Config { name: name, port: port, host: host })
 }
 ```
 
@@ -263,7 +251,7 @@ pub fun parse_config(text: string) -> Result<Config, Error> {
 
 - `if/else` are expressions that return values
 - `match` enables powerful pattern matching with destructuring
-- Patterns include literals, tuples, structs, variants, and wildcards
+- Patterns include literals, tuples, structs, variants, or-patterns and wildcards (rest patterns `..` and slice patterns `[]` are not supported in v0.8.2)
 - Use guards (`if condition`) in match arms for complex conditions
 - `for` iterates over collections, `while` loops on a condition
 - The `?` operator enables early returns for `Option` and `Result`

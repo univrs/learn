@@ -67,7 +67,7 @@ export default function About() {
               <li>
                 <strong className="text-univrs-primary-400">DOL (Design Ontology Language)</strong> -
                 A specification language that lets you define systems in terms of genes (data),
-                traits (behavior), and constraints (rules).
+                traits (behavior), and rules (invariants).
               </li>
               <li>
                 <strong className="text-univrs-secondary-400">LLVM Translation Tools</strong> -
@@ -90,8 +90,8 @@ export default function About() {
           <h2 className="text-2xl font-light text-univrs-text-primary mb-8">Contributing</h2>
           <div className="card max-w-2xl">
             <p className="text-univrs-text-secondary mb-6">
-              Univrs is an open-source project and we welcome contributions of all kinds:
-              bug fixes, new features, documentation improvements, and more.
+              Univrs is open source, but it is not accepting external contributions or pull requests.
+              You can read the code and report bugs on GitHub.
             </p>
             <div className="flex flex-wrap gap-4">
               <a

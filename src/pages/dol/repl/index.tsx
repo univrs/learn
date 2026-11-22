@@ -282,7 +282,7 @@ function ReplOverview() {
                                 style={{ color: "var(--text-secondary)" }}
                             >
                                 <span style={{ color: "var(--glow-cyan)" }}>•</span>
-                                <span>Rust 1.70+ installed (<code className="text-sm px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--moss)", color: "var(--glow-cyan)" }}>rustc --version</code>)</span>
+                                <span>Rust 1.84+ installed (<code className="text-sm px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--moss)", color: "var(--glow-cyan)" }}>rustc --version</code>)</span>
                             </li>
                             <li
                                 className="flex items-start gap-3"
@@ -296,7 +296,7 @@ function ReplOverview() {
                                 style={{ color: "var(--text-secondary)" }}
                             >
                                 <span style={{ color: "var(--glow-cyan)" }}>•</span>
-                                <span>The metadol crate with <code className="text-sm px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--moss)", color: "var(--glow-cyan)" }}>wasm</code> feature enabled</span>
+                                <span>The <code className="text-sm px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--moss)", color: "var(--glow-cyan)" }}>dol</code> crate (library name <code className="text-sm px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--moss)", color: "var(--glow-cyan)" }}>metadol</code>) with <code className="text-sm px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--moss)", color: "var(--glow-cyan)" }}>wasm</code> feature enabled</span>
                             </li>
                         </ul>
                     </div>

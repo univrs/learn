@@ -68,7 +68,7 @@ learn.univrs.io/
 └── /about/                     ← ABOUT
     ├── philosophy              Why we build this way
     ├── roadmap                 What's coming
-    └── contributing            How to contribute
+    └── contributing            Contribution policy (not accepting)
 ```
 
 ---

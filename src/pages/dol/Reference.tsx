@@ -3,7 +3,8 @@ import { Helmet } from 'react-helmet-async'
 import { Code2, ChevronRight } from 'lucide-react'
 
 const keywords = {
-  declarations: ['gene', 'trait', 'constraint', 'system', 'evolves', 'exegesis'],
+  declarations: ['gen', 'trait', 'rule', 'system', 'evo', 'docs', 'fun', 'sex', 'type', 'const', 'module', 'use'],
+  deprecated: ['gene', 'constraint', 'evolves', 'exegesis'],
   predicates: ['has', 'is', 'derives', 'from', 'requires', 'uses', 'emits', 'matches', 'never'],
   evolution: ['adds', 'deprecates', 'removes', 'because'],
   tests: ['test', 'given', 'when', 'then', 'always'],
@@ -23,7 +24,7 @@ export default function DOLReference() {
     <>
       <Helmet>
         <title>DOL Reference | Univrs Learn</title>
-        <meta name="description" content="Complete language specification and syntax reference for the Design Ontology Language." />
+        <meta name="description" content="Syntax reference for the Design Ontology Language (DOL) v0.8.2." />
       </Helmet>
 
       {/* Hero */}
@@ -41,7 +42,7 @@ export default function DOLReference() {
             </h1>
           </div>
           <p className="text-xl max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
-            Complete specification of the Metal DOL language syntax, keywords, and semantics.
+            Syntax, keywords, and CLI reference for DOL v0.8.2. There is no formal language specification yet; the lexer and parser source in univrs/dol are the reference.
           </p>
         </div>
       </section>
@@ -54,7 +55,7 @@ export default function DOLReference() {
             {[
               { title: 'Declarative', desc: 'Describes what things are, not how they work' },
               { title: 'Ontology-First', desc: 'All concepts must be declared before implementation' },
-              { title: 'Exegesis Required', desc: 'Every declaration must include human-readable explanation' },
+              { title: 'Docs Required', desc: 'Every declaration should include a docs block (enforced by dol-check --require-exegesis)' },
               { title: 'Versioned', desc: 'Changes are tracked through explicit evolution declarations' },
               { title: 'Composable', desc: 'Complex behaviors are built from simple, atomic units' },
             ].map((principle) => (
@@ -149,18 +150,15 @@ docs {
     toleration has effect
 
     filter has resource_feasibility_check
-    resource_feasibility_check validates cpu_capacity
-    resource_feasibility_check validates memory_capacity
+    resource_feasibility_check requires cpu_capacity
+    resource_feasibility_check requires memory_capacity
 
     each filter is deterministic
     each filter is parallelizable
     each filter is stateless
 
     filter requires node_pool
-    filter produces eligible_nodes
-
-    filter phase precedes scoring_phase
-    filter phase reduces search_space
+    filter emits eligible_nodes
 }
 
 docs {
@@ -171,19 +169,19 @@ docs {
               </pre>
             </div>
             <p className="mt-3 text-sm" style={{ color: 'var(--soft-gray)' }}>
-              Allowed statements: <code>uses</code>, <code>has</code>, <code>is</code>, <code>validates</code>, <code>requires</code>, <code>produces</code>, <code>each</code>
+              Allowed statements: <code>uses</code>, <code>has</code>, <code>is</code>, <code>requires</code>, <code>emits</code>, <code>matches</code>, <code>never</code>, plus quantifiers <code>each</code>/<code>all</code>/<code>no</code>
             </p>
           </div>
 
           {/* Constraint */}
           <div className="mb-12">
-            <h3 className="text-xl font-normal mb-4" style={{ color: 'var(--spore-purple)' }}>Constraint Declarations</h3>
+            <h3 className="text-xl font-normal mb-4" style={{ color: 'var(--spore-purple)' }}>Rule Declarations</h3>
             <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
-              Constraints define invariants that must always hold true in the system.
+              Rules (formerly <code>constraint</code>, now deprecated) declare invariants that must always hold true in the system.
             </p>
             <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
               <pre className="p-6 text-sm font-mono overflow-x-auto" style={{ color: 'var(--spore-purple)' }}>
-{`constraint scheduling.feasibility {
+{`rule scheduling.feasibility {
     node_capacity never exceeded
     node_status requires ready
     resource_requests is bounded_by_limits
@@ -207,18 +205,18 @@ docs {
 
     scheduling_decision is atomic
     scheduling_decision requires validation
-    binding_conflict triggers reschedule
+    binding_conflict emits reschedule
 }
 
 docs {
-    The scheduling.feasibility constraint defines invariants for pod placement.
+    The scheduling.feasibility rule defines invariants for pod placement.
     A node cannot accept a pod if capacity is exceeded, status is not ready,
     taints lack matching tolerations, or anti-affinity rules are violated.
 }`}
               </pre>
             </div>
             <p className="mt-3 text-sm" style={{ color: 'var(--soft-gray)' }}>
-              Allowed statements: <code>never</code>, <code>requires</code>, <code>has</code>, <code>is</code>, <code>triggers</code>
+              Allowed statements: <code>never</code>, <code>requires</code>, <code>has</code>, <code>is</code>, <code>emits</code>, <code>matches</code>
             </p>
           </div>
 
@@ -262,7 +260,7 @@ docs {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-light mb-8" style={{ color: 'var(--text-primary)' }}>CLI Reference</h2>
           <p className="mb-8" style={{ color: 'var(--text-secondary)' }}>
-            The DOL toolchain provides command-line utilities for parsing, validating, testing, and code generation.
+            The DOL toolchain provides command-line utilities for parsing, validating, testing, and code generation. Install them with <code>cargo install dol --features cli</code>. Note: in v0.8.2, <code>dol-parse</code> and <code>dol-check</code> only read the first declaration of each file; anything after it is not checked.
           </p>
 
           {/* dol-parse */}
@@ -281,11 +279,11 @@ docs {
 {`# Parse a single file
 dol-parse examples/genes/container.exists.dol
 
-# Output as JSON AST
+# JSON output for tooling
 dol-parse --format json examples/genes/container.exists.dol
 
-# Output as Rust code
-dol-parse --format rust examples/genes/container.exists.dol`}
+# Process a directory recursively
+dol-parse -r examples/`}
                 </pre>
               </div>
             </div>
@@ -304,16 +302,20 @@ dol-parse --format rust examples/genes/container.exists.dol`}
                   </thead>
                   <tbody>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td className="py-2 px-3"><code style={{ color: 'var(--glow-cyan)' }}>--format &lt;type&gt;</code></td>
-                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Output format: json, rust, or pretty (default: pretty)</td>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--glow-cyan)' }}>-f, --format &lt;format&gt;</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Output format: pretty, json, compact, or debug (default: pretty)</td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td className="py-2 px-3"><code style={{ color: 'var(--glow-cyan)' }}>-o, --output</code></td>
-                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Write output to file instead of stdout</td>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--glow-cyan)' }}>-r, --recursive</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Recursively process directories</td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td className="py-2 px-3"><code style={{ color: 'var(--glow-cyan)' }}>-v, --verbose</code></td>
-                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Show detailed parsing information</td>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--glow-cyan)' }}>--validate</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Validate only, don't output AST</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--glow-cyan)' }}>--ci</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>CI mode: minimal output, exit code indicates success/failure</td>
                     </tr>
                   </tbody>
                 </table>
@@ -327,15 +329,19 @@ dol-parse --format rust examples/genes/container.exists.dol`}
               <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
                 <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-cyan)' }}>
 {`{
-  "declaration": "Gene",
-  "name": "container.exists",
-  "version": "1.0.0",
-  "exegesis": "A container is the fundamental unit...",
-  "statements": [
-    { "type": "Has", "property": "identity", "value_type": "string" },
-    { "type": "Has", "property": "state", "value_type": "ContainerState" },
-    { "type": "Is", "predicate": "entity" }
-  ]
+  "files": [
+    {
+      "path": "examples/genes/container.exists.dol",
+      "success": true,
+      "declaration_type": "gene",
+      "name": "container.exists"
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "successful": 1,
+    "failed": 0
+  }
 }`}
                 </pre>
               </div>
@@ -346,7 +352,7 @@ dol-parse --format rust examples/genes/container.exists.dol`}
           <div className="mb-12">
             <h3 className="text-xl font-normal mb-4" style={{ color: 'var(--glow-gold)' }}>dol-check</h3>
             <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
-              Type check and validate constraints across DOL files. Perfect for CI/CD pipelines and pre-commit hooks.
+              Validate DOL files and check docs (exegesis) coverage, for CI pipelines and pre-commit hooks. Type errors are not enforced in v0.8.2, even with <code>--typecheck</code>.
             </p>
 
             <div className="mb-4">
@@ -358,8 +364,8 @@ dol-parse --format rust examples/genes/container.exists.dol`}
 {`# Check all files in a directory
 dol-check examples/
 
-# Check with glob pattern
-dol-check --strict src/**/*.dol
+# Treat warnings as errors
+dol-check --strict src/*.dol
 
 # Require exegesis on all declarations
 dol-check --require-exegesis *.dol
@@ -385,19 +391,19 @@ dol-check --ci examples/`}
                   <tbody>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                       <td className="py-2 px-3"><code style={{ color: 'var(--glow-gold)' }}>--strict</code></td>
-                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Enable all validation rules, fail on warnings</td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Treat warnings as errors</td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                       <td className="py-2 px-3"><code style={{ color: 'var(--glow-gold)' }}>--require-exegesis</code></td>
-                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Fail if any declaration lacks exegesis</td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Require docs (exegesis) blocks to be present and non-empty</td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                       <td className="py-2 px-3"><code style={{ color: 'var(--glow-gold)' }}>--ci</code></td>
-                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>CI mode: minimal output, exit codes for automation</td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>CI mode: exit code only, minimal output</td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td className="py-2 px-3"><code style={{ color: 'var(--glow-gold)' }}>--format &lt;type&gt;</code></td>
-                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Output format: human, json, or github (default: human)</td>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--glow-gold)' }}>-f, --format &lt;format&gt;</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Output format: pretty, json, or compact (default: pretty)</td>
                     </tr>
                   </tbody>
                 </table>
@@ -410,16 +416,16 @@ dol-check --ci examples/`}
               </h4>
               <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
                 <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--glow-gold)' }}>
-{`Checking 12 DOL files...
+{`✗ examples/minimal-test/Spirit.dol:2
+  Parse error: invalid declaration type 'spirit' at line 2, column 1 (...)
+⚠ examples/v0.8/functions.dol
+  'Vector3' has no exegesis
 
-✓ examples/genes/container.exists.dol
-✓ examples/traits/container.lifecycle.dol
-✗ examples/constraints/invalid.dol
-  Error: Missing exegesis (line 1)
-  Error: Undefined reference to 'unknown.trait' (line 8)
-
-Summary: 10 passed, 2 failed
-Exit code: 1`}
+Summary
+  Files:    121
+  Passed:   105
+  Failed:   16
+  Warnings: 103`}
                 </pre>
               </div>
             </div>
@@ -429,7 +435,7 @@ Exit code: 1`}
           <div className="mb-12">
             <h3 className="text-xl font-normal mb-4" style={{ color: 'var(--spore-purple)' }}>dol-codegen</h3>
             <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
-              Generate code from DOL specifications. Supports multiple target languages and frameworks.
+              Generate code from DOL specifications. Targets: Rust, TypeScript and JSON Schema. Output quality varies; not all generated Rust compiles standalone.
             </p>
 
             <div className="mb-4">
@@ -438,17 +444,17 @@ Exit code: 1`}
               </h4>
               <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
                 <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-primary)' }}>
-{`# Generate to output directory
-dol-codegen hello.dol -o generated/
+{`# Write Rust to a file
+dol-codegen hello.dol -o hello.rs
 
-# Target Rust code
+# Target Rust code (default, printed to stdout)
 dol-codegen --target rust src/domain.dol
 
-# Target TypeScript interfaces
+# Target TypeScript
 dol-codegen --target typescript src/domain.dol
 
-# Generate with custom template
-dol-codegen --target rust --template custom.hbs src/domain.dol`}
+# Target JSON Schema
+dol-codegen --target jsonschema src/domain.dol`}
                 </pre>
               </div>
             </div>
@@ -467,20 +473,20 @@ dol-codegen --target rust --template custom.hbs src/domain.dol`}
                   </thead>
                   <tbody>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td className="py-2 px-3"><code style={{ color: 'var(--spore-purple)' }}>--target &lt;lang&gt;</code></td>
-                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Target language: rust, typescript, python, go</td>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--spore-purple)' }}>-t, --target &lt;target&gt;</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Target language: rust, typescript, or jsonschema (default: rust)</td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td className="py-2 px-3"><code style={{ color: 'var(--spore-purple)' }}>-o, --output</code></td>
-                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Output directory for generated files</td>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--spore-purple)' }}>-o, --output &lt;file&gt;</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Output file (defaults to stdout)</td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td className="py-2 px-3"><code style={{ color: 'var(--spore-purple)' }}>--template</code></td>
-                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Custom template file (Handlebars format)</td>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--spore-purple)' }}>-r, --recursive</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Recursively process directories</td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td className="py-2 px-3"><code style={{ color: 'var(--spore-purple)' }}>--watch</code></td>
-                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Watch for changes and regenerate automatically</td>
+                      <td className="py-2 px-3"><code style={{ color: 'var(--spore-purple)' }}>--derive &lt;list&gt;</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Include derive macros (Rust only)</td>
                     </tr>
                   </tbody>
                 </table>
@@ -493,17 +499,16 @@ dol-codegen --target rust --template custom.hbs src/domain.dol`}
               </h4>
               <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
                 <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--spore-purple)' }}>
-{`// Generated from container.exists.dol v1.0.0
-// A container is the fundamental unit of workload isolation.
-
-pub struct Container {
+{`/// The container gen defines the essential properties of a container in
+/// the Univrs platform. ...
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContainerExists {
     pub identity: String,
-    pub state: ContainerState,
-    pub boundaries: ResourceBoundaries,
-}
-
-impl Entity for Container {}
-impl Persistent for Container {}`}
+    pub status: String,
+    pub boundaries: String,
+    pub resources: String,
+    pub image: String,
+}`}
                 </pre>
               </div>
             </div>
@@ -513,7 +518,7 @@ impl Persistent for Container {}`}
           <div className="mb-12">
             <h3 className="text-xl font-normal mb-4" style={{ color: 'var(--text-primary)' }}>dol-test</h3>
             <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
-              Run DOL test suites and generate test code from .dol.test files.
+              Generate Rust test code from .dol.test files (it does not run the tests; use <code>cargo test</code> for that).
             </p>
 
             <div className="mb-4">
@@ -522,17 +527,17 @@ impl Persistent for Container {}`}
               </h4>
               <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
                 <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-primary)' }}>
-{`# Run all tests in directory
-dol-test examples/tests/
+{`# Generate tests into the default directory (tests/generated)
+dol-test examples/container.lifecycle.dol.test
 
-# Generate test code
-dol-test --output tests/ *.dol.test
+# Generate into a specific directory
+dol-test -o tests/ examples/container.lifecycle.dol.test
 
-# Run specific test file
-dol-test examples/traits/container.lifecycle.dol.test
+# Validate test files without generating
+dol-test validate examples/
 
-# Watch mode for continuous testing
-dol-test --watch examples/tests/`}
+# Show what would be generated (dry run)
+dol-test plan examples/`}
                 </pre>
               </div>
             </div>
@@ -551,20 +556,20 @@ dol-test --watch examples/tests/`}
                   </thead>
                   <tbody>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td className="py-2 px-3"><code>--output &lt;dir&gt;</code></td>
-                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Generate test files to specified directory</td>
+                      <td className="py-2 px-3"><code>-o, --output &lt;dir&gt;</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Output directory for generated tests (default: tests/generated)</td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td className="py-2 px-3"><code>--watch</code></td>
-                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Watch for changes and re-run tests</td>
+                      <td className="py-2 px-3"><code>-s, --stubs</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Generate stub tests only (unimplemented!() bodies)</td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td className="py-2 px-3"><code>--format &lt;type&gt;</code></td>
-                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Output format: pretty, json, junit (default: pretty)</td>
+                      <td className="py-2 px-3"><code>-f, --force</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Overwrite existing generated files</td>
                     </tr>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td className="py-2 px-3"><code>--filter &lt;pattern&gt;</code></td>
-                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Run only tests matching pattern</td>
+                      <td className="py-2 px-3"><code>-q, --quiet</code></td>
+                      <td className="py-2 px-3" style={{ color: 'var(--text-secondary)' }}>Quiet mode</td>
                     </tr>
                   </tbody>
                 </table>
@@ -577,16 +582,10 @@ dol-test --watch examples/tests/`}
               </h4>
               <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-subtle)' }}>
                 <pre className="p-4 text-sm font-mono overflow-x-auto" style={{ color: 'var(--text-primary)' }}>
-{`Running tests from examples/tests/
+{`✓ examples/container.lifecycle.dol.test → tests/container_lifecycle_dol.rs
 
-test container.lifecycle::creation ... ok
-test container.lifecycle::state_transitions ... ok
-test container.lifecycle::termination ... ok
-
-Test results: 3 passed, 0 failed
-Generated 3 test files to tests/
-
-Time: 0.42s`}
+Summary
+  Generated: 1`}
                 </pre>
               </div>
             </div>

@@ -51,7 +51,7 @@ const phases: Phase[] = [
   },
   {
     id: 'phase2a',
-    name: 'Phase 2a: HIR v0.8.0',
+    name: 'Phase 2a: HIR (v0.3.0)',
     status: 'complete',
     tests: 466,
     description: 'High-level Intermediate Representation',
@@ -75,11 +75,11 @@ const phases: Phase[] = [
   },
   {
     id: 'phase3',
-    name: 'Phase 3: MLIR + WASM Pipeline',
+    name: 'Phase 3: WASM Pipeline',
     status: 'complete',
     tests: 50,
-    description: 'DOL -> HIR -> MLIR -> WASM compilation',
-    deliverables: ['MLIR lowering', 'WASM backend', 'add.wasm validated'],
+    description: 'DOL -> WASM direct backend (beta, language subset). MLIR path is experimental and not in CI.',
+    deliverables: ['WASM backend', 'VUDO VM host ABI (v0.8.2)', 'add.wasm validated'],
   },
   {
     id: 'phase4a',
@@ -100,7 +100,7 @@ const phases: Phase[] = [
 ]
 
 const repositories: Repository[] = [
-  { name: 'univrs-dol', url: 'https://github.com/univrs/univrs-dol', status: 'stable', tests: 454 },
+  { name: 'univrs-dol', url: 'https://github.com/univrs/dol', status: 'stable', tests: 2512 },
   { name: 'univrs-enr', url: 'https://github.com/univrs/univrs-enr', status: 'active', tests: 0 },
   { name: 'univrs-network', url: 'https://github.com/univrs/univrs-network', status: 'pending', tests: 0 },
   { name: 'univrs-vudo', url: 'https://github.com/univrs/univrs-vudo', status: 'stable', tests: 402 },
