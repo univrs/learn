@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async'
-import { Github, ExternalLink, Code2, BookOpen, FileCode, MessageSquare } from 'lucide-react'
+import { Github, Code2, BookOpen, FileCode, MessageSquare } from 'lucide-react'
 
 export default function Developers() {
   return (
